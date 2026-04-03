@@ -11,17 +11,27 @@
 
 import { Env } from '@adonisjs/core/env'
 
+function withDefault<T>(fallback: string, validate: (key: string, value?: string) => T) {
+  return (key: string, value?: string) => validate(key, value && value !== '' ? value : fallback)
+}
+
 export default await Env.create(new URL('../', import.meta.url), {
   // Node
-  NODE_ENV: Env.schema.enum(['development', 'production', 'test'] as const),
+  NODE_ENV: withDefault('development', Env.schema.enum(['development', 'production', 'test'] as const)),
   PORT: Env.schema.number(),
-  HOST: Env.schema.string({ format: 'host' }),
-  LOG_LEVEL: Env.schema.string(),
+  HOST: withDefault('127.0.0.1', Env.schema.string({ format: 'host' })),
+  LOG_LEVEL: withDefault('info', Env.schema.string()),
 
   // App
   APP_KEY: Env.schema.secret(),
   APP_URL: Env.schema.string({ format: 'url', tld: false }),
 
+  // Database (Lucid + `pg`; omit to use SQLite from config/database.ts)
+  DATABASE_URL: Env.schema.string(),
+
   // Session
   SESSION_DRIVER: Env.schema.enum(['cookie', 'memory', 'database'] as const),
+
+  // Firebase Admin (verify ID tokens from the web client). Optional path to service account JSON.
+  FIREBASE_CREDENTIALS_PATH: Env.schema.string.optional(),
 })

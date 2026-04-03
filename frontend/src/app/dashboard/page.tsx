@@ -53,7 +53,7 @@ export default function DashboardPage() {
         <div className="flex items-center gap-4">
           <div className="text-xs text-zinc-300">
             <div className="font-medium">
-              {user?.businessName || "Your business"}
+              {user?.fullName || "Your workspace"}
             </div>
             <div className="text-zinc-500">{user?.email}</div>
           </div>
@@ -69,7 +69,7 @@ export default function DashboardPage() {
       <main className="mx-auto flex max-w-5xl flex-col gap-6 px-6 py-8 md:flex-row md:items-start">
         <section className="flex-1">
           <h2 className="mb-1 text-xl font-semibold text-zinc-50">
-            Welcome, {user?.contactName || "there"}
+            Welcome, {user?.fullName?.split(" ")[0] || "there"}
           </h2>
           <p className="mb-6 text-sm text-zinc-400">
             This is your starting point to connect channels, configure smart

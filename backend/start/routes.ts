@@ -3,35 +3,13 @@
 | Routes file
 |--------------------------------------------------------------------------
 |
-| The routes file is used for defining the HTTP routes.
+| Composes module route registrations. Each module owns its routes,
+| controllers, validators, and types under `modules/<name>/`.
 |
 */
 
-import { middleware } from '#start/kernel'
-import router from '@adonisjs/core/services/router'
-import { controllers } from '#generated/controllers'
+import { registerApiV1Routes } from '#start/api_routes'
+import { registerCoreRoutes } from '#start/core_routes'
 
-router.get('/', () => {
-  return { hello: 'world' }
-})
-
-router
-  .group(() => {
-    router
-      .group(() => {
-        router.post('signup', [controllers.NewAccount, 'store'])
-        router.post('login', [controllers.AccessToken, 'store'])
-        router.post('logout', [controllers.AccessToken, 'destroy']).use(middleware.auth())
-      })
-      .prefix('auth')
-      .as('auth')
-
-    router
-      .group(() => {
-        router.get('/profile', [controllers.Profile, 'show'])
-      })
-      .prefix('account')
-      .as('profile')
-      .use(middleware.auth())
-  })
-  .prefix('/api/v1')
+registerCoreRoutes()
+registerApiV1Routes()

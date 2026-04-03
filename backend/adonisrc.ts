@@ -108,7 +108,11 @@ export default defineConfig({
   hooks: {
     init: [
       indexEntities({
-        transformers: { enabled: true },
+        transformers: {
+          enabled: true,
+          source: 'modules/users/transformers',
+          importAlias: '#transformers',
+        },
       }),
       generateRegistry(),
     ],
