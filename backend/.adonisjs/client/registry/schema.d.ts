@@ -31,6 +31,18 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/access_token_controller').default['store']>>>
     }
   }
+  'auth.firebase_auths.store': {
+    methods: ["POST"]
+    pattern: '/api/v1/auth/firebase'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('modules/auth/validators/firebase_id_token.js').firebaseIdTokenValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('modules/auth/validators/firebase_id_token.js').firebaseIdTokenValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/firebase_auths_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/firebase_auths_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
   'auth.access_token.destroy': {
     methods: ["POST"]
     pattern: '/api/v1/auth/logout'
