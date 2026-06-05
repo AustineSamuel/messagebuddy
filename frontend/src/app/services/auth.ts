@@ -30,9 +30,9 @@ export async function login(payload: {
   const data = (await apiFetch("/api/v1/auth/login", {
     method: "POST",
     body: JSON.stringify(payload)
-  })) as AuthResponse;
-  setAuthToken(data.token);
-  return data;
+  })) as {data: AuthResponse};
+  setAuthToken(data.data.token);
+  return data.data;
 }
 
 /** Exchange a Firebase ID token for an API access token (same shape as login). */
