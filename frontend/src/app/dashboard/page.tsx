@@ -38,7 +38,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <DashboardLayout/>
+    <DashboardLayout onLogout={handleLogout} />
   );
 }
 
