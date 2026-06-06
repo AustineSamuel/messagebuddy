@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Sidebar from "@/dashboard/components/dashboard/Sidebar";
 import ChatList from "@/dashboard/components/chat/ChatList";
 import ChatArea from "@/dashboard/components/chat/ChatArea";
@@ -11,6 +12,20 @@ import { useDashboardStore } from "@/dashboard/hooks/useDashboardStore";
 import { DEMO_DAILY_CREDITS } from "@/dashboard/data/demo";
 
 export default function DashboardLayout() {
+  useEffect(() => {
+    const id = "dashboard-stylesheet";
+    if (!document.getElementById(id)) {
+      const link = document.createElement("link");
+      link.id = id;
+      link.rel = "stylesheet";
+      link.href = "/dashboard.css";
+      document.head.appendChild(link);
+    }
+    return () => {
+      const el = document.getElementById(id);
+      if (el) el.remove();
+    };
+  }, []);
   const store = useDashboardStore();
   const creditsToday = DEMO_DAILY_CREDITS[DEMO_DAILY_CREDITS.length - 1].used;
 

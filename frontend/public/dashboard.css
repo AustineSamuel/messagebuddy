@@ -1,0 +1,247 @@
+/* ============================================
+   MessageBuddy Dashboard – Global Styles
+   WhatsApp AI Agent – Dark Theme
+   ============================================ */
+
+/* ── CSS Variables ── */
+:root {
+  /* Backgrounds */
+  --bg-base: #0a0e13;
+  --bg-1: #0f1520;
+  --bg-2: #141c2e;
+  --bg-3: #192236;
+  --bg-4: #1f2a40;
+  --bg-5: #253248;
+
+  /* Surfaces */
+  --surface-1: #1a2235;
+  --surface-2: #202a3a;
+  --surface-3: #263348;
+
+  /* Borders */
+  --border-1: #1e2d44;
+  --border-2: #283a55;
+  --border-3: #324868;
+
+  /* WhatsApp Green */
+  --wa-green: #25d366;
+  --wa-green-dim: #1fb855;
+  --wa-teal: #128c7e;
+  --wa-green-glow: rgba(37, 211, 102, 0.15);
+  --wa-green-muted: rgba(37, 211, 102, 0.08);
+
+  /* Accent Blue */
+  --blue: #2196f3;
+  --blue-dim: #1976d2;
+  --blue-muted: rgba(33, 150, 243, 0.12);
+
+  /* Message bubbles */
+  --msg-out: #1a3426;
+  --msg-out-border: #264838;
+  --msg-in: #192236;
+  --msg-in-border: #1e2d44;
+
+  /* Semantic */
+  --red: #ef4444;
+  --red-muted: rgba(239, 68, 68, 0.12);
+  --amber: #f59e0b;
+  --amber-muted: rgba(245, 158, 11, 0.12);
+  --emerald: #10b981;
+  --emerald-muted: rgba(16, 185, 129, 0.12);
+  --purple: #8b5cf6;
+  --purple-muted: rgba(139, 92, 246, 0.12);
+
+  /* Text */
+  --text-0: #eef2f8;
+  --text-1: #b8c4d8;
+  --text-2: #6e82a0;
+  --text-3: #3a4e68;
+
+  /* Misc */
+  --font-sans: "DM Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  /* Scrollbar */
+  --scrollbar-thumb: #1e2d44;
+  --scrollbar-track: transparent;
+}
+
+/* ── Reset & Base ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  background: var(--bg-base);
+  color: var(--text-0);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* ── Scrollbars ── */
+::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+}
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-3);
+}
+
+/* ── Selection ── */
+::selection {
+  background: var(--wa-green-glow);
+  color: var(--text-0);
+}
+
+/* ── Focus ring ── */
+:focus-visible {
+  outline: 2px solid var(--wa-green);
+  outline-offset: 2px;
+}
+
+/* ── Utilities ── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Tag / Badge base ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  line-height: 1.4;
+}
+.badge-green {
+  background: var(--wa-green-glow);
+  color: var(--wa-green);
+}
+.badge-red {
+  background: var(--red-muted);
+  color: var(--red);
+}
+.badge-blue {
+  background: var(--blue-muted);
+  color: var(--blue);
+}
+.badge-amber {
+  background: var(--amber-muted);
+  color: var(--amber);
+}
+.badge-purple {
+  background: var(--purple-muted);
+  color: var(--purple);
+}
+.badge-gray {
+  background: var(--bg-4);
+  color: var(--text-1);
+}
+
+/* ── WA Pattern Background ── */
+.wa-pattern-bg {
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2325d366'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+/* ── Animations ── */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes bar-grow {
+  from { transform: scaleY(0); transform-origin: bottom; }
+  to { transform: scaleY(1); transform-origin: bottom; }
+}
+
+.animate-fade-up {
+  animation: fade-in-up 0.25s ease both;
+}
+
+.animate-slide-right {
+  animation: slide-in-right 0.2s ease both;
+}
+
+/* ── Toggle component ── */
+.toggle-track {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: 99px;
+  background: var(--border-2);
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.toggle-track.on {
+  background: var(--wa-green);
+}
+.toggle-thumb {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: white;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.2s;
+}
+.toggle-track.on .toggle-thumb {
+  transform: translateX(16px);
+}
+
+/* ── Form base overrides ── */
+input,
+textarea,
+select {
+  font-family: var(--font-sans);
+}
