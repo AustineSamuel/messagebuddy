@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { getErrorMessage, isUnauthorizedError } from "../lib/api";
+import { clearAuthToken } from "../lib/auth-token";
 import { logout } from "../services/auth";
 import { getProfile, type User } from "../services/users";
 
@@ -9,29 +12,73 @@ export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function load() {
-      const current = await getProfile();
-      if (!current) {
-        router.replace("/login");
-        return;
+      let stopLoading = true;
+
+      try {
+        const current = await getProfile();
+        if (cancelled) return;
+        setUser(current);
+        setError(null);
+      } catch (err) {
+        if (cancelled) return;
+
+        if (isUnauthorizedError(err)) {
+          stopLoading = false;
+          clearAuthToken();
+          router.replace("/login");
+          return;
+        }
+
+        setError(getErrorMessage(err));
+      } finally {
+        if (!cancelled && stopLoading) {
+          setLoading(false);
+        }
       }
-      setUser(current);
-      setLoading(false);
     }
+
     load();
+
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   async function handleLogout() {
-    await logout();
+    try {
+      await logout();
+    } catch {
+      clearAuthToken();
+    }
     router.replace("/login");
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-zinc-200">
+      <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-zinc-200">
         Loading your workspace...
+      </div>
+    );
+  }
+
+  if (error || !user) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-zinc-950 px-6 text-center text-zinc-200">
+        <p className="max-w-sm text-sm text-zinc-300">
+          {error || "We couldn't load your workspace."}
+        </p>
+        <Link
+          href="/login"
+          className="rounded-full bg-emerald-400 px-5 py-2 text-sm font-semibold text-emerald-950"
+        >
+          Go to sign in
+        </Link>
       </div>
     );
   }
@@ -53,9 +100,9 @@ export default function DashboardPage() {
         <div className="flex items-center gap-4">
           <div className="text-xs text-zinc-300">
             <div className="font-medium">
-              {user?.fullName || "Your workspace"}
+              {user.fullName || "Your workspace"}
             </div>
-            <div className="text-zinc-500">{user?.email}</div>
+            <div className="text-zinc-500">{user.email}</div>
           </div>
           <button
             onClick={handleLogout}
@@ -69,7 +116,7 @@ export default function DashboardPage() {
       <main className="mx-auto flex max-w-5xl flex-col gap-6 px-6 py-8 md:flex-row md:items-start">
         <section className="flex-1">
           <h2 className="mb-1 text-xl font-semibold text-zinc-50">
-            Welcome, {user?.fullName?.split(" ")[0] || "there"}
+            Welcome, {user.fullName?.split(" ")[0] || "there"}
           </h2>
           <p className="mb-6 text-sm text-zinc-400">
             This is your starting point to connect channels, configure smart
@@ -119,4 +166,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

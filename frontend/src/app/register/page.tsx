@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { GoogleSignInButton } from "../components/GoogleSignInButton";
+import { getErrorMessage } from "../lib/api";
 import { signup } from "../services/auth";
 
 export default function RegisterPage() {
@@ -31,7 +32,7 @@ export default function RegisterPage() {
       });
       router.push("/dashboard");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Registration failed");
+      setError(getErrorMessage(err, "Registration failed. Please try again."));
     } finally {
       setSubmitting(false);
     }

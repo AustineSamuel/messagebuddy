@@ -10,6 +10,9 @@ export interface ApiDefinition {
       store: typeof routes['auth.access_token.store']
       destroy: typeof routes['auth.access_token.destroy']
     }
+    firebaseAuths: {
+      store: typeof routes['auth.firebase_auths.store']
+    }
   }
   profile: {
     profile: {

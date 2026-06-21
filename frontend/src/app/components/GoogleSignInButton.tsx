@@ -1,6 +1,7 @@
 "use client";
 
 import { signInWithPopup } from "firebase/auth";
+import { getErrorMessage } from "../lib/api";
 import { getFirebaseAuth, googleAuthProvider } from "../lib/firebase";
 import { loginWithFirebaseIdToken } from "../services/auth";
 
@@ -31,9 +32,7 @@ export function GoogleSignInButton({
       await loginWithFirebaseIdToken(idToken);
       onSuccess?.();
     } catch (e: unknown) {
-      const message =
-        e instanceof Error ? e.message : "Google sign-in failed";
-      onError?.(message);
+      onError?.(getErrorMessage(e, "Google sign-in failed. Please try again."));
     }
   }
 
