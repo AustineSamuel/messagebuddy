@@ -13,11 +13,19 @@ const RULE_LABELS: Record<string, { label: string; variant: "green" | "red" | "p
 
 interface ChatListProps {
   contacts: Contact[];
-  activeContactId: number;
-  onSelectContact: (id: number) => void;
+  activeContactId: string;
+  onSelectContact: (id: string) => void;
+  loading?: boolean;
+  onRefresh?: () => void;
 }
 
-export default function ChatList({ contacts, activeContactId, onSelectContact }: ChatListProps) {
+export default function ChatList({
+  contacts,
+  activeContactId,
+  onSelectContact,
+  loading,
+  onRefresh,
+}: ChatListProps) {
   const [search, setSearch] = useState("");
 
   const filtered = contacts.filter((c) =>
@@ -54,6 +62,9 @@ export default function ChatList({ contacts, activeContactId, onSelectContact }:
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <Badge variant="green">AI Live</Badge>
           <button
+            type="button"
+            onClick={onRefresh}
+            title="Refresh chats"
             style={{
               width: 28,
               height: 28,
@@ -143,6 +154,15 @@ export default function ChatList({ contacts, activeContactId, onSelectContact }:
 
       {/* Chat list */}
       <div style={{ overflow: "auto", flex: 1 }}>
+        {loading ? (
+          <p style={{ padding: 20, fontSize: 13, color: "var(--text-2)", textAlign: "center" }}>
+            Loading chats…
+          </p>
+        ) : filtered.length === 0 ? (
+          <p style={{ padding: 20, fontSize: 13, color: "var(--text-2)", textAlign: "center" }}>
+            No conversations yet.
+          </p>
+        ) : null}
         {filtered.map((contact) => {
           const isActive = contact.id === activeContactId;
           const ruleInfo = RULE_LABELS[contact.rule];

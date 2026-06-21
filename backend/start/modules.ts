@@ -4,3 +4,4 @@
  */
 export { registerAuthRoutes } from '../modules/auth/routes.js'
 export { registerUsersRoutes } from '../modules/users/routes.js'
+export { registerWhatsappRoutes } from '../modules/whatsapp/routes.js'

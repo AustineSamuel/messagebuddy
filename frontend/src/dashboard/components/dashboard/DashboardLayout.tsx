@@ -8,7 +8,9 @@ import RightPanel from "@/dashboard/components/chat/RightPanel";
 import DashboardAnalytics from "@/dashboard/components/dashboard/DashboardAnalytics";
 import ContactsPage from "@/dashboard/components/contacts/ContactsPage";
 import SettingsPage from "@/dashboard/components/settings/SettingsPage";
+import WhatsAppConnectScreen from "@/dashboard/components/whatsapp/WhatsAppConnectScreen";
 import { useDashboardStore } from "@/dashboard/hooks/useDashboardStore";
+import { useWhatsAppSession } from "@/dashboard/hooks/useWhatsAppSession";
 import { DEMO_DAILY_CREDITS } from "@/dashboard/data/demo";
 
 interface DashboardLayoutProps {
@@ -17,6 +19,8 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const wa = useWhatsAppSession();
+  const store = useDashboardStore({ whatsAppReady: wa.isReady });
 
   useEffect(() => {
     const storedTheme = window.localStorage.getItem("dashboard-theme");
@@ -45,9 +49,29 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
   }, [theme]);
 
   const toggleTheme = () => setTheme((prev) => (prev === "dark" ? "light" : "dark"));
-
-  const store = useDashboardStore();
   const creditsToday = DEMO_DAILY_CREDITS[DEMO_DAILY_CREDITS.length - 1].used;
+  const contactsForPage =
+    store.waContacts.length > 0 ? store.waContacts : store.contacts;
+
+  if (wa.loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-zinc-200">
+        Loading WhatsApp workspace…
+      </div>
+    );
+  }
+
+  if (!wa.isReady) {
+    return (
+      <WhatsAppConnectScreen
+        session={wa.session}
+        connecting={wa.connecting}
+        error={wa.error}
+        onConnect={wa.connect}
+        onRefresh={wa.refresh}
+      />
+    );
+  }
 
   return (
     <div
@@ -80,6 +104,26 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
         ) : null}
       </div>
 
+      {store.syncError ? (
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: 12,
+            transform: "translateX(-50%)",
+            zIndex: 30,
+            background: "rgba(239,68,68,0.15)",
+            border: "1px solid rgba(239,68,68,0.4)",
+            color: "#fecaca",
+            fontSize: 12,
+            padding: "8px 14px",
+            borderRadius: 99,
+          }}
+        >
+          {store.syncError}
+        </div>
+      ) : null}
+
       <div
         style={{
           display: "flex",
@@ -88,16 +132,16 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
           overflow: "hidden",
         }}
       >
-        {/* ── Sidebar ── */}
         <Sidebar activeView={store.activeView} onNavigate={store.setActiveView} />
 
-        {/* ── Main content ── */}
         {store.activeView === "chats" && (
           <>
             <ChatList
               contacts={store.contacts}
               activeContactId={store.activeContactId}
               onSelectContact={store.openContact}
+              loading={store.loadingChats}
+              onRefresh={store.refreshChats}
             />
             <ChatArea
               contact={store.activeContact}
@@ -107,16 +151,19 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
                 store.editMessage(store.activeContactId, msgId, newText)
               }
               creditsToday={creditsToday}
+              loadingMessages={store.loadingMessages}
             />
-            <RightPanel
-              contact={store.activeContact}
-              activeTab={store.activeRightTab}
-              onTabChange={store.setActiveRightTab}
-              triggerRules={store.triggerRules}
-              onAddTriggerRule={store.addTriggerRule}
-              onRemoveTriggerRule={store.removeTriggerRule}
-              creditsBalance={store.creditsBalance}
-            />
+            {store.activeContact ? (
+              <RightPanel
+                contact={store.activeContact}
+                activeTab={store.activeRightTab}
+                onTabChange={store.setActiveRightTab}
+                triggerRules={store.triggerRules}
+                onAddTriggerRule={store.addTriggerRule}
+                onRemoveTriggerRule={store.removeTriggerRule}
+                creditsBalance={store.creditsBalance}
+              />
+            ) : null}
           </>
         )}
 
@@ -125,10 +172,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
         )}
 
         {store.activeView === "contacts" && (
-          <ContactsPage
-            contacts={store.contacts}
-            onSetRule={store.setContactRule}
-          />
+          <ContactsPage contacts={contactsForPage} onSetRule={store.setContactRule} />
         )}
 
         {store.activeView === "settings" && (

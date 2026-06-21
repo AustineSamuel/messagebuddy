@@ -1,4 +1,6 @@
-import { MessageMedia, type Client } from 'whatsapp-web.js'
+import type { Client } from 'whatsapp-web.js'
+import { MessageMedia } from '../lib/wwebjs.js'
+import type WAWebJS from 'whatsapp-web.js'
 import whatsAppClientManager from './whatsapp_client_manager.js'
 import {
   serializeChat,
@@ -16,12 +18,14 @@ export default class WhatsAppService {
   }
 
   static getSession(userId: number) {
+    whatsAppClientManager.restoreIfPersisted(userId)
     const session = whatsAppClientManager.getSession(userId)
     return {
       status: session.status,
       qr: session.qr,
       pairingCode: session.pairingCode,
       lastError: session.lastError,
+      loadingPercent: session.loadingPercent,
     }
   }
 
@@ -49,7 +53,7 @@ export default class WhatsAppService {
       wid: serializeId(info.wid),
       platform: info.platform,
       phone: info.phone,
-      me: info.me ? serializeContact(info.me) : null,
+      me: info.me ? serializeId(info.me) : null,
     }
   }
 
@@ -87,7 +91,7 @@ export default class WhatsAppService {
   static async muteChat(userId: number, chatId: string, unmuteDate?: number) {
     const client = await whatsAppClientManager.getReadyClient(userId)
     if (unmuteDate) {
-      await client.muteChat(chatId, unmuteDate)
+      await client.muteChat(chatId, new Date(unmuteDate))
     } else {
       const chat = await client.getChatById(chatId)
       await chat.mute()
@@ -233,8 +237,8 @@ export default class WhatsAppService {
   }
 
   static async reactToMessage(userId: number, messageId: string, reaction: string) {
-    const client = await whatsAppClientManager.getReadyClient(userId)
-    await client.sendReaction(messageId, reaction)
+    const message = await this.getMessageEntity(userId, messageId)
+    await message.react(reaction)
     return { reaction }
   }
 
@@ -288,8 +292,8 @@ export default class WhatsAppService {
   }
 
   static async getPollVotes(userId: number, messageId: string) {
-    const client = await whatsAppClientManager.getReadyClient(userId)
-    return client.getPollVotes(messageId)
+    const message = await this.getMessageEntity(userId, messageId)
+    return message.getPollVotes()
   }
 
   static async starMessage(userId: number, messageId: string) {
@@ -362,7 +366,8 @@ export default class WhatsAppService {
 
   static async getCommonGroups(userId: number, contactId: string) {
     const client = await whatsAppClientManager.getReadyClient(userId)
-    const groups = await client.getCommonGroups(contactId)
+    const groupIds = await client.getCommonGroups(contactId)
+    const groups = await Promise.all(groupIds.map((id) => client.getChatById(serializeId(id))))
     return Promise.all(groups.map(serializeGroupChat))
   }
 
@@ -415,7 +420,10 @@ export default class WhatsAppService {
 
   static async createGroup(userId: number, title: string, participants: string[], options?: Record<string, unknown>) {
     const client = await whatsAppClientManager.getReadyClient(userId)
-    const result = await client.createGroup(title, participants, options)
+    const result = await client.createGroup(title, participants, options as WAWebJS.CreateGroupOptions)
+    if (typeof result === 'string') {
+      return { chatId: result }
+    }
     return {
       title: result.title,
       gid: serializeId(result.gid),
@@ -506,14 +514,14 @@ export default class WhatsAppService {
     return client.getGroupMembershipRequests(groupId)
   }
 
-  static async approveGroupMembershipRequests(userId: number, groupId: string, options?: Record<string, unknown>) {
+  static async approveGroupMembershipRequests(userId: number, groupId: string, options?: WAWebJS.MembershipRequestActionOptions) {
     const client = await whatsAppClientManager.getReadyClient(userId)
-    return client.approveGroupMembershipRequests(groupId, options)
+    return client.approveGroupMembershipRequests(groupId, options ?? { requesterIds: null, sleep: null })
   }
 
-  static async rejectGroupMembershipRequests(userId: number, groupId: string, options?: Record<string, unknown>) {
+  static async rejectGroupMembershipRequests(userId: number, groupId: string, options?: WAWebJS.MembershipRequestActionOptions) {
     const client = await whatsAppClientManager.getReadyClient(userId)
-    return client.rejectGroupMembershipRequests(groupId, options)
+    return client.rejectGroupMembershipRequests(groupId, options ?? { requesterIds: null, sleep: null })
   }
 
   static async setGroupInfoAdminsOnly(userId: number, groupId: string, adminsOnly?: boolean) {
@@ -742,12 +750,12 @@ export default class WhatsAppService {
     return client.getChatById(chatId)
   }
 
-  private static async getGroupEntity(userId: number, groupId: string) {
+  private static async getGroupEntity(userId: number, groupId: string): Promise<WAWebJS.GroupChat> {
     const chat = await this.getChatEntity(userId, groupId)
     if (!chat.isGroup) {
       throw new Error('Chat is not a group.')
     }
-    return chat
+    return chat as WAWebJS.GroupChat
   }
 
   private static async getContactEntity(userId: number, contactId: string) {

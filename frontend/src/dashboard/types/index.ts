@@ -1,7 +1,7 @@
 export type ContactRule = "always" | "never" | "custom" | "default";
 
 export interface Contact {
-  id: number;
+  id: string;
   name: string;
   phone: string;
   initials: string;
@@ -12,6 +12,7 @@ export interface Contact {
   lastMessage: string;
   lastMessageTime: string;
   aiHandled: boolean;
+  isGroup?: boolean;
   tags?: string[];
   notes?: string;
 }
@@ -26,7 +27,7 @@ export interface Message {
 }
 
 export interface Conversation {
-  contactId: number;
+  contactId: string;
   messages: Message[];
 }
 

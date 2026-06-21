@@ -1,5 +1,6 @@
 "use client";
 
+import type { Message } from "@/dashboard/types";
 import { DEMO_DAILY_CREDITS, DEMO_CONTACTS, DEMO_CONVERSATIONS } from "@/dashboard/data/demo";
 
 interface KpiCardProps {
@@ -122,8 +123,8 @@ export default function DashboardAnalytics({ creditsBalance }: { creditsBalance:
   const recentAiMsgs = Object.entries(DEMO_CONVERSATIONS)
     .flatMap(([cId, conv]) =>
       conv.messages
-        .filter((m:any) => m.aiGenerated && m.direction === "out")
-        .map((m:any) => ({ ...m, contactId: Number(cId) }))
+        .filter((m: Message) => m.aiGenerated && m.direction === "out")
+        .map((m) => ({ ...m, contactId: cId }))
     )
     .slice(-5)
     .reverse();

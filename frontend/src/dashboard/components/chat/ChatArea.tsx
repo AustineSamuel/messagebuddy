@@ -7,11 +7,12 @@ import EditMessageModal from "./EditMessageModal";
 import type { Contact, Conversation, Message } from "@/dashboard/types";
 
 interface ChatAreaProps {
-  contact: Contact;
+  contact: Contact | undefined;
   conversation: Conversation | undefined;
   onSendMessage: (text: string) => void;
   onEditMessage: (messageId: string, newText: string) => void;
   creditsToday: number;
+  loadingMessages?: boolean;
 }
 
 export default function ChatArea({
@@ -20,6 +21,7 @@ export default function ChatArea({
   onSendMessage,
   onEditMessage,
   creditsToday,
+  loadingMessages,
 }: ChatAreaProps) {
   const [inputValue, setInputValue] = useState("");
   const [editingMsg, setEditingMsg] = useState<Message | null>(null);
@@ -45,7 +47,15 @@ export default function ChatArea({
   };
 
   const messages = conversation?.messages ?? [];
-  const aiActive = contact.rule !== "never";
+  const aiActive = contact ? contact.rule !== "never" : false;
+
+  if (!contact) {
+    return (
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-2)" }}>
+        Select a chat to start messaging
+      </div>
+    );
+  }
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative", minWidth: 0 }}>
@@ -181,7 +191,11 @@ export default function ChatArea({
           </span>
         </div>
 
-        {messages.length === 0 ? (
+        {loadingMessages ? (
+          <div style={{ textAlign: "center", color: "var(--text-2)", fontSize: 13, marginTop: 40 }}>
+            Loading messages…
+          </div>
+        ) : messages.length === 0 ? (
           <div style={{ textAlign: "center", color: "var(--text-2)", fontSize: 13, marginTop: 40 }}>
             <div style={{ fontSize: 32, marginBottom: 8 }}>💬</div>
             No messages yet. Start the conversation!

@@ -6,7 +6,7 @@ import type { Contact, ContactRule } from "@/dashboard/types";
 
 interface ContactsPageProps {
   contacts: Contact[];
-  onSetRule: (contactId: number, rule: ContactRule) => void;
+  onSetRule: (contactId: string, rule: ContactRule) => void;
 }
 
 const FILTER_TABS: { key: ContactRule | "all"; label: string }[] = [
@@ -24,7 +24,15 @@ const RULE_CONFIG: Record<ContactRule, { label: string; color: string; bg: strin
   default: { label: "Default", color: "var(--text-2)", bg: "var(--bg-3)", border: "var(--border-2)", desc: "Global rules apply" },
 };
 
-function RuleSelector({ contactId, current, onChange }: { contactId: number; current: ContactRule; onChange: (id: number, rule: ContactRule) => void }) {
+function RuleSelector({
+  contactId,
+  current,
+  onChange,
+}: {
+  contactId: string;
+  current: ContactRule;
+  onChange: (id: string, rule: ContactRule) => void;
+}) {
   return (
     <div style={{ display: "flex", gap: 4 }}>
       {(["always", "never", "custom"] as ContactRule[]).map((rule) => {

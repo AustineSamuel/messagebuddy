@@ -9,7 +9,7 @@ import type {
 
 export const DEMO_CONTACTS: Contact[] = [
   {
-    id: 1,
+    id: "1",
     name: "Amaka Kelechi",
     phone: "+234 803 421 9900",
     initials: "AK",
@@ -25,7 +25,7 @@ export const DEMO_CONTACTS: Contact[] = [
       "Returning customer. Interested in premium plan. Prefers formal tone.",
   },
   {
-    id: 2,
+    id: "2",
     name: "Chidi Uzodinma",
     phone: "+234 706 332 8811",
     initials: "CU",
@@ -40,7 +40,7 @@ export const DEMO_CONTACTS: Contact[] = [
     notes: "Interested in bulk orders. Always ask about bulk discount first.",
   },
   {
-    id: 3,
+    id: "3",
     name: "Fatima Abubakar",
     phone: "+234 813 905 6634",
     initials: "FA",
@@ -54,7 +54,7 @@ export const DEMO_CONTACTS: Contact[] = [
     tags: ["Premium"],
   },
   {
-    id: 4,
+    id: "4",
     name: "Taiwo Makinde",
     phone: "+234 802 771 4422",
     initials: "TM",
@@ -67,7 +67,7 @@ export const DEMO_CONTACTS: Contact[] = [
     aiHandled: false,
   },
   {
-    id: 5,
+    id: "5",
     name: "Ngozi Eze",
     phone: "+234 817 449 2200",
     initials: "NE",
@@ -80,7 +80,7 @@ export const DEMO_CONTACTS: Contact[] = [
     aiHandled: false,
   },
   {
-    id: 6,
+    id: "6",
     name: "Emeka Okafor",
     phone: "+234 803 215 7744",
     initials: "EO",
@@ -93,7 +93,7 @@ export const DEMO_CONTACTS: Contact[] = [
     aiHandled: true,
   },
   {
-    id: 7,
+    id: "7",
     name: "Bola Adeyemi",
     phone: "+234 805 663 2210",
     initials: "BA",
@@ -108,9 +108,9 @@ export const DEMO_CONTACTS: Contact[] = [
   },
 ];
 
-export const DEMO_CONVERSATIONS: Record<number, Conversation> = {
+export const DEMO_CONVERSATIONS: Record<string, Conversation> = {
   1: {
-    contactId: 1,
+    contactId: "1",
     messages: [
       {
         id: "m1",
@@ -164,7 +164,7 @@ export const DEMO_CONVERSATIONS: Record<number, Conversation> = {
     ],
   },
   2: {
-    contactId: 2,
+    contactId: "2",
     messages: [
       {
         id: "m1",
@@ -197,7 +197,7 @@ export const DEMO_CONVERSATIONS: Record<number, Conversation> = {
     ],
   },
   3: {
-    contactId: 3,
+    contactId: "3",
     messages: [
       {
         id: "m1",
@@ -216,7 +216,7 @@ export const DEMO_CONVERSATIONS: Record<number, Conversation> = {
     ],
   },
   4: {
-    contactId: 4,
+    contactId: "4",
     messages: [
       {
         id: "m1",
@@ -228,7 +228,7 @@ export const DEMO_CONVERSATIONS: Record<number, Conversation> = {
     ],
   },
   6: {
-    contactId: 6,
+    contactId: "6",
     messages: [
       {
         id: "m1",
@@ -252,12 +252,12 @@ export const DEMO_DAILY_CREDITS: DailyCredits[] = [
 ];
 
 export const DEMO_PRODUCTS: Product[] = [
-  { id: 1, emoji: "📱", name: "iPhone 15 Pro Max", price: "₦850,000", stock: "in" },
-  { id: 2, emoji: "💻", name: "MacBook Air M2", price: "₦1,200,000", stock: "in" },
-  { id: 3, emoji: "🎧", name: "AirPods Pro 2nd Gen", price: "₦180,000", stock: "in" },
-  { id: 4, emoji: "⌚", name: "Apple Watch Series 9", price: "₦320,000", stock: "low" },
-  { id: 5, emoji: "🖥️", name: "Samsung 32\" Monitor", price: "₦145,000", stock: "out" },
-  { id: 6, emoji: "🔌", name: "MagSafe Charger 30W", price: "₦25,000", stock: "in" },
+  { id: "1", emoji: "📱", name: "iPhone 15 Pro Max", price: "₦850,000", stock: "in" },
+  { id: "2", emoji: "💻", name: "MacBook Air M2", price: "₦1,200,000", stock: "in" },
+  { id: "3", emoji: "🎧", name: "AirPods Pro 2nd Gen", price: "₦180,000", stock: "in" },
+  { id: "4", emoji: "⌚", name: "Apple Watch Series 9", price: "₦320,000", stock: "low" },
+  { id: "5", emoji: "🖥️", name: "Samsung 32\" Monitor", price: "₦145,000", stock: "out" },
+  { id: "6", emoji: "🔌", name: "MagSafe Charger 30W", price: "₦25,000", stock: "in" },
 ];
 
 export const DEMO_BUSINESS_SETTINGS: BusinessSettings = {
@@ -274,10 +274,10 @@ export const DEMO_BUSINESS_SETTINGS: BusinessSettings = {
 };
 
 export const DEMO_TRIGGER_RULES: TriggerRule[] = [
-  { id: 1, keyword: "price", action: "Send pricing catalog" },
-  { id: 2, keyword: "complaint", action: "Escalate to owner" },
-  { id: 3, keyword: "delivery", action: "Send tracking info" },
-  { id: 4, keyword: "return", action: "Share return policy" },
+  { id: "1", keyword: "price", action: "Send pricing catalog" },
+  { id: "2", keyword: "complaint", action: "Escalate to owner" },
+  { id: "3", keyword: "delivery", action: "Send tracking info" },
+  { id: "4", keyword: "return", action: "Share return policy" },
 ];
 
 export const DEMO_CREDITS_BALANCE = 4820;
