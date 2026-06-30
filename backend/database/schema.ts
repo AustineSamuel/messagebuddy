@@ -32,6 +32,33 @@ export class AuthAccessTokenSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class ChatRuleSchema extends BaseModel {
+  static $columns = ['aiAutoReply', 'chatId', 'createdAt', 'customInstructions', 'id', 'notes', 'notifyOnReply', 'rule', 'sendCatalog', 'updatedAt', 'userId'] as const
+  $columns = ChatRuleSchema.$columns
+  @column()
+  declare aiAutoReply: boolean
+  @column()
+  declare chatId: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare customInstructions: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare notes: string | null
+  @column()
+  declare notifyOnReply: boolean
+  @column()
+  declare rule: string
+  @column()
+  declare sendCatalog: boolean
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare userId: number
+}
+
 export class SessionSchema extends BaseModel {
   static $columns = ['data', 'expiresAt', 'id', 'userId'] as const
   $columns = SessionSchema.$columns

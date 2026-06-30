@@ -3,7 +3,7 @@ import { MessageMedia } from '../lib/wwebjs.js'
 import type WAWebJS from 'whatsapp-web.js'
 import whatsAppClientManager from './whatsapp_client_manager.js'
 import {
-  serializeChat,
+  serializeChatForApi,
   serializeContact,
   serializeGroupChat,
   serializeId,
@@ -67,13 +67,13 @@ export default class WhatsAppService {
   static async getChats(userId: number) {
     const client = await whatsAppClientManager.getReadyClient(userId)
     const chats = await client.getChats()
-    return Promise.all(chats.map((c) => (c.isGroup ? serializeGroupChat(c) : serializeChat(c))))
+    return Promise.all(chats.map((c) => (c.isGroup ? serializeGroupChat(c) : serializeChatForApi(c))))
   }
 
   static async getChatById(userId: number, chatId: string) {
     const client = await whatsAppClientManager.getReadyClient(userId)
     const chat = await client.getChatById(chatId)
-    return chat.isGroup ? serializeGroupChat(chat) : serializeChat(chat)
+    return chat.isGroup ? serializeGroupChat(chat) : serializeChatForApi(chat)
   }
 
   static async archiveChat(userId: number, chatId: string) {
@@ -140,9 +140,41 @@ export default class WhatsAppService {
     chatId: string,
     options?: { limit?: number; fromMe?: boolean }
   ) {
-    const chat = await this.getChatEntity(userId, chatId)
-    const messages = await chat.fetchMessages(options ?? {})
-    return messages.map(serializeMessage)
+    const client = await whatsAppClientManager.getReadyClient(userId)
+    const normalizedId = decodeURIComponent(chatId)
+
+    const chat = await client.getChatById(normalizedId)
+    if (!chat) {
+      throw new Error(`Chat not found: ${normalizedId}`)
+    }
+
+    const requestedLimit = Math.min(Math.max(options?.limit ?? 30, 1), 100)
+    const searchOptions: { limit: number; fromMe?: boolean } = { limit: requestedLimit }
+    if (options?.fromMe !== undefined) {
+      searchOptions.fromMe = options.fromMe
+    }
+
+    try {
+      const messages = await chat.fetchMessages(searchOptions)
+      return messages.map(serializeMessage)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      const isTimeout =
+        message.includes('timed out') ||
+        message.includes('protocolTimeout') ||
+        message.includes('Timeout')
+
+      // Retry with fewer messages — pagination via loadEarlierMsgs is slow on large chats.
+      if (isTimeout && requestedLimit > 15) {
+        const fallback = await chat.fetchMessages({
+          ...searchOptions,
+          limit: 15,
+        })
+        return fallback.map(serializeMessage)
+      }
+
+      throw error
+    }
   }
 
   static async getPinnedMessages(userId: number, chatId: string) {
@@ -634,7 +666,9 @@ export default class WhatsAppService {
   static async getChatsByLabelId(userId: number, labelId: string) {
     const client = await whatsAppClientManager.getReadyClient(userId)
     const chats = await client.getChatsByLabelId(labelId)
-    return Promise.all(chats.map(serializeChat))
+    return Promise.all(
+      chats.map((c) => (c.isGroup ? serializeGroupChat(c) : serializeChatForApi(c)))
+    )
   }
 
   static async addOrRemoveLabels(userId: number, labelIds: string[], chatIds: string[]) {
@@ -747,7 +781,12 @@ export default class WhatsAppService {
 
   private static async getChatEntity(userId: number, chatId: string) {
     const client = await whatsAppClientManager.getReadyClient(userId)
-    return client.getChatById(chatId)
+    const normalizedId = decodeURIComponent(chatId)
+    const chat = await client.getChatById(normalizedId)
+    if (!chat) {
+      throw new Error(`Chat not found: ${normalizedId}`)
+    }
+    return chat
   }
 
   private static async getGroupEntity(userId: number, groupId: string): Promise<WAWebJS.GroupChat> {

@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import { Avatar, IconButton } from "@/dashboard/components/ui/primitives";
 import MessageBubble from "./MessageBubble";
 import EditMessageModal from "./EditMessageModal";
+import { shouldShowSenderHeader } from "@/dashboard/lib/whatsapp-mappers";
+import { ChatAreaSkeleton } from "@/dashboard/components/ui/WhatsAppSkeleton";
 import type { Contact, Conversation, Message } from "@/dashboard/types";
 
 interface ChatAreaProps {
@@ -48,6 +50,7 @@ export default function ChatArea({
 
   const messages = conversation?.messages ?? [];
   const aiActive = contact ? contact.rule !== "never" : false;
+  const isGroup = contact?.isGroup ?? false;
 
   if (!contact) {
     return (
@@ -55,6 +58,10 @@ export default function ChatArea({
         Select a chat to start messaging
       </div>
     );
+  }
+
+  if (loadingMessages && messages.length === 0) {
+    return <ChatAreaSkeleton />;
   }
 
   return (
@@ -191,20 +198,24 @@ export default function ChatArea({
           </span>
         </div>
 
-        {loadingMessages ? (
-          <div style={{ textAlign: "center", color: "var(--text-2)", fontSize: 13, marginTop: 40 }}>
-            Loading messages…
+        {loadingMessages && messages.length > 0 ? (
+          <div style={{ textAlign: "center", color: "var(--text-2)", fontSize: 12, padding: 8 }}>
+            Loading more…
           </div>
-        ) : messages.length === 0 ? (
+        ) : null}
+
+        {!loadingMessages && messages.length === 0 ? (
           <div style={{ textAlign: "center", color: "var(--text-2)", fontSize: 13, marginTop: 40 }}>
             <div style={{ fontSize: 32, marginBottom: 8 }}>💬</div>
             No messages yet. Start the conversation!
           </div>
         ) : (
-          messages.map((msg) => (
+          messages.map((msg, index) => (
             <MessageBubble
               key={msg.id}
               message={msg}
+              isGroup={isGroup}
+              showSender={shouldShowSenderHeader(msg, messages[index - 1], isGroup)}
               onEdit={msg.aiGenerated ? setEditingMsg : undefined}
             />
           ))

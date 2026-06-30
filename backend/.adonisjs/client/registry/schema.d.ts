@@ -1411,4 +1411,64 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/whatsapp_settings_controller').default['backgroundSync']>>>
     }
   }
+  'chatRules.chat_rules.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/chat-rules'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/chat_rules_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/chat_rules_controller').default['index']>>>
+    }
+  }
+  'chatRules.chat_rules.show_default': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/chat-rules/default'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/chat_rules_controller').default['showDefault']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/chat_rules_controller').default['showDefault']>>>
+    }
+  }
+  'chatRules.chat_rules.update_default': {
+    methods: ["PUT"]
+    pattern: '/api/v1/chat-rules/default'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/chat_rules_controller').default['updateDefault']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/chat_rules_controller').default['updateDefault']>>>
+    }
+  }
+  'chatRules.chat_rules.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/chat-rules/:chatId'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { chatId: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/chat_rules_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/chat_rules_controller').default['show']>>>
+    }
+  }
+  'chatRules.chat_rules.update': {
+    methods: ["PUT"]
+    pattern: '/api/v1/chat-rules/:chatId'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { chatId: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/chat_rules_controller').default['update']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/chat_rules_controller').default['update']>>>
+    }
+  }
 }

@@ -9,8 +9,15 @@ import DashboardAnalytics from "@/dashboard/components/dashboard/DashboardAnalyt
 import ContactsPage from "@/dashboard/components/contacts/ContactsPage";
 import SettingsPage from "@/dashboard/components/settings/SettingsPage";
 import WhatsAppConnectScreen from "@/dashboard/components/whatsapp/WhatsAppConnectScreen";
+import WhatsAppSyncingScreen from "@/dashboard/components/whatsapp/WhatsAppSyncingScreen";
 import { useDashboardStore } from "@/dashboard/hooks/useDashboardStore";
 import { useWhatsAppSession } from "@/dashboard/hooks/useWhatsAppSession";
+import DismissibleAlert from "@/dashboard/components/ui/DismissibleAlert";
+import {
+  ConnectScreenSkeleton,
+  DashboardWorkspaceSkeleton,
+  SettingsPageSkeleton,
+} from "@/dashboard/components/ui/WhatsAppSkeleton";
 import { DEMO_DAILY_CREDITS } from "@/dashboard/data/demo";
 
 interface DashboardLayoutProps {
@@ -53,15 +60,20 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
   const contactsForPage =
     store.waContacts.length > 0 ? store.waContacts : store.contacts;
 
-  if (wa.loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-zinc-200">
-        Loading WhatsApp workspace…
-      </div>
-    );
+  const sessionStatus = wa.session?.status ?? "disconnected";
+  const isSessionBooting =
+    sessionStatus === "initializing" || sessionStatus === "authenticated";
+
+  if (wa.loading && !wa.session) {
+    return <ConnectScreenSkeleton />;
   }
 
   if (!wa.isReady) {
+    if (wa.connecting || isSessionBooting) {
+      return (
+        <WhatsAppSyncingScreen session={wa.session} onRefresh={wa.refresh} />
+      );
+    }
     return (
       <WhatsAppConnectScreen
         session={wa.session}
@@ -69,7 +81,16 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
         error={wa.error}
         onConnect={wa.connect}
         onRefresh={wa.refresh}
+        onDismissError={wa.dismissError}
       />
+    );
+  }
+
+  if (store.workspaceLoading && store.activeView === "chats") {
+    return (
+      <div className="relative h-screen w-full overflow-hidden" style={{ background: "var(--bg-base)" }}>
+        <DashboardWorkspaceSkeleton />
+      </div>
     );
   }
 
@@ -112,15 +133,13 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
             top: 12,
             transform: "translateX(-50%)",
             zIndex: 30,
-            background: "rgba(239,68,68,0.15)",
-            border: "1px solid rgba(239,68,68,0.4)",
-            color: "#fecaca",
-            fontSize: 12,
-            padding: "8px 14px",
-            borderRadius: 99,
+            width: "min(520px, calc(100% - 32px))",
           }}
         >
-          {store.syncError}
+          <DismissibleAlert
+            message={store.syncError}
+            onDismiss={store.dismissSyncError}
+          />
         </div>
       ) : null}
 
@@ -162,6 +181,11 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
                 onAddTriggerRule={store.addTriggerRule}
                 onRemoveTriggerRule={store.removeTriggerRule}
                 creditsBalance={store.creditsBalance}
+                chatSettings={store.activeChatSettings}
+                loadingSettings={store.loadingChatSettings}
+                savingSettings={store.savingChatSettings}
+                onSaveSettings={store.saveActiveContactSettings}
+                onRuleChange={store.setContactRule}
               />
             ) : null}
           </>
@@ -176,14 +200,21 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
         )}
 
         {store.activeView === "settings" && (
+          store.loadingRules ? (
+            <SettingsPageSkeleton />
+          ) : (
           <SettingsPage
             settings={store.settings}
             products={store.products}
             triggerRules={store.triggerRules}
+            defaultChatSettings={store.defaultChatSettings}
+            savingDefaultSettings={store.savingDefaultSettings}
+            onSaveDefaultChatSettings={store.saveDefaultChatSettings}
             onUpdateSettings={store.updateSettings}
             onAddProduct={store.addProduct}
             onRemoveProduct={store.removeProduct}
           />
+          )
         )}
       </div>
     </div>

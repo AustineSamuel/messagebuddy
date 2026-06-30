@@ -100,7 +100,7 @@ export default class WhatsappChatsController {
       const { limit, fromMe } = ctx.request.qs()
       return ctx.serialize(
         await WhatsAppService.fetchChatMessages(uid(ctx), ctx.params.chatId, {
-          limit: limit ? Number(limit) : undefined,
+          limit: limit ? Number(limit) : 30,
           fromMe: fromMe === 'true' ? true : fromMe === 'false' ? false : undefined,
         })
       )

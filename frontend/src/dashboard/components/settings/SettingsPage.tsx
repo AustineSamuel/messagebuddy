@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FormInput,
   FormTextarea,
@@ -10,12 +10,16 @@ import {
   AddBtn,
   Badge,
 } from "@/dashboard/components/ui/primitives";
-import type { BusinessSettings, Product, TriggerRule } from "@/dashboard/types";
+import type { ChatRuleSettings } from "@/app/services/chat-rules";
+import type { BusinessSettings, ContactRule, Product, TriggerRule } from "@/dashboard/types";
 
 interface SettingsPageProps {
   settings: BusinessSettings;
   products: Product[];
   triggerRules: TriggerRule[];
+  defaultChatSettings: ChatRuleSettings | null;
+  savingDefaultSettings?: boolean;
+  onSaveDefaultChatSettings: (data: Partial<Omit<ChatRuleSettings, "chatId">>) => Promise<void>;
   onUpdateSettings: (patch: Partial<BusinessSettings>) => void;
   onAddProduct: (p: Omit<Product, "id">) => void;
   onRemoveProduct: (id: number) => void;
@@ -53,16 +57,36 @@ export default function SettingsPage({
   settings,
   products,
   triggerRules,
+  defaultChatSettings,
+  savingDefaultSettings,
+  onSaveDefaultChatSettings,
   onUpdateSettings,
   onAddProduct,
   onRemoveProduct,
 }: SettingsPageProps) {
   const [local, setLocal] = useState(settings);
+  const [defaultRule, setDefaultRule] = useState<ContactRule>("default");
+  const [defaultNotes, setDefaultNotes] = useState("");
+  const [defaultAiReply, setDefaultAiReply] = useState(true);
+  const [defaultSendCatalog, setDefaultSendCatalog] = useState(false);
+  const [defaultNotify, setDefaultNotify] = useState(true);
+  const [defaultInstructions, setDefaultInstructions] = useState("");
   const [aiEnabled, setAiEnabled] = useState(true);
   const [outsideHours, setOutsideHours] = useState(true);
   const [notifyFail, setNotifyFail] = useState(true);
   const [sendReceipts, setSendReceipts] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [defaultSaved, setDefaultSaved] = useState(false);
+
+  useEffect(() => {
+    if (!defaultChatSettings) return;
+    setDefaultRule(defaultChatSettings.rule);
+    setDefaultNotes(defaultChatSettings.notes ?? "");
+    setDefaultAiReply(defaultChatSettings.aiAutoReply);
+    setDefaultSendCatalog(defaultChatSettings.sendCatalog);
+    setDefaultNotify(defaultChatSettings.notifyOnReply);
+    setDefaultInstructions(defaultChatSettings.customInstructions ?? "");
+  }, [defaultChatSettings]);
 
   const set = (key: keyof BusinessSettings) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setLocal((prev) => ({ ...prev, [key]: e.target.value }));
@@ -72,6 +96,19 @@ export default function SettingsPage({
     onUpdateSettings(local);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleSaveDefaultRules = async () => {
+    await onSaveDefaultChatSettings({
+      rule: defaultRule,
+      notes: defaultNotes.trim() || null,
+      aiAutoReply: defaultAiReply,
+      sendCatalog: defaultSendCatalog,
+      notifyOnReply: defaultNotify,
+      customInstructions: defaultInstructions.trim() || null,
+    });
+    setDefaultSaved(true);
+    setTimeout(() => setDefaultSaved(false), 2000);
   };
 
   return (
@@ -135,6 +172,73 @@ export default function SettingsPage({
             Save Profile
           </PrimaryBtn>
         </div>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Default chat rules"
+        subtitle="Applied to any chat without its own saved rules (stored per your account)"
+      >
+        <SectionLabel>Default reply rule</SectionLabel>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
+          {(["default", "always", "never", "custom"] as ContactRule[]).map((rule) => (
+            <button
+              key={rule}
+              type="button"
+              onClick={() => setDefaultRule(rule)}
+              style={{
+                padding: "7px 14px",
+                borderRadius: 99,
+                border: defaultRule === rule ? "1px solid var(--wa-green)" : "1px solid var(--border-2)",
+                background: defaultRule === rule ? "var(--wa-green-glow)" : "transparent",
+                color: defaultRule === rule ? "var(--wa-green)" : "var(--text-2)",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+                textTransform: "capitalize",
+              }}
+            >
+              {rule}
+            </button>
+          ))}
+        </div>
+
+        <div
+          style={{
+            background: "var(--bg-2)",
+            border: "1px solid var(--border-1)",
+            borderRadius: "var(--radius-sm)",
+            padding: "4px 12px",
+            marginBottom: 14,
+          }}
+        >
+          <Toggle label="AI auto-reply (default)" checked={defaultAiReply} onChange={setDefaultAiReply} />
+          <Toggle label="Send product catalog (default)" checked={defaultSendCatalog} onChange={setDefaultSendCatalog} />
+          <Toggle label="Notify on reply (default)" checked={defaultNotify} onChange={setDefaultNotify} />
+        </div>
+
+        <FormTextarea
+          label="Default notes"
+          value={defaultNotes}
+          onChange={(e) => setDefaultNotes(e.target.value)}
+          placeholder="Notes applied when a chat has no custom notes..."
+          style={{ minHeight: 60, marginBottom: 14 }}
+        />
+
+        <FormTextarea
+          label="Default AI instructions"
+          value={defaultInstructions}
+          onChange={(e) => setDefaultInstructions(e.target.value)}
+          placeholder="Default custom instructions for chats using the default rule..."
+          style={{ minHeight: 90, marginBottom: 14 }}
+        />
+
+        <PrimaryBtn
+          variant="green"
+          onClick={() => void handleSaveDefaultRules()}
+          style={{ opacity: savingDefaultSettings ? 0.7 : 1 }}
+        >
+          {savingDefaultSettings ? "Saving…" : defaultSaved ? "Default rules saved ✓" : "Save default chat rules"}
+        </PrimaryBtn>
       </SettingsSection>
 
       {/* AI Writing Rules */}

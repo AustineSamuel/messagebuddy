@@ -4,10 +4,17 @@ import type { Message } from "@/dashboard/types";
 
 interface MessageBubbleProps {
   message: Message;
+  showSender?: boolean;
+  isGroup?: boolean;
   onEdit?: (msg: Message) => void;
 }
 
-export default function MessageBubble({ message, onEdit }: MessageBubbleProps) {
+export default function MessageBubble({
+  message,
+  showSender = false,
+  isGroup = false,
+  onEdit,
+}: MessageBubbleProps) {
   const isOut = message.direction === "out";
 
   return (
@@ -17,12 +24,52 @@ export default function MessageBubble({ message, onEdit }: MessageBubbleProps) {
         display: "flex",
         flexDirection: "column",
         alignItems: isOut ? "flex-end" : "flex-start",
-        maxWidth: "70%",
+        maxWidth: "72%",
         alignSelf: isOut ? "flex-end" : "flex-start",
-        gap: 3,
+        gap: 4,
       }}
     >
-      {/* Bubble */}
+      {showSender && message.senderLabel ? (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            marginBottom: 1,
+            paddingLeft: isOut ? 0 : 2,
+            paddingRight: isOut ? 2 : 0,
+            alignSelf: isOut ? "flex-end" : "flex-start",
+          }}
+        >
+          {!isOut && isGroup ? (
+            <span
+              style={{
+                width: 7,
+                height: 7,
+                borderRadius: "50%",
+                background: message.senderColor ?? "var(--wa-green)",
+                flexShrink: 0,
+              }}
+            />
+          ) : null}
+          <span
+            style={{
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: "0.02em",
+              color: isOut
+                ? "var(--text-2)"
+                : isGroup
+                  ? message.senderColor ?? "var(--wa-green)"
+                  : "var(--text-1)",
+              lineHeight: 1.2,
+            }}
+          >
+            {message.senderLabel}
+          </span>
+        </div>
+      ) : null}
+
       <div
         style={{
           padding: "9px 13px",
@@ -61,7 +108,6 @@ export default function MessageBubble({ message, onEdit }: MessageBubbleProps) {
         )}
       </div>
 
-      {/* Meta row */}
       <div
         style={{
           display: "flex",

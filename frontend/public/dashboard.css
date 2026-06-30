@@ -294,3 +294,25 @@ textarea,
 select {
   font-family: var(--font-sans);
 }
+
+/* ── Skeleton loaders ── */
+@keyframes wa-skeleton-pulse {
+  0% { opacity: 0.45; }
+  50% { opacity: 0.9; }
+  100% { opacity: 0.45; }
+}
+
+.wa-skeleton {
+  background: linear-gradient(90deg, var(--bg-3) 0%, var(--bg-4) 50%, var(--bg-3) 100%);
+  background-size: 200% 100%;
+  animation: wa-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes wa-progress-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+
+.wa-progress-indeterminate {
+  animation: wa-progress-slide 1.2s ease-in-out infinite;
+}

@@ -153,4 +153,13 @@ export interface ApiDefinition {
       backgroundSync: typeof routes['whatsapp.whatsapp_settings.background_sync']
     }
   }
+  chatRules: {
+    chatRules: {
+      index: typeof routes['chatRules.chat_rules.index']
+      showDefault: typeof routes['chatRules.chat_rules.show_default']
+      updateDefault: typeof routes['chatRules.chat_rules.update_default']
+      show: typeof routes['chatRules.chat_rules.show']
+      update: typeof routes['chatRules.chat_rules.update']
+    }
+  }
 }

@@ -121,6 +121,11 @@ export type ScannedRoutes = {
     'whatsapp.whatsapp_settings.auto_download_photos': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_settings.auto_download_videos': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_settings.background_sync': { paramsTuple?: []; params?: {} }
+    'chatRules.chat_rules.index': { paramsTuple?: []; params?: {} }
+    'chatRules.chat_rules.show_default': { paramsTuple?: []; params?: {} }
+    'chatRules.chat_rules.update_default': { paramsTuple?: []; params?: {} }
+    'chatRules.chat_rules.show': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
+    'chatRules.chat_rules.update': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
   }
   GET: {
     'profile.profile.show': { paramsTuple?: []; params?: {} }
@@ -156,6 +161,9 @@ export type ScannedRoutes = {
     'whatsapp.whatsapp_labels.chats': { paramsTuple: [ParamValue]; params: {'labelId': ParamValue} }
     'whatsapp.whatsapp_broadcasts.index': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_broadcasts.show': { paramsTuple: [ParamValue]; params: {'contactId': ParamValue} }
+    'chatRules.chat_rules.index': { paramsTuple?: []; params?: {} }
+    'chatRules.chat_rules.show_default': { paramsTuple?: []; params?: {} }
+    'chatRules.chat_rules.show': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
   }
   HEAD: {
     'profile.profile.show': { paramsTuple?: []; params?: {} }
@@ -191,6 +199,9 @@ export type ScannedRoutes = {
     'whatsapp.whatsapp_labels.chats': { paramsTuple: [ParamValue]; params: {'labelId': ParamValue} }
     'whatsapp.whatsapp_broadcasts.index': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_broadcasts.show': { paramsTuple: [ParamValue]; params: {'contactId': ParamValue} }
+    'chatRules.chat_rules.index': { paramsTuple?: []; params?: {} }
+    'chatRules.chat_rules.show_default': { paramsTuple?: []; params?: {} }
+    'chatRules.chat_rules.show': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
   }
   POST: {
     'auth.new_account.store': { paramsTuple?: []; params?: {} }
@@ -268,6 +279,8 @@ export type ScannedRoutes = {
   PUT: {
     'whatsapp.whatsapp_chats.set_labels': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_chats.set_customer_note': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
+    'chatRules.chat_rules.update_default': { paramsTuple?: []; params?: {} }
+    'chatRules.chat_rules.update': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
   }
   PATCH: {
     'whatsapp.whatsapp_messages.update': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }

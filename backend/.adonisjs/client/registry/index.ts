@@ -708,6 +708,36 @@ const routes = {
     tokens: [{"old":"/api/v1/whatsapp/settings/background-sync","type":0,"val":"api","end":""},{"old":"/api/v1/whatsapp/settings/background-sync","type":0,"val":"v1","end":""},{"old":"/api/v1/whatsapp/settings/background-sync","type":0,"val":"whatsapp","end":""},{"old":"/api/v1/whatsapp/settings/background-sync","type":0,"val":"settings","end":""},{"old":"/api/v1/whatsapp/settings/background-sync","type":0,"val":"background-sync","end":""}],
     types: placeholder as Registry['whatsapp.whatsapp_settings.background_sync']['types'],
   },
+  'chatRules.chat_rules.index': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/chat-rules',
+    tokens: [{"old":"/api/v1/chat-rules","type":0,"val":"api","end":""},{"old":"/api/v1/chat-rules","type":0,"val":"v1","end":""},{"old":"/api/v1/chat-rules","type":0,"val":"chat-rules","end":""}],
+    types: placeholder as Registry['chatRules.chat_rules.index']['types'],
+  },
+  'chatRules.chat_rules.show_default': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/chat-rules/default',
+    tokens: [{"old":"/api/v1/chat-rules/default","type":0,"val":"api","end":""},{"old":"/api/v1/chat-rules/default","type":0,"val":"v1","end":""},{"old":"/api/v1/chat-rules/default","type":0,"val":"chat-rules","end":""},{"old":"/api/v1/chat-rules/default","type":0,"val":"default","end":""}],
+    types: placeholder as Registry['chatRules.chat_rules.show_default']['types'],
+  },
+  'chatRules.chat_rules.update_default': {
+    methods: ["PUT"],
+    pattern: '/api/v1/chat-rules/default',
+    tokens: [{"old":"/api/v1/chat-rules/default","type":0,"val":"api","end":""},{"old":"/api/v1/chat-rules/default","type":0,"val":"v1","end":""},{"old":"/api/v1/chat-rules/default","type":0,"val":"chat-rules","end":""},{"old":"/api/v1/chat-rules/default","type":0,"val":"default","end":""}],
+    types: placeholder as Registry['chatRules.chat_rules.update_default']['types'],
+  },
+  'chatRules.chat_rules.show': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/chat-rules/:chatId',
+    tokens: [{"old":"/api/v1/chat-rules/:chatId","type":0,"val":"api","end":""},{"old":"/api/v1/chat-rules/:chatId","type":0,"val":"v1","end":""},{"old":"/api/v1/chat-rules/:chatId","type":0,"val":"chat-rules","end":""},{"old":"/api/v1/chat-rules/:chatId","type":1,"val":"chatId","end":""}],
+    types: placeholder as Registry['chatRules.chat_rules.show']['types'],
+  },
+  'chatRules.chat_rules.update': {
+    methods: ["PUT"],
+    pattern: '/api/v1/chat-rules/:chatId',
+    tokens: [{"old":"/api/v1/chat-rules/:chatId","type":0,"val":"api","end":""},{"old":"/api/v1/chat-rules/:chatId","type":0,"val":"v1","end":""},{"old":"/api/v1/chat-rules/:chatId","type":0,"val":"chat-rules","end":""},{"old":"/api/v1/chat-rules/:chatId","type":1,"val":"chatId","end":""}],
+    types: placeholder as Registry['chatRules.chat_rules.update']['types'],
+  },
 } as const satisfies Record<string, AdonisEndpoint>
 
 export { routes }

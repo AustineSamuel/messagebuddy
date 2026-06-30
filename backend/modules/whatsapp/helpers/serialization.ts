@@ -8,6 +8,63 @@ export function serializeId(id: unknown): string {
   return String(id)
 }
 
+function idToDisplayName(chatId: string) {
+  const local = chatId.split('@')[0] ?? chatId
+  return local.replace(/\D/g, '').length >= 6 ? local.replace(/\D/g, '') : local
+}
+
+type SerializedMessage = {
+  id: string
+  body: string
+  type: string
+  timestamp: number
+  from: string
+  to: string
+  fromMe: boolean
+  author: string | null
+  hasMedia: boolean
+  hasQuotedMsg: boolean
+  isForwarded: boolean
+  isStarred: boolean
+  isStatus: boolean
+  ack: number
+  deviceType: string
+  mentionedIds?: string[]
+  links?: unknown
+  location?: unknown
+  vCards?: unknown
+}
+
+function messagePreviewBody(message: { body?: string; type?: string; hasMedia?: boolean }) {
+  if (message.body?.trim()) return message.body.trim()
+  if (message.hasMedia) return `[${message.type || 'media'}]`
+  return `[${message.type || 'message'}]`
+}
+
+/** Resolve display title per wwebjs Chat + Contact APIs (formattedTitle is often empty for DMs). */
+export async function resolveChatDisplayName(chat: Chat, chatId: string) {
+  const title = chat.name?.trim()
+  if (title) return title
+
+  if (!chat.isGroup) {
+    try {
+      const contact = await chat.getContact()
+      const fromContact =
+        contact.name?.trim() ||
+        contact.pushname?.trim() ||
+        contact.shortName?.trim() ||
+        contact.number?.trim() ||
+        ''
+      if (fromContact) return fromContact
+    } catch {
+      // contact lookup is best-effort
+    }
+  }
+
+  if (chat.isGroup) return 'Group chat'
+  return idToDisplayName(chatId) || chatId
+}
+
 export function serializeContact(contact: Contact) {
   return {
     id: serializeId(contact.id),
@@ -26,8 +83,8 @@ export function serializeContact(contact: Contact) {
   }
 }
 
-export function serializeMessage(message: Message) {
-  return {
+export function serializeMessage(message: Message): SerializedMessage {
+  const serialized = {
     id: serializeId(message.id),
     body: message.body,
     type: message.type,
@@ -35,6 +92,7 @@ export function serializeMessage(message: Message) {
     from: message.from,
     to: message.to,
     fromMe: message.fromMe,
+    author: message.author ?? null,
     hasMedia: message.hasMedia,
     hasQuotedMsg: message.hasQuotedMsg,
     isForwarded: message.isForwarded,
@@ -47,12 +105,20 @@ export function serializeMessage(message: Message) {
     location: message.location,
     vCards: message.vCards,
   }
+
+  return {
+    ...serialized,
+    body: messagePreviewBody(serialized),
+  }
 }
 
 export function serializeChat(chat: Chat) {
+  const chatId = serializeId(chat.id)
+  const lastMessage = chat.lastMessage ? serializeMessage(chat.lastMessage) : null
+
   return {
-    id: serializeId(chat.id),
-    name: chat.name,
+    id: chatId,
+    name: chat.name ?? null,
     isGroup: chat.isGroup,
     isReadOnly: chat.isReadOnly,
     unreadCount: chat.unreadCount,
@@ -61,12 +127,18 @@ export function serializeChat(chat: Chat) {
     pinned: chat.pinned,
     isMuted: chat.isMuted,
     muteExpiration: chat.muteExpiration,
-    lastMessage: chat.lastMessage ? serializeMessage(chat.lastMessage) : null,
+    lastMessage,
   }
 }
 
+export async function serializeChatForApi(chat: Chat) {
+  const base = serializeChat(chat)
+  const name = await resolveChatDisplayName(chat, base.id)
+  return { ...base, name }
+}
+
 export async function serializeGroupChat(group: Chat) {
-  const base = serializeChat(group)
+  const base = await serializeChatForApi(group)
   const g = group as Chat & {
     description?: string
     owner?: unknown
@@ -76,6 +148,7 @@ export async function serializeGroupChat(group: Chat) {
 
   return {
     ...base,
+    name: base.name || 'Group chat',
     description: g.description ?? null,
     owner: g.owner ? serializeId(g.owner) : null,
     createdAt: g.createdAt ?? null,

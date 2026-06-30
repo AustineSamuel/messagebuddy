@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import DismissibleAlert from "@/dashboard/components/ui/DismissibleAlert";
 import type { WhatsAppSession } from "@/whatsappjs-services/session";
 
 type Props = {
@@ -8,6 +10,7 @@ type Props = {
   error: string | null;
   onConnect: () => void;
   onRefresh: () => void;
+  onDismissError?: () => void;
 };
 
 export default function WhatsAppConnectScreen({
@@ -16,8 +19,12 @@ export default function WhatsAppConnectScreen({
   error,
   onConnect,
   onRefresh,
+  onDismissError,
 }: Props) {
   const status = session?.status ?? "disconnected";
+  const [dismissedSessionError, setDismissedSessionError] = useState(false);
+
+  const showSessionError = session?.lastError && !dismissedSessionError;
 
   return (
     <div
@@ -77,13 +84,18 @@ export default function WhatsAppConnectScreen({
         </div>
 
         {error ? (
-          <p style={{ color: "var(--red)", fontSize: 13, marginBottom: 12 }}>{error}</p>
+          <div style={{ marginBottom: 12 }}>
+            <DismissibleAlert message={error} onDismiss={() => onDismissError?.()} />
+          </div>
         ) : null}
 
-        {session?.lastError ? (
-          <p style={{ color: "var(--red)", fontSize: 12, marginBottom: 12 }}>
-            {session.lastError}
-          </p>
+        {showSessionError ? (
+          <div style={{ marginBottom: 12 }}>
+            <DismissibleAlert
+              message={session!.lastError!}
+              onDismiss={() => setDismissedSessionError(true)}
+            />
+          </div>
         ) : null}
 
         {session?.loadingPercent !== null && session?.loadingPercent !== undefined ? (

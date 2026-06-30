@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ChatListSkeleton } from "@/dashboard/components/ui/WhatsAppSkeleton";
 import { Avatar, Badge } from "@/dashboard/components/ui/primitives";
 import type { Contact } from "@/dashboard/types";
 
@@ -31,6 +32,10 @@ export default function ChatList({
   const filtered = contacts.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  if (loading && contacts.length === 0) {
+    return <ChatListSkeleton />;
+  }
 
   return (
     <div

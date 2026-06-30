@@ -7,6 +7,8 @@ import { clearAuthToken } from "../lib/auth-token";
 import { logout } from "../services/auth";
 import { getProfile, type User } from "../services/users";
 import DashboardLayout from "@/dashboard/components/dashboard/DashboardLayout";
+import DismissibleAlert from "@/dashboard/components/ui/DismissibleAlert";
+import { PageLoadingSkeleton } from "@/dashboard/components/ui/WhatsAppSkeleton";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -51,19 +53,24 @@ export default function DashboardPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-zinc-200">
-        Loading your workspace...
-      </div>
-    );
+    return <PageLoadingSkeleton />;
   }
 
   if (error || !user) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-zinc-950 px-6 text-center text-zinc-200">
-        <p className="max-w-sm text-sm text-zinc-300">
-          {error || "We couldn't load your workspace."}
-        </p>
+        {error ? (
+          <div className="w-full max-w-md">
+            <DismissibleAlert
+              message={error}
+              onDismiss={() => setError(null)}
+            />
+          </div>
+        ) : (
+          <p className="max-w-sm text-sm text-zinc-300">
+            We couldn&apos;t load your workspace.
+          </p>
+        )}
         <a
           href="/login"
           className="rounded-full bg-emerald-400 px-5 py-2 text-sm font-semibold text-emerald-950"

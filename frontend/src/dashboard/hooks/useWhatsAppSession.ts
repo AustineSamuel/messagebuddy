@@ -45,11 +45,6 @@ export function useWhatsAppSession() {
   }, [refresh]);
 
   useEffect(() => {
-    if (pollRef.current) {
-      clearInterval(pollRef.current);
-      pollRef.current = null;
-    }
-
     if (
       session?.status === "ready" ||
       session?.status === "disconnected" ||
@@ -58,9 +53,14 @@ export function useWhatsAppSession() {
       return;
     }
 
+    const intervalMs =
+      session?.status === "initializing" || session?.status === "authenticated"
+        ? 1000
+        : 2500;
+
     pollRef.current = setInterval(() => {
       void refresh();
-    }, 2500);
+    }, intervalMs);
 
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
@@ -68,6 +68,8 @@ export function useWhatsAppSession() {
   }, [session?.status, refresh]);
 
   const isReady = session?.status === "ready";
+
+  const dismissError = useCallback(() => setError(null), []);
 
   return {
     session,
@@ -77,5 +79,6 @@ export function useWhatsAppSession() {
     isReady,
     connect,
     refresh,
+    dismissError,
   };
 }

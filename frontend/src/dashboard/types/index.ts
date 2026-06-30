@@ -24,6 +24,11 @@ export interface Message {
   time: string;
   aiGenerated: boolean;
   edited?: boolean;
+  /** Display name or phone for the sender */
+  senderLabel?: string | null;
+  /** Accent color for group sender names */
+  senderColor?: string;
+  senderId?: string | null;
 }
 
 export interface Conversation {
