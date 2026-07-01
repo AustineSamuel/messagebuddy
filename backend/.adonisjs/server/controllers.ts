@@ -5,6 +5,7 @@
 
 export const controllers = {
   AccessToken: () => import('#controllers/access_token_controller'),
+  ChatRules: () => import('#controllers/chat_rules_controller'),
   FirebaseAuths: () => import('#controllers/firebase_auths_controller'),
   NewAccount: () => import('#controllers/new_account_controller'),
   Profile: () => import('#controllers/profile_controller'),
@@ -18,5 +19,4 @@ export const controllers = {
   WhatsappProfile: () => import('#controllers/whatsapp_profile_controller'),
   WhatsappSession: () => import('#controllers/whatsapp_session_controller'),
   WhatsappSettings: () => import('#controllers/whatsapp_settings_controller'),
-  ChatRules: () => import('#controllers/chat_rules_controller'),
 }

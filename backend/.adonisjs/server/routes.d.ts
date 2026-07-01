@@ -31,6 +31,7 @@ export type ScannedRoutes = {
     'whatsapp.whatsapp_chats.destroy': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_chats.messages': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_chats.pinned_messages': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
+    'whatsapp.whatsapp_chats.suggest_ai_reply': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_chats.send_message': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_chats.send_seen': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_chats.send_typing': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
@@ -219,6 +220,7 @@ export type ScannedRoutes = {
     'whatsapp.whatsapp_chats.unpin': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_chats.mark_unread': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_chats.clear_messages': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
+    'whatsapp.whatsapp_chats.suggest_ai_reply': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_chats.send_message': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_chats.send_seen': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_chats.send_typing': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }

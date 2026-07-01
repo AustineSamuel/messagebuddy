@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, unlinkSync } from 'node:fs'
 import path from 'node:path'
 import { Client as WWebClient, LocalAuth, WAState } from '../lib/wwebjs.js'
 import type { Client, WAState as WAStateType } from 'whatsapp-web.js'
+import WhatsAppAutoReplyService from './whatsapp_auto_reply_service.js'
 
 export type WhatsAppSessionStatus =
   | 'disconnected'
@@ -195,6 +196,7 @@ async function promoteToReadyIfPossible(
     session.loadingPercent = null
     session.lastError = null
     clearReadyCheck(userId)
+    attachAutoReplyListener(userId, client)
     notifyReadyWaiters(userId, client)
     return true
   } catch {
@@ -225,6 +227,10 @@ function scheduleReadyCheck(userId: number, session: WhatsAppSession, client: Cl
   }, STALE_INIT_MS)
 }
 
+function attachAutoReplyListener(userId: number, client: Client) {
+  WhatsAppAutoReplyService.attachListener(userId, client)
+}
+
 function attachClientEvents(userId: number, session: WhatsAppSession, client: Client) {
   client.on('qr', (qr) => {
     session.qr = qr
@@ -251,6 +257,7 @@ function attachClientEvents(userId: number, session: WhatsAppSession, client: Cl
     session.loadingPercent = null
     session.lastError = null
     clearReadyCheck(userId)
+    attachAutoReplyListener(userId, client)
     notifyReadyWaiters(userId, client)
   })
 

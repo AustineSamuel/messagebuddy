@@ -2,12 +2,16 @@ import type { Client } from 'whatsapp-web.js'
 import { MessageMedia } from '../lib/wwebjs.js'
 import type WAWebJS from 'whatsapp-web.js'
 import whatsAppClientManager from './whatsapp_client_manager.js'
+import ChatRulesService from '../../chat_rules/services/chat_rules_service.js'
+import AiReplyService from '#services/ai_reply_service'
+import { buildConversationHistory } from '../helpers/conversation_history.js'
 import {
   serializeChatForApi,
   serializeContact,
   serializeGroupChat,
   serializeId,
   serializeMessage,
+  resolveChatDisplayName,
 } from '../helpers/serialization.js'
 
 export default class WhatsAppService {
@@ -181,6 +185,41 @@ export default class WhatsAppService {
     const client = await whatsAppClientManager.getReadyClient(userId)
     const messages = await client.getPinnedMessages(chatId)
     return messages.map(serializeMessage)
+  }
+
+  static async suggestAiReply(userId: number, chatId: string, limit = 50) {
+    if (!AiReplyService.isConfigured()) {
+      throw new Error('AI is not configured. Set OPENAI_API_KEY on the server.')
+    }
+
+    const client = await whatsAppClientManager.getReadyClient(userId)
+    const normalizedId = decodeURIComponent(chatId)
+    const chat = await client.getChatById(normalizedId)
+    if (!chat) {
+      throw new Error(`Chat not found: ${normalizedId}`)
+    }
+
+    const { settings: rules } = await ChatRulesService.getForChat(userId, normalizedId)
+    if (rules.rule === 'never') {
+      throw new Error('AI replies are disabled for this chat.')
+    }
+
+    const historyLimit = Math.min(Math.max(limit, 1), 100)
+    const history = await buildConversationHistory(chat, { limit: historyLimit })
+    const contactLabel = await resolveChatDisplayName(chat, normalizedId).catch(() => normalizedId)
+
+    const suggestion = await AiReplyService.generateDraftReply({
+      history,
+      customInstructions: rules.customInstructions,
+      notes: rules.notes,
+      contactLabel,
+    })
+
+    if (!suggestion) {
+      throw new Error('Could not generate a reply suggestion. Try again.')
+    }
+
+    return { suggestion, messageCount: history.length }
   }
 
   static async sendChatMessage(

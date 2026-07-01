@@ -45,6 +45,7 @@ export interface ApiDefinition {
       destroy: typeof routes['whatsapp.whatsapp_chats.destroy']
       messages: typeof routes['whatsapp.whatsapp_chats.messages']
       pinnedMessages: typeof routes['whatsapp.whatsapp_chats.pinned_messages']
+      suggestAiReply: typeof routes['whatsapp.whatsapp_chats.suggest_ai_reply']
       sendMessage: typeof routes['whatsapp.whatsapp_chats.send_message']
       sendSeen: typeof routes['whatsapp.whatsapp_chats.send_seen']
       sendTyping: typeof routes['whatsapp.whatsapp_chats.send_typing']

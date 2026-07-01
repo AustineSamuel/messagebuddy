@@ -106,3 +106,17 @@ export async function getCustomerNote(chatId: string) {
 export async function setCustomerNote(chatId: string, note: string) {
   return waPut(`/chats/${encodeURIComponent(chatId)}/customer-note`, { note });
 }
+
+export type AiSuggestReplyResponse = {
+  suggestion: string;
+  messageCount: number;
+};
+
+export async function suggestAiReply(chatId: string, options?: { limit?: number }) {
+  const params = new URLSearchParams();
+  if (options?.limit) params.set("limit", String(options.limit));
+  const qs = params.toString();
+  return waPost<AiSuggestReplyResponse>(
+    `/chats/${encodeURIComponent(chatId)}/ai-suggest-reply${qs ? `?${qs}` : ""}`
+  );
+}

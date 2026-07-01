@@ -117,6 +117,21 @@ export default class WhatsappChatsController {
     }
   }
 
+  async suggestAiReply(ctx: HttpContext) {
+    try {
+      const { limit } = ctx.request.qs()
+      return ctx.serialize(
+        await WhatsAppService.suggestAiReply(
+          uid(ctx),
+          ctx.params.chatId,
+          limit ? Number(limit) : 50
+        )
+      )
+    } catch (error) {
+      return handleWhatsAppError(error, ctx.response)
+    }
+  }
+
   async sendMessage(ctx: HttpContext) {
     try {
       const body = ctx.request.body()

@@ -331,6 +331,18 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/whatsapp_chats_controller').default['pinnedMessages']>>>
     }
   }
+  'whatsapp.whatsapp_chats.suggest_ai_reply': {
+    methods: ["POST"]
+    pattern: '/api/v1/whatsapp/chats/:chatId/ai-suggest-reply'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { chatId: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/whatsapp_chats_controller').default['suggestAiReply']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/whatsapp_chats_controller').default['suggestAiReply']>>>
+    }
+  }
   'whatsapp.whatsapp_chats.send_message': {
     methods: ["POST"]
     pattern: '/api/v1/whatsapp/chats/:chatId/messages'

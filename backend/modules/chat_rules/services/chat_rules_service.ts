@@ -138,4 +138,19 @@ export default class ChatRulesService {
 
     return serializeRow(created)
   }
+
+  /**
+   * Returns saved per-chat rules only. Does not fall back to __default__.
+   * Used by server-side auto-reply — no row means no reply.
+   */
+  static async getSavedRuleForChat(
+    userId: number,
+    chatId: string
+  ): Promise<ChatRulePayload | null> {
+    if (chatId === DEFAULT_CHAT_RULE_ID) return null
+
+    const row = await ChatRule.query().where('user_id', userId).where('chat_id', chatId).first()
+
+    return row ? serializeRow(row) : null
+  }
 }

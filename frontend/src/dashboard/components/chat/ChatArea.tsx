@@ -6,6 +6,8 @@ import MessageBubble from "./MessageBubble";
 import EditMessageModal from "./EditMessageModal";
 import { shouldShowSenderHeader } from "@/dashboard/lib/whatsapp-mappers";
 import { ChatAreaSkeleton } from "@/dashboard/components/ui/WhatsAppSkeleton";
+import { getErrorMessage } from "@/app/lib/api";
+import { suggestAiReply } from "@/whatsappjs-services/chats";
 import type { Contact, Conversation, Message } from "@/dashboard/types";
 
 interface ChatAreaProps {
@@ -27,6 +29,8 @@ export default function ChatArea({
 }: ChatAreaProps) {
   const [inputValue, setInputValue] = useState("");
   const [editingMsg, setEditingMsg] = useState<Message | null>(null);
+  const [generatingAi, setGeneratingAi] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -47,6 +51,25 @@ export default function ChatArea({
       handleSend();
     }
   };
+
+  const handleGenerateAi = async () => {
+    if (!contact?.id || generatingAi) return;
+    setGeneratingAi(true);
+    setGenerateError(null);
+    try {
+      const result = await suggestAiReply(contact.id, { limit: 50 });
+      setInputValue(result.suggestion);
+      inputRef.current?.focus();
+    } catch (err) {
+      setGenerateError(getErrorMessage(err, "Could not generate AI reply."));
+    } finally {
+      setGeneratingAi(false);
+    }
+  };
+
+  useEffect(() => {
+    setGenerateError(null);
+  }, [contact?.id]);
 
   const messages = conversation?.messages ?? [];
   const aiActive = contact ? contact.rule !== "never" : false;
@@ -229,14 +252,27 @@ export default function ChatArea({
           padding: "12px 20px",
           background: "var(--bg-1)",
           borderTop: "1px solid var(--border-1)",
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
           position: "relative",
           zIndex: 1,
           flexShrink: 0,
         }}
       >
+        {generateError ? (
+          <div
+            style={{
+              marginBottom: 8,
+              padding: "8px 12px",
+              borderRadius: 8,
+              background: "var(--red-muted)",
+              border: "1px solid var(--red)",
+              color: "var(--red)",
+              fontSize: 12,
+            }}
+          >
+            {generateError}
+          </div>
+        ) : null}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <IconButton title="Attach file">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width={15} height={15}>
             <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
@@ -273,6 +309,29 @@ export default function ChatArea({
           </svg>
         </IconButton>
         <button
+          type="button"
+          onClick={() => void handleGenerateAi()}
+          disabled={generatingAi}
+          title="Generate AI response from recent messages"
+          style={{
+            padding: "0 14px",
+            height: 42,
+            borderRadius: 22,
+            border: "1px solid var(--wa-green)",
+            background: generatingAi ? "var(--bg-3)" : "var(--wa-green-glow)",
+            color: "var(--wa-green)",
+            fontSize: 12,
+            fontWeight: 700,
+            cursor: generatingAi ? "wait" : "pointer",
+            fontFamily: "var(--font-sans)",
+            whiteSpace: "nowrap",
+            flexShrink: 0,
+            opacity: generatingAi ? 0.7 : 1,
+          }}
+        >
+          {generatingAi ? "Generating…" : "✨ AI"}
+        </button>
+        <button
           onClick={handleSend}
           disabled={!inputValue.trim()}
           style={{
@@ -293,6 +352,7 @@ export default function ChatArea({
             <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
           </svg>
         </button>
+        </div>
       </div>
 
       {/* Edit modal */}

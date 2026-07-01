@@ -38,6 +38,7 @@ export function registerWhatsappRoutes() {
       router.delete('chats/:chatId', [controllers.WhatsappChats, 'destroy'])
       router.get('chats/:chatId/messages', [controllers.WhatsappChats, 'messages'])
       router.get('chats/:chatId/pinned-messages', [controllers.WhatsappChats, 'pinnedMessages'])
+      router.post('chats/:chatId/ai-suggest-reply', [controllers.WhatsappChats, 'suggestAiReply'])
       router.post('chats/:chatId/messages', [controllers.WhatsappChats, 'sendMessage'])
       router.post('chats/:chatId/seen', [controllers.WhatsappChats, 'sendSeen'])
       router.post('chats/:chatId/typing', [controllers.WhatsappChats, 'sendTyping'])

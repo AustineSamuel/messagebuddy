@@ -34,4 +34,9 @@ export default await Env.create(new URL('../', import.meta.url), {
 
   // Firebase Admin (verify ID tokens from the web client). Optional path to service account JSON.
   FIREBASE_CREDENTIALS_PATH: Env.schema.string.optional(),
+
+  // AI auto-reply (OpenAI-compatible chat completions API)
+  OPENAI_API_KEY: Env.schema.string.optional(),
+  OPENAI_MODEL: Env.schema.string.optional(),
+  OPENAI_BASE_URL: Env.schema.string.optional(),
 })

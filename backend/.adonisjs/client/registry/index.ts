@@ -168,6 +168,12 @@ const routes = {
     tokens: [{"old":"/api/v1/whatsapp/chats/:chatId/pinned-messages","type":0,"val":"api","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/pinned-messages","type":0,"val":"v1","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/pinned-messages","type":0,"val":"whatsapp","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/pinned-messages","type":0,"val":"chats","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/pinned-messages","type":1,"val":"chatId","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/pinned-messages","type":0,"val":"pinned-messages","end":""}],
     types: placeholder as Registry['whatsapp.whatsapp_chats.pinned_messages']['types'],
   },
+  'whatsapp.whatsapp_chats.suggest_ai_reply': {
+    methods: ["POST"],
+    pattern: '/api/v1/whatsapp/chats/:chatId/ai-suggest-reply',
+    tokens: [{"old":"/api/v1/whatsapp/chats/:chatId/ai-suggest-reply","type":0,"val":"api","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/ai-suggest-reply","type":0,"val":"v1","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/ai-suggest-reply","type":0,"val":"whatsapp","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/ai-suggest-reply","type":0,"val":"chats","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/ai-suggest-reply","type":1,"val":"chatId","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/ai-suggest-reply","type":0,"val":"ai-suggest-reply","end":""}],
+    types: placeholder as Registry['whatsapp.whatsapp_chats.suggest_ai_reply']['types'],
+  },
   'whatsapp.whatsapp_chats.send_message': {
     methods: ["POST"],
     pattern: '/api/v1/whatsapp/chats/:chatId/messages',
