@@ -1483,4 +1483,64 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/chat_rules_controller').default['update']>>>
     }
   }
+  'followUps.follow_ups.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/follow-ups'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/follow_ups_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/follow_ups_controller').default['index']>>>
+    }
+  }
+  'followUps.follow_ups.sync': {
+    methods: ["PUT"]
+    pattern: '/api/v1/follow-ups/sync'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/follow_ups_controller').default['sync']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/follow_ups_controller').default['sync']>>>
+    }
+  }
+  'followUps.follow_ups.update': {
+    methods: ["PATCH"]
+    pattern: '/api/v1/follow-ups/:chatId'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { chatId: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/follow_ups_controller').default['update']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/follow_ups_controller').default['update']>>>
+    }
+  }
+  'businessSettings.business_settings.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/business-settings'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/business_settings_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/business_settings_controller').default['show']>>>
+    }
+  }
+  'businessSettings.business_settings.update': {
+    methods: ["PUT"]
+    pattern: '/api/v1/business-settings'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/business_settings_controller').default['update']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/business_settings_controller').default['update']>>>
+    }
+  }
 }

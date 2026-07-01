@@ -3,6 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getErrorMessage } from "@/app/lib/api";
 import {
+  getBusinessSettings,
+  saveBusinessSettings,
+} from "@/app/services/business-settings";
+import {
   getAllChatRules,
   getChatRules,
   saveChatRules,
@@ -21,11 +25,20 @@ import type {
   Conversation,
 } from "@/dashboard/types";
 import {
-  DEMO_PRODUCTS,
-  DEMO_BUSINESS_SETTINGS,
   DEMO_TRIGGER_RULES,
   DEMO_CREDITS_BALANCE,
 } from "@/dashboard/data/demo";
+
+const EMPTY_BUSINESS_SETTINGS: BusinessSettings = {
+  name: "",
+  description: "",
+  website: "",
+  address: "",
+  aiRules: "",
+  responseLanguage: "auto",
+  escalationRules: "",
+  tone: "professional",
+};
 import {
   apiMessageToMessage,
   buildContactLookup,
@@ -35,6 +48,7 @@ import {
   type ApiMessage,
   type ApiWaContact,
 } from "@/dashboard/lib/whatsapp-mappers";
+import { dedupeContactsById } from "@/dashboard/lib/contacts";
 import {
   fetchChatMessages,
   getChats,
@@ -55,12 +69,28 @@ function ruleForChat(chatId: string, index: ChatRulesIndex | null): ContactRule 
   return index.rules[chatId]?.rule ?? index.default.rule;
 }
 
+function contactNotes(contactId: string, index: ChatRulesIndex | null): string | undefined {
+  if (!index) return undefined;
+  if (Object.prototype.hasOwnProperty.call(index.rules, contactId)) {
+    return index.rules[contactId].notes ?? undefined;
+  }
+  return index.default.notes ?? undefined;
+}
+
 function applyRulesToContacts(list: Contact[], index: ChatRulesIndex | null) {
   return list.map((c) => ({
     ...c,
     rule: ruleForChat(c.id, index),
-    notes: index?.rules[c.id]?.notes ?? index?.default.notes ?? c.notes,
+    notes: contactNotes(c.id, index) ?? c.notes,
   }));
+}
+
+function keepDefaultChatSettings(
+  prev: ChatRuleSettings | null,
+  next: ChatRuleSettings
+): ChatRuleSettings {
+  if (prev && JSON.stringify(prev) === JSON.stringify(next)) return prev;
+  return next;
 }
 
 export function useDashboardStore({ whatsAppReady }: Props) {
@@ -70,19 +100,22 @@ export function useDashboardStore({ whatsAppReady }: Props) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [waContacts, setWaContacts] = useState<Contact[]>([]);
   const [conversations, setConversations] = useState<Record<string, Conversation>>({});
-  const [products, setProducts] = useState<Product[]>(DEMO_PRODUCTS);
-  const [settings, setSettings] = useState<BusinessSettings>(DEMO_BUSINESS_SETTINGS);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [settings, setSettings] = useState<BusinessSettings>(EMPTY_BUSINESS_SETTINGS);
   const [triggerRules, setTriggerRules] = useState<TriggerRule[]>(DEMO_TRIGGER_RULES);
   const [creditsBalance, setCreditsBalance] = useState(DEMO_CREDITS_BALANCE);
   const [chatRulesIndex, setChatRulesIndex] = useState<ChatRulesIndex | null>(null);
   const [activeChatSettings, setActiveChatSettings] = useState<ChatRuleSettings | null>(null);
+  const [activeChatUsingDefault, setActiveChatUsingDefault] = useState(true);
   const [defaultChatSettings, setDefaultChatSettings] = useState<ChatRuleSettings | null>(null);
   const [loadingChats, setLoadingChats] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [loadingRules, setLoadingRules] = useState(true);
+  const [loadingBusinessSettings, setLoadingBusinessSettings] = useState(true);
   const [loadingChatSettings, setLoadingChatSettings] = useState(false);
   const [savingChatSettings, setSavingChatSettings] = useState(false);
   const [savingDefaultSettings, setSavingDefaultSettings] = useState(false);
+  const [savingBusinessSettings, setSavingBusinessSettings] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [editingMessage, setEditingMessage] = useState<{
     contactId: string;
@@ -98,13 +131,27 @@ export function useDashboardStore({ whatsAppReady }: Props) {
     ? conversations[activeContactId]
     : undefined;
 
+  const loadBusinessSettings = useCallback(async () => {
+    setLoadingBusinessSettings(true);
+    try {
+      const data = await getBusinessSettings();
+      const { products: savedProducts, ...businessFields } = data;
+      setSettings(businessFields);
+      setProducts(savedProducts ?? []);
+    } catch (err) {
+      setSyncError(getErrorMessage(err));
+    } finally {
+      setLoadingBusinessSettings(false);
+    }
+  }, []);
+
   const loadAllChatRules = useCallback(async () => {
     setLoadingRules(true);
     try {
       const index = await getAllChatRules();
       rulesIndexRef.current = index;
       setChatRulesIndex(index);
-      setDefaultChatSettings(index.default);
+      setDefaultChatSettings((prev) => keepDefaultChatSettings(prev, index.default));
       setContacts((prev) => applyRulesToContacts(prev, index));
       setWaContacts((prev) => applyRulesToContacts(prev, index));
     } catch (err) {
@@ -120,14 +167,19 @@ export function useDashboardStore({ whatsAppReady }: Props) {
     try {
       const response = await getChatRules(chatId);
       setActiveChatSettings(response.settings);
-      setDefaultChatSettings(response.default);
+      setActiveChatUsingDefault(response.isUsingDefault);
+      // Default rules are loaded via loadAllChatRules — avoid overwriting while user edits Settings.
       setContacts((prev) =>
         prev.map((c) =>
           c.id === chatId
             ? {
                 ...c,
-                rule: response.settings.rule,
-                notes: response.settings.notes ?? undefined,
+                rule: response.isUsingDefault
+                  ? response.default.rule
+                  : response.settings.rule,
+                notes: response.isUsingDefault
+                  ? undefined
+                  : response.settings.notes ?? undefined,
               }
             : c
         )
@@ -148,7 +200,7 @@ export function useDashboardStore({ whatsAppReady }: Props) {
       const mapped = chats
         .filter((c) => !c.id.includes("@broadcast"))
         .map((chat) => chatToContact(chat, ruleForChat(chat.id, index)));
-      setContacts(mapped);
+      setContacts(applyRulesToContacts(dedupeContactsById(mapped), index));
       setActiveContactId((current) => current || mapped[0]?.id || "");
     } catch (err) {
       setSyncError(getErrorMessage(err));
@@ -162,9 +214,14 @@ export function useDashboardStore({ whatsAppReady }: Props) {
       const list = (await getContacts()) as ApiWaContact[];
       const index = rulesIndexRef.current;
       setWaContacts(
-        list
-          .filter((c) => !c.isMe && !c.isGroup)
-          .map((c) => waContactToContact(c, ruleForChat(c.id, index)))
+        applyRulesToContacts(
+          dedupeContactsById(
+            list
+              .filter((c) => !c.isMe && !c.isGroup)
+              .map((c) => waContactToContact(c, ruleForChat(c.id, index)))
+          ),
+          index
+        )
       );
     } catch (err) {
       setSyncError(getErrorMessage(err));
@@ -209,12 +266,18 @@ export function useDashboardStore({ whatsAppReady }: Props) {
         phone?: string;
       };
       if (info.pushname) {
-        setSettings((prev) => ({ ...prev, name: info.pushname! }));
+        setSettings((prev) =>
+          prev.name.trim() ? prev : { ...prev, name: info.pushname! }
+        );
       }
     } catch {
       // optional
     }
   }, []);
+
+  useEffect(() => {
+    void loadBusinessSettings();
+  }, [loadBusinessSettings]);
 
   useEffect(() => {
     if (!whatsAppReady) return;
@@ -309,16 +372,16 @@ export function useDashboardStore({ whatsAppReady }: Props) {
           prev.map((c) => (c.id === contactId ? { ...c, rule: saved.rule } : c))
         );
         if (contactId === activeContactId) {
-          setActiveChatSettings((prev) => (prev ? { ...prev, rule: saved.rule } : saved));
+          setActiveChatSettings(saved);
+          setActiveChatUsingDefault(false);
         }
-        setChatRulesIndex((prev) =>
-          prev
-            ? {
-                ...prev,
-                rules: { ...prev.rules, [contactId]: saved },
-              }
-            : prev
-        );
+        setChatRulesIndex((prev) => {
+          const next = prev
+            ? { ...prev, rules: { ...prev.rules, [contactId]: saved } }
+            : prev;
+          if (next) rulesIndexRef.current = next;
+          return next;
+        });
       } catch (err) {
         setSyncError(getErrorMessage(err));
       }
@@ -334,6 +397,7 @@ export function useDashboardStore({ whatsAppReady }: Props) {
       try {
         const saved = await saveChatRules(activeContactId, data);
         setActiveChatSettings(saved);
+        setActiveChatUsingDefault(false);
         setContacts((prev) =>
           prev.map((c) =>
             c.id === activeContactId
@@ -341,11 +405,13 @@ export function useDashboardStore({ whatsAppReady }: Props) {
               : c
           )
         );
-        setChatRulesIndex((prev) =>
-          prev
+        setChatRulesIndex((prev) => {
+          const next = prev
             ? { ...prev, rules: { ...prev.rules, [activeContactId]: saved } }
-            : prev
-        );
+            : prev;
+          if (next) rulesIndexRef.current = next;
+          return next;
+        });
       } catch (err) {
         setSyncError(getErrorMessage(err));
         throw err;
@@ -380,15 +446,34 @@ export function useDashboardStore({ whatsAppReady }: Props) {
     []
   );
 
-  const updateSettings = useCallback(async (patch: Partial<BusinessSettings>) => {
-    setSettings((prev) => ({ ...prev, ...patch }));
-    try {
-      if (patch.name) await setDisplayName(patch.name);
-      if (patch.description) await setStatus(patch.description);
-    } catch (err) {
-      setSyncError(getErrorMessage(err));
-    }
-  }, []);
+  const updateSettings = useCallback(
+    async (patch: Partial<BusinessSettings>, catalogProducts?: Product[]) => {
+      setSavingBusinessSettings(true);
+      setSyncError(null);
+      try {
+        const saved = await saveBusinessSettings({
+          ...settings,
+          ...patch,
+          products: catalogProducts ?? products,
+        });
+        const { products: savedProducts, ...businessFields } = saved;
+        setSettings(businessFields);
+        setProducts(savedProducts ?? []);
+        try {
+          if (patch.name) await setDisplayName(patch.name);
+          if (patch.description) await setStatus(patch.description);
+        } catch {
+          // WhatsApp profile sync is optional
+        }
+      } catch (err) {
+        setSyncError(getErrorMessage(err));
+        throw err;
+      } finally {
+        setSavingBusinessSettings(false);
+      }
+    },
+    [settings, products]
+  );
 
   const addProduct = useCallback((product: Omit<Product, "id">) => {
     setProducts((prev) => [...prev, { ...product, id: Date.now() }]);
@@ -417,6 +502,7 @@ export function useDashboardStore({ whatsAppReady }: Props) {
     activeContact,
     activeConversation,
     activeChatSettings,
+    activeChatUsingDefault,
     defaultChatSettings,
     contacts,
     waContacts,
@@ -429,9 +515,11 @@ export function useDashboardStore({ whatsAppReady }: Props) {
     loadingChats,
     loadingMessages,
     loadingRules,
+    loadingBusinessSettings,
     loadingChatSettings,
     savingChatSettings,
     savingDefaultSettings,
+    savingBusinessSettings,
     workspaceLoading,
     syncError,
     dismissSyncError,

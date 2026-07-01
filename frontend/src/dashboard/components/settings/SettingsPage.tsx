@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   FormInput,
   FormTextarea,
@@ -20,7 +20,8 @@ interface SettingsPageProps {
   defaultChatSettings: ChatRuleSettings | null;
   savingDefaultSettings?: boolean;
   onSaveDefaultChatSettings: (data: Partial<Omit<ChatRuleSettings, "chatId">>) => Promise<void>;
-  onUpdateSettings: (patch: Partial<BusinessSettings>) => void;
+  onUpdateSettings: (patch: Partial<BusinessSettings>, products?: Product[]) => Promise<void>;
+  savingBusinessSettings?: boolean;
   onAddProduct: (p: Omit<Product, "id">) => void;
   onRemoveProduct: (id: number) => void;
 }
@@ -63,8 +64,11 @@ export default function SettingsPage({
   onUpdateSettings,
   onAddProduct,
   onRemoveProduct,
+  savingBusinessSettings,
 }: SettingsPageProps) {
   const [local, setLocal] = useState(settings);
+  const settingsStampRef = useRef("");
+  const defaultRulesStampRef = useRef("");
   const [defaultRule, setDefaultRule] = useState<ContactRule>("default");
   const [defaultNotes, setDefaultNotes] = useState("");
   const [defaultAiReply, setDefaultAiReply] = useState(true);
@@ -79,7 +83,18 @@ export default function SettingsPage({
   const [defaultSaved, setDefaultSaved] = useState(false);
 
   useEffect(() => {
+    const stamp = JSON.stringify(settings);
+    if (settingsStampRef.current !== stamp) {
+      settingsStampRef.current = stamp;
+      setLocal(settings);
+    }
+  }, [settings]);
+
+  useEffect(() => {
     if (!defaultChatSettings) return;
+    const stamp = JSON.stringify(defaultChatSettings);
+    if (defaultRulesStampRef.current === stamp) return;
+    defaultRulesStampRef.current = stamp;
     setDefaultRule(defaultChatSettings.rule);
     setDefaultNotes(defaultChatSettings.notes ?? "");
     setDefaultAiReply(defaultChatSettings.aiAutoReply);
@@ -92,20 +107,32 @@ export default function SettingsPage({
     setLocal((prev) => ({ ...prev, [key]: e.target.value }));
   };
 
-  const handleSave = (section: string) => {
-    onUpdateSettings(local);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const handleSave = async (section: "profile" | "ai" | "products") => {
+    try {
+      await onUpdateSettings(
+        local,
+        section === "products" ? products : undefined
+      );
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      // syncError is set in the store
+    }
   };
 
   const handleSaveDefaultRules = async () => {
-    await onSaveDefaultChatSettings({
+    const payload = {
       rule: defaultRule,
       notes: defaultNotes.trim() || null,
       aiAutoReply: defaultAiReply,
       sendCatalog: defaultSendCatalog,
       notifyOnReply: defaultNotify,
       customInstructions: defaultInstructions.trim() || null,
+    };
+    await onSaveDefaultChatSettings(payload);
+    defaultRulesStampRef.current = JSON.stringify({
+      chatId: defaultChatSettings?.chatId ?? "__default__",
+      ...payload,
     });
     setDefaultSaved(true);
     setTimeout(() => setDefaultSaved(false), 2000);
@@ -119,7 +146,9 @@ export default function SettingsPage({
         flexDirection: "column",
         background: "var(--bg-base)",
         overflowY: "auto",
-        padding: "28px 32px",
+        padding: "72px 32px 28px",
+        position: "relative",
+        zIndex: 1,
       }}
     >
       {/* Header */}
@@ -168,8 +197,12 @@ export default function SettingsPage({
         </div>
         <FormInput label="Business Address" value={local.address} onChange={set("address")} placeholder="Street, City, State" />
         <div style={{ marginTop: 16 }}>
-          <PrimaryBtn variant="green" onClick={() => handleSave("profile")}>
-            Save Profile
+          <PrimaryBtn
+            variant="green"
+            onClick={() => void handleSave("profile")}
+            style={{ opacity: savingBusinessSettings ? 0.7 : 1 }}
+          >
+            {savingBusinessSettings ? "Saving…" : "Save Profile"}
           </PrimaryBtn>
         </div>
       </SettingsSection>
@@ -259,6 +292,7 @@ export default function SettingsPage({
             return (
               <button
                 key={tone}
+                type="button"
                 onClick={() => setLocal((p) => ({ ...p, tone }))}
                 style={{
                   padding: "7px 16px",
@@ -318,8 +352,12 @@ export default function SettingsPage({
         />
 
         <div style={{ marginTop: 16 }}>
-          <PrimaryBtn variant="green" onClick={() => handleSave("ai")}>
-            Save AI Rules
+          <PrimaryBtn
+            variant="green"
+            onClick={() => void handleSave("ai")}
+            style={{ opacity: savingBusinessSettings ? 0.7 : 1 }}
+          >
+            {savingBusinessSettings ? "Saving…" : "Save AI Rules"}
           </PrimaryBtn>
         </div>
       </SettingsSection>
@@ -401,8 +439,12 @@ export default function SettingsPage({
           Add Product
         </AddBtn>
         <div style={{ marginTop: 14 }}>
-          <PrimaryBtn variant="green" onClick={() => handleSave("products")}>
-            Save Catalog
+          <PrimaryBtn
+            variant="green"
+            onClick={() => void handleSave("products")}
+            style={{ opacity: savingBusinessSettings ? 0.7 : 1 }}
+          >
+            {savingBusinessSettings ? "Saving…" : "Save Catalog"}
           </PrimaryBtn>
         </div>
       </SettingsSection>

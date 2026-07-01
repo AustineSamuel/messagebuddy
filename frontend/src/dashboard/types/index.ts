@@ -68,5 +68,5 @@ export interface TriggerRule {
   action: string;
 }
 
-export type NavView = "chats" | "dashboard" | "contacts" | "settings";
+export type NavView = "chats" | "dashboard" | "contacts" | "followups" | "settings";
 export type RightTab = "info" | "ai" | "credits";

@@ -163,4 +163,17 @@ export interface ApiDefinition {
       update: typeof routes['chatRules.chat_rules.update']
     }
   }
+  followUps: {
+    followUps: {
+      index: typeof routes['followUps.follow_ups.index']
+      sync: typeof routes['followUps.follow_ups.sync']
+      update: typeof routes['followUps.follow_ups.update']
+    }
+  }
+  businessSettings: {
+    businessSettings: {
+      show: typeof routes['businessSettings.business_settings.show']
+      update: typeof routes['businessSettings.business_settings.update']
+    }
+  }
 }

@@ -5,8 +5,10 @@
 
 export const controllers = {
   AccessToken: () => import('#controllers/access_token_controller'),
+  BusinessSettings: () => import('#controllers/business_settings_controller'),
   ChatRules: () => import('#controllers/chat_rules_controller'),
   FirebaseAuths: () => import('#controllers/firebase_auths_controller'),
+  FollowUps: () => import('#controllers/follow_ups_controller'),
   NewAccount: () => import('#controllers/new_account_controller'),
   Profile: () => import('#controllers/profile_controller'),
   WhatsappBroadcasts: () => import('#controllers/whatsapp_broadcasts_controller'),

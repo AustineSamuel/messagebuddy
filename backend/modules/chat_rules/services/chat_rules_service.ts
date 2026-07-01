@@ -72,11 +72,7 @@ export default class ChatRulesService {
     if (!specific) {
       return {
         chatId,
-        settings: {
-          ...defaultPayload,
-          chatId,
-          rule: defaultPayload.rule,
-        },
+        settings: emptyPayload(chatId),
         default: defaultPayload,
         isUsingDefault: true,
       }

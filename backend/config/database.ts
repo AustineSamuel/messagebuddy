@@ -16,7 +16,9 @@ export default defineConfig({
 
       pool: {
         min: 0,
-        max: 3, // 🔥 VERY important for Neon
+        max: 3, // Keep low for Neon serverless pooler
+        idleTimeoutMillis: 10_000,
+        acquireTimeoutMillis: 30_000,
       },
 
       migrations: {

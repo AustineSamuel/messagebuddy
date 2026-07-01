@@ -1,6 +1,7 @@
 import logger from '@adonisjs/core/services/logger'
 import type { Client, Message } from 'whatsapp-web.js'
 import ChatRulesService from '../../chat_rules/services/chat_rules_service.js'
+import BusinessSettingsService from '../../business_settings/services/business_settings_service.js'
 import AiReplyService from '#services/ai_reply_service'
 import { buildConversationHistory, messageBodyFromWweb } from '../helpers/conversation_history.js'
 import { resolveChatDisplayName, serializeId } from '../helpers/serialization.js'
@@ -52,7 +53,7 @@ export default class WhatsAppAutoReplyService {
   }
 
   static async handleIncomingMessage(userId: number, message: Message) {
-    console.log(message);
+    // console.log(message);
     if (shouldSkipMessage(message)) return
 
     const messageId = serializeId(message.id)
@@ -88,6 +89,9 @@ export default class WhatsAppAutoReplyService {
 
         if (!AiReplyService.isConfigured()) return
 
+        const defaultRules = await ChatRulesService.getDefault(userId)
+        const business = await BusinessSettingsService.getAiContext(userId)
+
         const history = await buildConversationHistory(chat, {
           limit: HISTORY_LIMIT,
           excludeMessageId: messageId,
@@ -100,7 +104,10 @@ export default class WhatsAppAutoReplyService {
           history,
           customInstructions: rules.customInstructions,
           notes: rules.notes,
+          defaultCustomInstructions: defaultRules.customInstructions,
+          defaultNotes: defaultRules.notes,
           contactLabel,
+          business,
         })
 
         if (!replyText) {

@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Sidebar from "@/dashboard/components/dashboard/Sidebar";
 import ChatList from "@/dashboard/components/chat/ChatList";
 import ChatArea from "@/dashboard/components/chat/ChatArea";
 import RightPanel from "@/dashboard/components/chat/RightPanel";
 import DashboardAnalytics from "@/dashboard/components/dashboard/DashboardAnalytics";
 import ContactsPage from "@/dashboard/components/contacts/ContactsPage";
+import FollowUpsPage from "@/dashboard/components/followups/FollowUpsPage";
 import SettingsPage from "@/dashboard/components/settings/SettingsPage";
+import ThemeToggle from "@/dashboard/components/ui/ThemeToggle";
 import WhatsAppConnectScreen from "@/dashboard/components/whatsapp/WhatsAppConnectScreen";
 import WhatsAppSyncingScreen from "@/dashboard/components/whatsapp/WhatsAppSyncingScreen";
 import { useDashboardStore } from "@/dashboard/hooks/useDashboardStore";
@@ -19,6 +21,7 @@ import {
   SettingsPageSkeleton,
 } from "@/dashboard/components/ui/WhatsAppSkeleton";
 import { DEMO_DAILY_CREDITS } from "@/dashboard/data/demo";
+import { dedupeContactsById } from "@/dashboard/lib/contacts";
 
 interface DashboardLayoutProps {
   onLogout?: () => void;
@@ -57,8 +60,10 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
 
   const toggleTheme = () => setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   const creditsToday = DEMO_DAILY_CREDITS[DEMO_DAILY_CREDITS.length - 1].used;
-  const contactsForPage =
-    store.waContacts.length > 0 ? store.waContacts : store.contacts;
+  const contactsForPage = useMemo(() => {
+    const source = store.waContacts.length > 0 ? store.waContacts : store.contacts;
+    return dedupeContactsById(source);
+  }, [store.waContacts, store.contacts]);
 
   const sessionStatus = wa.session?.status ?? "disconnected";
   const isSessionBooting =
@@ -102,24 +107,10 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
         fontFamily: "var(--font-sans)",
       }}
     >
-      <div className="absolute right-4 top-4 z-20 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={toggleTheme}
-          className={
-            theme === "dark"
-              ? "rounded-full border border-white/15 bg-white/10 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
-              : "rounded-full border border-slate-300 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-900 transition hover:bg-slate-200"
-          }
-        >
-          {theme === "dark" ? "Light mode" : "Dark mode"}
-        </button>
+      <div className="dashboard-topbar">
+        <ThemeToggle theme={theme} onToggle={toggleTheme} />
         {onLogout ? (
-          <button
-            type="button"
-            onClick={onLogout}
-            className="rounded-full bg-red-500 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-600"
-          >
+          <button type="button" onClick={onLogout} className="dashboard-logout-btn">
             Logout
           </button>
         ) : null}
@@ -182,6 +173,8 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
                 onRemoveTriggerRule={store.removeTriggerRule}
                 creditsBalance={store.creditsBalance}
                 chatSettings={store.activeChatSettings}
+                defaultChatSettings={store.defaultChatSettings}
+                isUsingDefault={store.activeChatUsingDefault}
                 loadingSettings={store.loadingChatSettings}
                 savingSettings={store.savingChatSettings}
                 onSaveSettings={store.saveActiveContactSettings}
@@ -199,8 +192,12 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
           <ContactsPage contacts={contactsForPage} onSetRule={store.setContactRule} />
         )}
 
+        {store.activeView === "followups" && (
+          <FollowUpsPage contacts={contactsForPage} />
+        )}
+
         {store.activeView === "settings" && (
-          store.loadingRules ? (
+          store.loadingRules || store.loadingBusinessSettings ? (
             <SettingsPageSkeleton />
           ) : (
           <SettingsPage
@@ -209,6 +206,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
             triggerRules={store.triggerRules}
             defaultChatSettings={store.defaultChatSettings}
             savingDefaultSettings={store.savingDefaultSettings}
+            savingBusinessSettings={store.savingBusinessSettings}
             onSaveDefaultChatSettings={store.saveDefaultChatSettings}
             onUpdateSettings={store.updateSettings}
             onAddProduct={store.addProduct}

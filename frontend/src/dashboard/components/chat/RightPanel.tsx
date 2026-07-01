@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Avatar, Badge, SectionLabel, Toggle, FormTextarea, AddBtn, PrimaryBtn } from "@/dashboard/components/ui/primitives";
 import { RightPanelSkeleton } from "@/dashboard/components/ui/WhatsAppSkeleton";
 import type { ChatRuleSettings } from "@/app/services/chat-rules";
@@ -16,6 +16,8 @@ interface RightPanelProps {
   onRemoveTriggerRule: (id: number) => void;
   creditsBalance: number;
   chatSettings: ChatRuleSettings | null;
+  defaultChatSettings: ChatRuleSettings | null;
+  isUsingDefault?: boolean;
   loadingSettings?: boolean;
   savingSettings?: boolean;
   onSaveSettings: (data: Partial<Omit<ChatRuleSettings, "chatId">>) => Promise<void>;
@@ -35,6 +37,45 @@ const RULE_OPTIONS: { key: ContactRule; label: string; color: string }[] = [
   { key: "custom", label: "Custom", color: "var(--purple)" },
 ];
 
+function formFromSettings(
+  chatSettings: ChatRuleSettings | null,
+  defaultChatSettings: ChatRuleSettings | null,
+  isUsingDefault: boolean,
+  contact: Contact
+) {
+  if (!chatSettings) {
+    return {
+      rule: contact.rule,
+      notes: "",
+      aiReply: true,
+      sendCatalog: false,
+      notifyMe: true,
+      customInstructions: "",
+    };
+  }
+
+  if (isUsingDefault) {
+    const defaults = defaultChatSettings ?? chatSettings;
+    return {
+      rule: defaults.rule,
+      notes: "",
+      aiReply: defaults.aiAutoReply,
+      sendCatalog: defaults.sendCatalog,
+      notifyMe: defaults.notifyOnReply,
+      customInstructions: "",
+    };
+  }
+
+  return {
+    rule: chatSettings.rule,
+    notes: chatSettings.notes ?? "",
+    aiReply: chatSettings.aiAutoReply,
+    sendCatalog: chatSettings.sendCatalog,
+    notifyMe: chatSettings.notifyOnReply,
+    customInstructions: chatSettings.customInstructions ?? "",
+  };
+}
+
 export default function RightPanel({
   contact,
   activeTab,
@@ -44,35 +85,38 @@ export default function RightPanel({
   onRemoveTriggerRule,
   creditsBalance,
   chatSettings,
+  defaultChatSettings,
+  isUsingDefault = true,
   loadingSettings,
   savingSettings,
   onSaveSettings,
   onRuleChange,
 }: RightPanelProps) {
   const [rule, setRule] = useState<ContactRule>(contact.rule);
-  const [notes, setNotes] = useState(contact.notes ?? "");
+  const [notes, setNotes] = useState("");
   const [aiReply, setAiReply] = useState(true);
   const [sendCatalog, setSendCatalog] = useState(false);
   const [notifyMe, setNotifyMe] = useState(true);
   const [customInstructions, setCustomInstructions] = useState("");
   const [saved, setSaved] = useState(false);
+  const syncedContactIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!chatSettings) {
-      setRule(contact.rule);
-      setNotes(contact.notes ?? "");
-      return;
-    }
-    setRule(chatSettings.rule);
-    setNotes(chatSettings.notes ?? "");
-    setAiReply(chatSettings.aiAutoReply);
-    setSendCatalog(chatSettings.sendCatalog);
-    setNotifyMe(chatSettings.notifyOnReply);
-    setCustomInstructions(chatSettings.customInstructions ?? "");
-  }, [chatSettings, contact.id, contact.notes, contact.rule]);
+    if (loadingSettings) return;
+
+    const form = formFromSettings(chatSettings, defaultChatSettings, isUsingDefault, contact);
+    setRule(form.rule);
+    setNotes(form.notes);
+    setAiReply(form.aiReply);
+    setSendCatalog(form.sendCatalog);
+    setNotifyMe(form.notifyMe);
+    setCustomInstructions(form.customInstructions);
+    syncedContactIdRef.current = contact.id;
+  }, [contact.id, contact.rule, chatSettings, defaultChatSettings, isUsingDefault, loadingSettings]);
 
   const creditsToday = DEMO_DAILY_CREDITS[DEMO_DAILY_CREDITS.length - 1].used;
   const creditsMax = Math.max(...DEMO_DAILY_CREDITS.map((d) => d.used));
+  const defaultNotesHint = defaultChatSettings?.notes?.trim();
 
   const handleSave = async () => {
     await onSaveSettings({
@@ -197,10 +241,19 @@ export default function RightPanel({
             </div>
 
             <SectionLabel>Notes</SectionLabel>
+            {isUsingDefault && defaultNotesHint ? (
+              <p style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 8, lineHeight: 1.5 }}>
+                No contact-specific notes yet. Default notes from Settings apply until you save here.
+              </p>
+            ) : null}
             <FormTextarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add notes about this contact..."
+              placeholder={
+                isUsingDefault && defaultNotesHint
+                  ? `Default: ${defaultNotesHint.slice(0, 80)}${defaultNotesHint.length > 80 ? "…" : ""}`
+                  : "Add notes about this contact..."
+              }
               style={{ minHeight: 70, fontSize: 12, marginBottom: 12 }}
             />
 
@@ -216,6 +269,11 @@ export default function RightPanel({
 
         {activeTab === "ai" && (
           <div>
+            {isUsingDefault && defaultChatSettings?.customInstructions?.trim() ? (
+              <p style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 8, lineHeight: 1.5 }}>
+                Using default AI instructions until you save custom ones for this contact.
+              </p>
+            ) : null}
             <SectionLabel>Writing instructions</SectionLabel>
             <FormTextarea
               value={customInstructions}

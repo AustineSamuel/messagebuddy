@@ -169,6 +169,20 @@ Unlike server auto-reply, compose assist **does** use default rules when no per-
 | `frontend/src/whatsappjs-services/chats.ts` | `suggestAiReply()` client |
 | `frontend/src/dashboard/components/chat/ChatArea.tsx` | ✨ AI button |
 
+### AI context resolution
+
+File: `app/services/ai_context_resolver.ts`
+
+Before calling OpenAI, instructions and notes are resolved in this order:
+
+1. Per-chat saved value (if not empty and not a placeholder)
+2. Default chat rules row (`__default__`)
+3. Built-in general business instructions
+
+Placeholder-like text is ignored (e.g. `insert value here`, `TBD`, `lorem ipsum`, UI filler).
+
+The system prompt explicitly forbids placeholders in output. `sanitizeAiOutput()` strips any that slip through.
+
 ## Future improvements
 
 - Persist processed message ids in Redis/DB

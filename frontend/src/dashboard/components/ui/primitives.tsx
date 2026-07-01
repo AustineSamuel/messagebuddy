@@ -132,7 +132,7 @@ export function SectionLabel({ children }: { children: React.ReactNode }) {
 interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
 }
-export function FormInput({ label, className = "", ...props }: FormInputProps) {
+export function FormInput({ label, className = "", onFocus, onBlur, ...props }: FormInputProps) {
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
@@ -162,8 +162,14 @@ export function FormInput({ label, className = "", ...props }: FormInputProps) {
           fontFamily: "var(--font-sans)",
           transition: "border-color 0.15s",
         }}
-        onFocus={(e) => (e.target.style.borderColor = "var(--wa-green)")}
-        onBlur={(e) => (e.target.style.borderColor = "var(--border-1)")}
+        onFocus={(e) => {
+          e.target.style.borderColor = "var(--wa-green)";
+          onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          e.target.style.borderColor = "var(--border-1)";
+          onBlur?.(e);
+        }}
         {...props}
       />
     </div>
@@ -174,7 +180,7 @@ export function FormInput({ label, className = "", ...props }: FormInputProps) {
 interface FormTextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
 }
-export function FormTextarea({ label, className = "", style, ...props }: FormTextareaProps) {
+export function FormTextarea({ label, className = "", style, onFocus, onBlur, ...props }: FormTextareaProps) {
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
@@ -191,6 +197,7 @@ export function FormTextarea({ label, className = "", style, ...props }: FormTex
         </label>
       )}
       <textarea
+        className={className}
         style={{
           background: "var(--bg-2)",
           border: "1px solid var(--border-1)",
@@ -207,8 +214,14 @@ export function FormTextarea({ label, className = "", style, ...props }: FormTex
           transition: "border-color 0.15s",
           ...style,
         }}
-        onFocus={(e) => (e.target.style.borderColor = "var(--wa-green)")}
-        onBlur={(e) => (e.target.style.borderColor = "var(--border-1)")}
+        onFocus={(e) => {
+          e.target.style.borderColor = "var(--wa-green)";
+          onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          e.target.style.borderColor = "var(--border-1)";
+          onBlur?.(e);
+        }}
         {...props}
       />
     </div>

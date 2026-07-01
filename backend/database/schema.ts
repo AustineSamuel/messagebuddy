@@ -32,6 +32,37 @@ export class AuthAccessTokenSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class BusinessSettingSchema extends BaseModel {
+  static $columns = ['address', 'aiRules', 'createdAt', 'description', 'escalationRules', 'id', 'name', 'products', 'responseLanguage', 'tone', 'updatedAt', 'userId', 'website'] as const
+  $columns = BusinessSettingSchema.$columns
+  @column()
+  declare address: string | null
+  @column()
+  declare aiRules: string | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare description: string | null
+  @column()
+  declare escalationRules: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare name: string
+  @column()
+  declare products: any
+  @column()
+  declare responseLanguage: string
+  @column()
+  declare tone: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare userId: number
+  @column()
+  declare website: string | null
+}
+
 export class ChatRuleSchema extends BaseModel {
   static $columns = ['aiAutoReply', 'chatId', 'createdAt', 'customInstructions', 'id', 'notes', 'notifyOnReply', 'rule', 'sendCatalog', 'updatedAt', 'userId'] as const
   $columns = ChatRuleSchema.$columns
@@ -53,6 +84,29 @@ export class ChatRuleSchema extends BaseModel {
   declare rule: string
   @column()
   declare sendCatalog: boolean
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare userId: number
+}
+
+export class FollowUpScheduleSchema extends BaseModel {
+  static $columns = ['chatId', 'createdAt', 'enabled', 'id', 'interval', 'lastSentAt', 'nextRunAt', 'updatedAt', 'userId'] as const
+  $columns = FollowUpScheduleSchema.$columns
+  @column()
+  declare chatId: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare enabled: boolean
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare interval: string
+  @column.dateTime()
+  declare lastSentAt: DateTime | null
+  @column.dateTime()
+  declare nextRunAt: DateTime | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
   @column()

@@ -3,6 +3,7 @@ import { MessageMedia } from '../lib/wwebjs.js'
 import type WAWebJS from 'whatsapp-web.js'
 import whatsAppClientManager from './whatsapp_client_manager.js'
 import ChatRulesService from '../../chat_rules/services/chat_rules_service.js'
+import BusinessSettingsService from '../../business_settings/services/business_settings_service.js'
 import AiReplyService from '#services/ai_reply_service'
 import { buildConversationHistory } from '../helpers/conversation_history.js'
 import {
@@ -199,7 +200,10 @@ export default class WhatsAppService {
       throw new Error(`Chat not found: ${normalizedId}`)
     }
 
-    const { settings: rules } = await ChatRulesService.getForChat(userId, normalizedId)
+    const { settings: rules, default: defaultRules } = await ChatRulesService.getForChat(
+      userId,
+      normalizedId
+    )
     if (rules.rule === 'never') {
       throw new Error('AI replies are disabled for this chat.')
     }
@@ -208,11 +212,16 @@ export default class WhatsAppService {
     const history = await buildConversationHistory(chat, { limit: historyLimit })
     const contactLabel = await resolveChatDisplayName(chat, normalizedId).catch(() => normalizedId)
 
+    const business = await BusinessSettingsService.getAiContext(userId)
+
     const suggestion = await AiReplyService.generateDraftReply({
       history,
       customInstructions: rules.customInstructions,
       notes: rules.notes,
+      defaultCustomInstructions: defaultRules.customInstructions,
+      defaultNotes: defaultRules.notes,
       contactLabel,
+      business,
     })
 
     if (!suggestion) {

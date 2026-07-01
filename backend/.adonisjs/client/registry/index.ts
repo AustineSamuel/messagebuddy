@@ -744,6 +744,36 @@ const routes = {
     tokens: [{"old":"/api/v1/chat-rules/:chatId","type":0,"val":"api","end":""},{"old":"/api/v1/chat-rules/:chatId","type":0,"val":"v1","end":""},{"old":"/api/v1/chat-rules/:chatId","type":0,"val":"chat-rules","end":""},{"old":"/api/v1/chat-rules/:chatId","type":1,"val":"chatId","end":""}],
     types: placeholder as Registry['chatRules.chat_rules.update']['types'],
   },
+  'followUps.follow_ups.index': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/follow-ups',
+    tokens: [{"old":"/api/v1/follow-ups","type":0,"val":"api","end":""},{"old":"/api/v1/follow-ups","type":0,"val":"v1","end":""},{"old":"/api/v1/follow-ups","type":0,"val":"follow-ups","end":""}],
+    types: placeholder as Registry['followUps.follow_ups.index']['types'],
+  },
+  'followUps.follow_ups.sync': {
+    methods: ["PUT"],
+    pattern: '/api/v1/follow-ups/sync',
+    tokens: [{"old":"/api/v1/follow-ups/sync","type":0,"val":"api","end":""},{"old":"/api/v1/follow-ups/sync","type":0,"val":"v1","end":""},{"old":"/api/v1/follow-ups/sync","type":0,"val":"follow-ups","end":""},{"old":"/api/v1/follow-ups/sync","type":0,"val":"sync","end":""}],
+    types: placeholder as Registry['followUps.follow_ups.sync']['types'],
+  },
+  'followUps.follow_ups.update': {
+    methods: ["PATCH"],
+    pattern: '/api/v1/follow-ups/:chatId',
+    tokens: [{"old":"/api/v1/follow-ups/:chatId","type":0,"val":"api","end":""},{"old":"/api/v1/follow-ups/:chatId","type":0,"val":"v1","end":""},{"old":"/api/v1/follow-ups/:chatId","type":0,"val":"follow-ups","end":""},{"old":"/api/v1/follow-ups/:chatId","type":1,"val":"chatId","end":""}],
+    types: placeholder as Registry['followUps.follow_ups.update']['types'],
+  },
+  'businessSettings.business_settings.show': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/business-settings',
+    tokens: [{"old":"/api/v1/business-settings","type":0,"val":"api","end":""},{"old":"/api/v1/business-settings","type":0,"val":"v1","end":""},{"old":"/api/v1/business-settings","type":0,"val":"business-settings","end":""}],
+    types: placeholder as Registry['businessSettings.business_settings.show']['types'],
+  },
+  'businessSettings.business_settings.update': {
+    methods: ["PUT"],
+    pattern: '/api/v1/business-settings',
+    tokens: [{"old":"/api/v1/business-settings","type":0,"val":"api","end":""},{"old":"/api/v1/business-settings","type":0,"val":"v1","end":""},{"old":"/api/v1/business-settings","type":0,"val":"business-settings","end":""}],
+    types: placeholder as Registry['businessSettings.business_settings.update']['types'],
+  },
 } as const satisfies Record<string, AdonisEndpoint>
 
 export { routes }

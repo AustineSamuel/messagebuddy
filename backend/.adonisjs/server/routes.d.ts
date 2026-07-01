@@ -127,6 +127,11 @@ export type ScannedRoutes = {
     'chatRules.chat_rules.update_default': { paramsTuple?: []; params?: {} }
     'chatRules.chat_rules.show': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'chatRules.chat_rules.update': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
+    'followUps.follow_ups.index': { paramsTuple?: []; params?: {} }
+    'followUps.follow_ups.sync': { paramsTuple?: []; params?: {} }
+    'followUps.follow_ups.update': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
+    'businessSettings.business_settings.show': { paramsTuple?: []; params?: {} }
+    'businessSettings.business_settings.update': { paramsTuple?: []; params?: {} }
   }
   GET: {
     'profile.profile.show': { paramsTuple?: []; params?: {} }
@@ -165,6 +170,8 @@ export type ScannedRoutes = {
     'chatRules.chat_rules.index': { paramsTuple?: []; params?: {} }
     'chatRules.chat_rules.show_default': { paramsTuple?: []; params?: {} }
     'chatRules.chat_rules.show': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
+    'followUps.follow_ups.index': { paramsTuple?: []; params?: {} }
+    'businessSettings.business_settings.show': { paramsTuple?: []; params?: {} }
   }
   HEAD: {
     'profile.profile.show': { paramsTuple?: []; params?: {} }
@@ -203,6 +210,8 @@ export type ScannedRoutes = {
     'chatRules.chat_rules.index': { paramsTuple?: []; params?: {} }
     'chatRules.chat_rules.show_default': { paramsTuple?: []; params?: {} }
     'chatRules.chat_rules.show': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
+    'followUps.follow_ups.index': { paramsTuple?: []; params?: {} }
+    'businessSettings.business_settings.show': { paramsTuple?: []; params?: {} }
   }
   POST: {
     'auth.new_account.store': { paramsTuple?: []; params?: {} }
@@ -283,6 +292,8 @@ export type ScannedRoutes = {
     'whatsapp.whatsapp_chats.set_customer_note': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'chatRules.chat_rules.update_default': { paramsTuple?: []; params?: {} }
     'chatRules.chat_rules.update': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
+    'followUps.follow_ups.sync': { paramsTuple?: []; params?: {} }
+    'businessSettings.business_settings.update': { paramsTuple?: []; params?: {} }
   }
   PATCH: {
     'whatsapp.whatsapp_messages.update': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }
@@ -298,6 +309,7 @@ export type ScannedRoutes = {
     'whatsapp.whatsapp_settings.auto_download_photos': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_settings.auto_download_videos': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_settings.background_sync': { paramsTuple?: []; params?: {} }
+    'followUps.follow_ups.update': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
   }
 }
 declare module '@adonisjs/core/types/http' {
