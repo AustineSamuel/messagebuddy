@@ -1,4 +1,5 @@
 import User from '#models/user'
+import CreditsService from '#services/credits_service'
 import { signupValidator } from '#validators/user'
 import UserTransformer from '../../users/transformers/user_transformer.js'
 import type { HttpContext } from '@adonisjs/core/http'
@@ -8,6 +9,7 @@ export default class NewAccountController {
     const { fullName, email, password } = await request.validateUsing(signupValidator)
 
     const user = await User.create({ fullName, email, password })
+    await CreditsService.initializeNewUser(user.id)
     const token = await User.accessTokens.create(user)
 
     return serialize({

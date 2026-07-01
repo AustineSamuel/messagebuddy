@@ -3,6 +3,7 @@ import type { Client, Message } from 'whatsapp-web.js'
 import ChatRulesService from '../../chat_rules/services/chat_rules_service.js'
 import BusinessSettingsService from '../../business_settings/services/business_settings_service.js'
 import AiReplyService from '#services/ai_reply_service'
+import CreditsService, { InsufficientCreditsError } from '#services/credits_service'
 import { buildConversationHistory, messageBodyFromWweb } from '../helpers/conversation_history.js'
 import { resolveChatDisplayName, serializeId } from '../helpers/serialization.js'
 
@@ -89,6 +90,11 @@ export default class WhatsAppAutoReplyService {
 
         if (!AiReplyService.isConfigured()) return
 
+        if (!(await CreditsService.hasSufficientCredits(userId))) {
+          logger.debug({ userId, chatId }, 'Insufficient credits — auto-reply skipped')
+          return
+        }
+
         const defaultRules = await ChatRulesService.getDefault(userId)
         const business = await BusinessSettingsService.getAiContext(userId)
 
@@ -116,6 +122,18 @@ export default class WhatsAppAutoReplyService {
         }
 
         await message.reply(replyText)
+        await CreditsService.chargeMessageSent(userId, {
+          chatId,
+          source: 'auto_reply',
+          preview: replyText,
+          chatLabel: contactLabel,
+        }).catch((err) => {
+          if (err instanceof InsufficientCreditsError) {
+            logger.warn({ userId, chatId }, 'Auto-reply sent but credit charge failed')
+          } else {
+            throw err
+          }
+        })
         markProcessed(messageId)
         logger.info({ userId, chatId, messageId }, 'AI auto-reply sent')
       } catch (error) {

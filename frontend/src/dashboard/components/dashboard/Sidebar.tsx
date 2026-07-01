@@ -20,6 +20,17 @@ const NAV_ITEMS: {
     ),
   },
   {
+    view: "credits",
+    title: "Buy Credits",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width={20} height={20}>
+        <rect x="2" y="5" width="20" height="14" rx="2" />
+        <path d="M2 10h20" />
+        <circle cx="7" cy="15" r="1.5" fill="currentColor" stroke="none" />
+      </svg>
+    ),
+  },
+  {
     view: "dashboard",
     title: "Analytics",
     icon: (

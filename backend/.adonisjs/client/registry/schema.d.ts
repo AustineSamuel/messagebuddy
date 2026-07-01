@@ -1543,4 +1543,88 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/business_settings_controller').default['update']>>>
     }
   }
+  'credits.credits.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/credits'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/credits_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/credits_controller').default['show']>>>
+    }
+  }
+  'credits.credits.usage': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/credits/usage'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/credits_controller').default['usage']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/credits_controller').default['usage']>>>
+    }
+  }
+  'credits.credits.purchase': {
+    methods: ["POST"]
+    pattern: '/api/v1/credits/purchase'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/credits_controller').default['purchase']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/credits_controller').default['purchase']>>>
+    }
+  }
+  'analytics.analytics.summary': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/analytics/summary'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/analytics_controller').default['summary']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/analytics_controller').default['summary']>>>
+    }
+  }
+  'analytics.analytics.hourly': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/analytics/hourly'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/analytics_controller').default['hourly']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/analytics_controller').default['hourly']>>>
+    }
+  }
+  'analytics.analytics.top_contacts': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/analytics/top-contacts'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/analytics_controller').default['topContacts']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/analytics_controller').default['topContacts']>>>
+    }
+  }
+  'analytics.analytics.recent_messages': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/analytics/recent-messages'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/analytics_controller').default['recentMessages']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/analytics_controller').default['recentMessages']>>>
+    }
+  }
 }

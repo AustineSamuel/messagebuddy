@@ -774,6 +774,48 @@ const routes = {
     tokens: [{"old":"/api/v1/business-settings","type":0,"val":"api","end":""},{"old":"/api/v1/business-settings","type":0,"val":"v1","end":""},{"old":"/api/v1/business-settings","type":0,"val":"business-settings","end":""}],
     types: placeholder as Registry['businessSettings.business_settings.update']['types'],
   },
+  'credits.credits.show': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/credits',
+    tokens: [{"old":"/api/v1/credits","type":0,"val":"api","end":""},{"old":"/api/v1/credits","type":0,"val":"v1","end":""},{"old":"/api/v1/credits","type":0,"val":"credits","end":""}],
+    types: placeholder as Registry['credits.credits.show']['types'],
+  },
+  'credits.credits.usage': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/credits/usage',
+    tokens: [{"old":"/api/v1/credits/usage","type":0,"val":"api","end":""},{"old":"/api/v1/credits/usage","type":0,"val":"v1","end":""},{"old":"/api/v1/credits/usage","type":0,"val":"credits","end":""},{"old":"/api/v1/credits/usage","type":0,"val":"usage","end":""}],
+    types: placeholder as Registry['credits.credits.usage']['types'],
+  },
+  'credits.credits.purchase': {
+    methods: ["POST"],
+    pattern: '/api/v1/credits/purchase',
+    tokens: [{"old":"/api/v1/credits/purchase","type":0,"val":"api","end":""},{"old":"/api/v1/credits/purchase","type":0,"val":"v1","end":""},{"old":"/api/v1/credits/purchase","type":0,"val":"credits","end":""},{"old":"/api/v1/credits/purchase","type":0,"val":"purchase","end":""}],
+    types: placeholder as Registry['credits.credits.purchase']['types'],
+  },
+  'analytics.analytics.summary': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/analytics/summary',
+    tokens: [{"old":"/api/v1/analytics/summary","type":0,"val":"api","end":""},{"old":"/api/v1/analytics/summary","type":0,"val":"v1","end":""},{"old":"/api/v1/analytics/summary","type":0,"val":"analytics","end":""},{"old":"/api/v1/analytics/summary","type":0,"val":"summary","end":""}],
+    types: placeholder as Registry['analytics.analytics.summary']['types'],
+  },
+  'analytics.analytics.hourly': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/analytics/hourly',
+    tokens: [{"old":"/api/v1/analytics/hourly","type":0,"val":"api","end":""},{"old":"/api/v1/analytics/hourly","type":0,"val":"v1","end":""},{"old":"/api/v1/analytics/hourly","type":0,"val":"analytics","end":""},{"old":"/api/v1/analytics/hourly","type":0,"val":"hourly","end":""}],
+    types: placeholder as Registry['analytics.analytics.hourly']['types'],
+  },
+  'analytics.analytics.top_contacts': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/analytics/top-contacts',
+    tokens: [{"old":"/api/v1/analytics/top-contacts","type":0,"val":"api","end":""},{"old":"/api/v1/analytics/top-contacts","type":0,"val":"v1","end":""},{"old":"/api/v1/analytics/top-contacts","type":0,"val":"analytics","end":""},{"old":"/api/v1/analytics/top-contacts","type":0,"val":"top-contacts","end":""}],
+    types: placeholder as Registry['analytics.analytics.top_contacts']['types'],
+  },
+  'analytics.analytics.recent_messages': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/analytics/recent-messages',
+    tokens: [{"old":"/api/v1/analytics/recent-messages","type":0,"val":"api","end":""},{"old":"/api/v1/analytics/recent-messages","type":0,"val":"v1","end":""},{"old":"/api/v1/analytics/recent-messages","type":0,"val":"analytics","end":""},{"old":"/api/v1/analytics/recent-messages","type":0,"val":"recent-messages","end":""}],
+    types: placeholder as Registry['analytics.analytics.recent_messages']['types'],
+  },
 } as const satisfies Record<string, AdonisEndpoint>
 
 export { routes }

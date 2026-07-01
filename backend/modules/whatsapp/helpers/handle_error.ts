@@ -1,10 +1,12 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import { InsufficientCreditsError } from '#services/credits_service'
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'WhatsApp request failed.'
 }
 
-function errorStatus(message: string) {
+function errorStatus(error: unknown, message: string) {
+  if (error instanceof InsufficientCreditsError) return 402
   if (message.includes('not connected')) return 503
   if (
     message.includes('protocolTimeout') ||
@@ -18,5 +20,11 @@ function errorStatus(message: string) {
 
 export function handleWhatsAppError(error: unknown, response: HttpContext['response']) {
   const message = errorMessage(error)
-  return response.status(errorStatus(message)).json({ error: message })
+  const status = errorStatus(error, message)
+  const body: Record<string, unknown> = { error: message }
+  if (error instanceof InsufficientCreditsError) {
+    body.balance = error.balance
+    body.required = error.required
+  }
+  return response.status(status).json(body)
 }

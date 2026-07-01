@@ -8,6 +8,7 @@ import RightPanel from "@/dashboard/components/chat/RightPanel";
 import DashboardAnalytics from "@/dashboard/components/dashboard/DashboardAnalytics";
 import ContactsPage from "@/dashboard/components/contacts/ContactsPage";
 import FollowUpsPage from "@/dashboard/components/followups/FollowUpsPage";
+import BuyCreditsPage from "@/dashboard/components/credits/BuyCreditsPage";
 import SettingsPage from "@/dashboard/components/settings/SettingsPage";
 import ThemeToggle from "@/dashboard/components/ui/ThemeToggle";
 import WhatsAppConnectScreen from "@/dashboard/components/whatsapp/WhatsAppConnectScreen";
@@ -20,8 +21,8 @@ import {
   DashboardWorkspaceSkeleton,
   SettingsPageSkeleton,
 } from "@/dashboard/components/ui/WhatsAppSkeleton";
-import { DEMO_DAILY_CREDITS } from "@/dashboard/data/demo";
 import { dedupeContactsById } from "@/dashboard/lib/contacts";
+import type { DailyCredits } from "@/dashboard/types";
 
 interface DashboardLayoutProps {
   onLogout?: () => void;
@@ -59,7 +60,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
   }, [theme]);
 
   const toggleTheme = () => setTheme((prev) => (prev === "dark" ? "light" : "dark"));
-  const creditsToday = DEMO_DAILY_CREDITS[DEMO_DAILY_CREDITS.length - 1].used;
+  const creditsToday = store.creditsUsedToday;
   const contactsForPage = useMemo(() => {
     const source = store.waContacts.length > 0 ? store.waContacts : store.contacts;
     return dedupeContactsById(source);
@@ -172,6 +173,9 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
                 onAddTriggerRule={store.addTriggerRule}
                 onRemoveTriggerRule={store.removeTriggerRule}
                 creditsBalance={store.creditsBalance}
+                creditsUsedToday={store.creditsUsedToday}
+                dailyCreditsUsage={store.dailyCreditsUsage as DailyCredits[]}
+                onBuyCredits={() => store.setActiveView("credits")}
                 chatSettings={store.activeChatSettings}
                 defaultChatSettings={store.defaultChatSettings}
                 isUsingDefault={store.activeChatUsingDefault}
@@ -185,7 +189,16 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
         )}
 
         {store.activeView === "dashboard" && (
-          <DashboardAnalytics creditsBalance={store.creditsBalance} />
+          <DashboardAnalytics onBuyCredits={() => store.setActiveView("credits")} />
+        )}
+
+        {store.activeView === "credits" && (
+          <BuyCreditsPage
+            balance={store.creditsBalance}
+            packages={store.creditPackages}
+            creditsPerMessage={store.creditsPerMessage}
+            onPurchased={store.refreshCredits}
+          />
         )}
 
         {store.activeView === "contacts" && (

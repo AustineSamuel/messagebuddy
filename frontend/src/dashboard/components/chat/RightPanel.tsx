@@ -4,8 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Avatar, Badge, SectionLabel, Toggle, FormTextarea, AddBtn, PrimaryBtn } from "@/dashboard/components/ui/primitives";
 import { RightPanelSkeleton } from "@/dashboard/components/ui/WhatsAppSkeleton";
 import type { ChatRuleSettings } from "@/app/services/chat-rules";
-import type { Contact, ContactRule, RightTab, TriggerRule } from "@/dashboard/types";
-import { DEMO_DAILY_CREDITS } from "@/dashboard/data/demo";
+import type { Contact, ContactRule, RightTab, TriggerRule, DailyCredits } from "@/dashboard/types";
 
 interface RightPanelProps {
   contact: Contact;
@@ -15,6 +14,9 @@ interface RightPanelProps {
   onAddTriggerRule: (rule: Omit<TriggerRule, "id">) => void;
   onRemoveTriggerRule: (id: number) => void;
   creditsBalance: number;
+  creditsUsedToday: number;
+  dailyCreditsUsage: DailyCredits[];
+  onBuyCredits?: () => void;
   chatSettings: ChatRuleSettings | null;
   defaultChatSettings: ChatRuleSettings | null;
   isUsingDefault?: boolean;
@@ -84,6 +86,9 @@ export default function RightPanel({
   onAddTriggerRule,
   onRemoveTriggerRule,
   creditsBalance,
+  creditsUsedToday,
+  dailyCreditsUsage,
+  onBuyCredits,
   chatSettings,
   defaultChatSettings,
   isUsingDefault = true,
@@ -114,8 +119,8 @@ export default function RightPanel({
     syncedContactIdRef.current = contact.id;
   }, [contact.id, contact.rule, chatSettings, defaultChatSettings, isUsingDefault, loadingSettings]);
 
-  const creditsToday = DEMO_DAILY_CREDITS[DEMO_DAILY_CREDITS.length - 1].used;
-  const creditsMax = Math.max(...DEMO_DAILY_CREDITS.map((d) => d.used));
+  const creditsToday = creditsUsedToday;
+  const creditsMax = Math.max(...dailyCreditsUsage.map((d) => d.used), 1);
   const defaultNotesHint = defaultChatSettings?.notes?.trim();
 
   const handleSave = async () => {
@@ -349,11 +354,11 @@ export default function RightPanel({
 
             <SectionLabel>This week</SectionLabel>
             <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 64, marginBottom: 12 }}>
-              {DEMO_DAILY_CREDITS.map((d, i) => {
+              {dailyCreditsUsage.map((d, i) => {
                 const pct = Math.round((d.used / creditsMax) * 100);
-                const isToday = i === DEMO_DAILY_CREDITS.length - 1;
+                const isToday = i === dailyCreditsUsage.length - 1;
                 return (
-                  <div key={d.day} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", height: "100%" }}>
+                  <div key={`${d.day}-${d.date}`} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", height: "100%" }}>
                     <div
                       style={{
                         width: "100%",
@@ -369,6 +374,11 @@ export default function RightPanel({
               })}
             </div>
             <Badge variant="gray">Used today: {creditsToday} credits</Badge>
+            {onBuyCredits ? (
+              <PrimaryBtn variant="green" style={{ width: "100%", marginTop: 12 }} onClick={onBuyCredits}>
+                Buy more credits
+              </PrimaryBtn>
+            ) : null}
           </div>
         )}
       </div>

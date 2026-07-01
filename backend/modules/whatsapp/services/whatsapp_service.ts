@@ -2,6 +2,7 @@ import type { Client } from 'whatsapp-web.js'
 import { MessageMedia } from '../lib/wwebjs.js'
 import type WAWebJS from 'whatsapp-web.js'
 import whatsAppClientManager from './whatsapp_client_manager.js'
+import CreditsService, { InsufficientCreditsError } from '#services/credits_service'
 import ChatRulesService from '../../chat_rules/services/chat_rules_service.js'
 import BusinessSettingsService from '../../business_settings/services/business_settings_service.js'
 import AiReplyService from '#services/ai_reply_service'
@@ -237,9 +238,26 @@ export default class WhatsAppService {
     content: string | Record<string, unknown>,
     options?: Record<string, unknown>
   ) {
-    const chat = await this.getChatEntity(userId, chatId)
+    const normalizedId = decodeURIComponent(chatId)
+    const textPreview = typeof content === 'string' ? content : String((content as { body?: string }).body ?? '')
+
+    if (!(await CreditsService.hasSufficientCredits(userId))) {
+      const account = await CreditsService.getAccount(userId)
+      throw new InsufficientCreditsError(account.balance)
+    }
+
+    const chat = await this.getChatEntity(userId, normalizedId)
     const payload = typeof content === 'string' ? content : this.buildMessageContent(content)
     const message = await chat.sendMessage(payload as string, options)
+
+    const contactLabel = await resolveChatDisplayName(chat, normalizedId).catch(() => normalizedId)
+    await CreditsService.chargeMessageSent(userId, {
+      chatId: normalizedId,
+      source: 'manual',
+      preview: textPreview,
+      chatLabel: contactLabel,
+    })
+
     return serializeMessage(message)
   }
 

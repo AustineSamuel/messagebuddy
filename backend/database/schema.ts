@@ -90,6 +90,48 @@ export class ChatRuleSchema extends BaseModel {
   declare userId: number
 }
 
+export class CreditTransactionSchema extends BaseModel {
+  static $columns = ['amount', 'balanceAfter', 'chatId', 'createdAt', 'description', 'id', 'metadata', 'type', 'userId'] as const
+  $columns = CreditTransactionSchema.$columns
+  @column()
+  declare amount: string
+  @column()
+  declare balanceAfter: string
+  @column()
+  declare chatId: string | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare description: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare metadata: any | null
+  @column()
+  declare type: string
+  @column()
+  declare userId: number
+}
+
+export class CreditUsageDailySchema extends BaseModel {
+  static $columns = ['createdAt', 'creditsUsed', 'id', 'messagesSent', 'updatedAt', 'usageDate', 'userId'] as const
+  $columns = CreditUsageDailySchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare creditsUsed: string
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare messagesSent: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column.date()
+  declare usageDate: DateTime
+  @column()
+  declare userId: number
+}
+
 export class FollowUpScheduleSchema extends BaseModel {
   static $columns = ['chatId', 'createdAt', 'enabled', 'id', 'interval', 'lastSentAt', 'nextRunAt', 'updatedAt', 'userId'] as const
   $columns = FollowUpScheduleSchema.$columns
@@ -113,6 +155,29 @@ export class FollowUpScheduleSchema extends BaseModel {
   declare userId: number
 }
 
+export class MessageLogSchema extends BaseModel {
+  static $columns = ['bodyPreview', 'chatId', 'chatLabel', 'createdAt', 'creditsCharged', 'id', 'isAi', 'source', 'userId'] as const
+  $columns = MessageLogSchema.$columns
+  @column()
+  declare bodyPreview: string | null
+  @column()
+  declare chatId: string
+  @column()
+  declare chatLabel: string | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare creditsCharged: string
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare isAi: boolean
+  @column()
+  declare source: string
+  @column()
+  declare userId: number
+}
+
 export class SessionSchema extends BaseModel {
   static $columns = ['data', 'expiresAt', 'id', 'userId'] as const
   $columns = SessionSchema.$columns
@@ -127,10 +192,12 @@ export class SessionSchema extends BaseModel {
 }
 
 export class UserSchema extends BaseModel {
-  static $columns = ['createdAt', 'email', 'fullName', 'id', 'password', 'updatedAt'] as const
+  static $columns = ['createdAt', 'creditsBalance', 'email', 'fullName', 'id', 'password', 'updatedAt'] as const
   $columns = UserSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
+  @column()
+  declare creditsBalance: string
   @column()
   declare email: string
   @column()

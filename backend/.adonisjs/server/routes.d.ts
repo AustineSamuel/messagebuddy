@@ -132,6 +132,13 @@ export type ScannedRoutes = {
     'followUps.follow_ups.update': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'businessSettings.business_settings.show': { paramsTuple?: []; params?: {} }
     'businessSettings.business_settings.update': { paramsTuple?: []; params?: {} }
+    'credits.credits.show': { paramsTuple?: []; params?: {} }
+    'credits.credits.usage': { paramsTuple?: []; params?: {} }
+    'credits.credits.purchase': { paramsTuple?: []; params?: {} }
+    'analytics.analytics.summary': { paramsTuple?: []; params?: {} }
+    'analytics.analytics.hourly': { paramsTuple?: []; params?: {} }
+    'analytics.analytics.top_contacts': { paramsTuple?: []; params?: {} }
+    'analytics.analytics.recent_messages': { paramsTuple?: []; params?: {} }
   }
   GET: {
     'profile.profile.show': { paramsTuple?: []; params?: {} }
@@ -172,6 +179,12 @@ export type ScannedRoutes = {
     'chatRules.chat_rules.show': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'followUps.follow_ups.index': { paramsTuple?: []; params?: {} }
     'businessSettings.business_settings.show': { paramsTuple?: []; params?: {} }
+    'credits.credits.show': { paramsTuple?: []; params?: {} }
+    'credits.credits.usage': { paramsTuple?: []; params?: {} }
+    'analytics.analytics.summary': { paramsTuple?: []; params?: {} }
+    'analytics.analytics.hourly': { paramsTuple?: []; params?: {} }
+    'analytics.analytics.top_contacts': { paramsTuple?: []; params?: {} }
+    'analytics.analytics.recent_messages': { paramsTuple?: []; params?: {} }
   }
   HEAD: {
     'profile.profile.show': { paramsTuple?: []; params?: {} }
@@ -212,6 +225,12 @@ export type ScannedRoutes = {
     'chatRules.chat_rules.show': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'followUps.follow_ups.index': { paramsTuple?: []; params?: {} }
     'businessSettings.business_settings.show': { paramsTuple?: []; params?: {} }
+    'credits.credits.show': { paramsTuple?: []; params?: {} }
+    'credits.credits.usage': { paramsTuple?: []; params?: {} }
+    'analytics.analytics.summary': { paramsTuple?: []; params?: {} }
+    'analytics.analytics.hourly': { paramsTuple?: []; params?: {} }
+    'analytics.analytics.top_contacts': { paramsTuple?: []; params?: {} }
+    'analytics.analytics.recent_messages': { paramsTuple?: []; params?: {} }
   }
   POST: {
     'auth.new_account.store': { paramsTuple?: []; params?: {} }
@@ -277,6 +296,7 @@ export type ScannedRoutes = {
     'whatsapp.whatsapp_profile.presence_available': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_profile.presence_unavailable': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_profile.revoke_status': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }
+    'credits.credits.purchase': { paramsTuple?: []; params?: {} }
   }
   DELETE: {
     'whatsapp.whatsapp_session.destroy': { paramsTuple?: []; params?: {} }

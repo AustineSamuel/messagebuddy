@@ -25,9 +25,12 @@ import type {
   Conversation,
 } from "@/dashboard/types";
 import {
-  DEMO_TRIGGER_RULES,
-  DEMO_CREDITS_BALANCE,
-} from "@/dashboard/data/demo";
+  getCreditsAccount,
+  getCreditsUsage,
+  type CreditPackage,
+  type DailyCreditsUsage,
+} from "@/app/services/credits";
+import { DEMO_TRIGGER_RULES } from "@/dashboard/data/demo";
 
 const EMPTY_BUSINESS_SETTINGS: BusinessSettings = {
   name: "",
@@ -103,7 +106,13 @@ export function useDashboardStore({ whatsAppReady }: Props) {
   const [products, setProducts] = useState<Product[]>([]);
   const [settings, setSettings] = useState<BusinessSettings>(EMPTY_BUSINESS_SETTINGS);
   const [triggerRules, setTriggerRules] = useState<TriggerRule[]>(DEMO_TRIGGER_RULES);
-  const [creditsBalance, setCreditsBalance] = useState(DEMO_CREDITS_BALANCE);
+  const [creditsBalance, setCreditsBalance] = useState(0);
+  const [creditsUsedToday, setCreditsUsedToday] = useState(0);
+  const [signupGrant, setSignupGrant] = useState(5000);
+  const [creditsPerMessage, setCreditsPerMessage] = useState(0.5);
+  const [dailyCreditsUsage, setDailyCreditsUsage] = useState<DailyCreditsUsage[]>([]);
+  const [creditPackages, setCreditPackages] = useState<CreditPackage[]>([]);
+  const [loadingCredits, setLoadingCredits] = useState(true);
   const [chatRulesIndex, setChatRulesIndex] = useState<ChatRulesIndex | null>(null);
   const [activeChatSettings, setActiveChatSettings] = useState<ChatRuleSettings | null>(null);
   const [activeChatUsingDefault, setActiveChatUsingDefault] = useState(true);
@@ -130,6 +139,25 @@ export function useDashboardStore({ whatsAppReady }: Props) {
   const activeConversation = activeContactId
     ? conversations[activeContactId]
     : undefined;
+
+  const loadCredits = useCallback(async () => {
+    setLoadingCredits(true);
+    try {
+      const [account, usage] = await Promise.all([getCreditsAccount(), getCreditsUsage(7)]);
+      setCreditsBalance(account.balance);
+      setCreditsUsedToday(account.usedToday);
+      setSignupGrant(account.signupGrant);
+      setCreditsPerMessage(account.creditsPerMessage);
+      setDailyCreditsUsage(usage);
+      setCreditPackages(account.packages);
+    } catch (err) {
+      setSyncError(getErrorMessage(err));
+    } finally {
+      setLoadingCredits(false);
+    }
+  }, []);
+
+  const refreshCredits = loadCredits;
 
   const loadBusinessSettings = useCallback(async () => {
     setLoadingBusinessSettings(true);
@@ -277,7 +305,8 @@ export function useDashboardStore({ whatsAppReady }: Props) {
 
   useEffect(() => {
     void loadBusinessSettings();
-  }, [loadBusinessSettings]);
+    void loadCredits();
+  }, [loadBusinessSettings, loadCredits]);
 
   useEffect(() => {
     if (!whatsAppReady) return;
@@ -331,11 +360,12 @@ export function useDashboardStore({ whatsAppReady }: Props) {
               : c
           )
         );
+        void loadCredits();
       } catch (err) {
         setSyncError(getErrorMessage(err));
       }
     },
-    [activeContactId, contacts, waContacts]
+    [activeContactId, contacts, waContacts, loadCredits]
   );
 
   const editMessage = useCallback(
@@ -511,6 +541,13 @@ export function useDashboardStore({ whatsAppReady }: Props) {
     settings,
     triggerRules,
     creditsBalance,
+    creditsUsedToday,
+    signupGrant,
+    creditsPerMessage,
+    dailyCreditsUsage,
+    creditPackages,
+    loadingCredits,
+    refreshCredits,
     editingMessage,
     loadingChats,
     loadingMessages,

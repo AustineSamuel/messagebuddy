@@ -1,4 +1,5 @@
 import User from '#models/user'
+import CreditsService from '#services/credits_service'
 import { getFirebaseAdmin } from '#services/firebase_admin_service'
 import { firebaseIdTokenValidator } from '../../modules/auth/validators/firebase_id_token.js'
 import UserTransformer from '../../modules/users/transformers/user_transformer.js'
@@ -35,8 +36,10 @@ export default class FirebaseAuthsController {
 
     const fullName = decoded.name?.trim() || email.split('@')[0] || 'User'
 
+    let isNewUser = false
     let user = await User.findBy('email', email)
     if (!user) {
+      isNewUser = true
       const randomPassword = randomBytes(48).toString('hex')
       user = await User.create({
         fullName,
@@ -46,6 +49,10 @@ export default class FirebaseAuthsController {
     } else if (!user.fullName) {
       user.fullName = fullName
       await user.save()
+    }
+
+    if (isNewUser) {
+      await CreditsService.initializeNewUser(user.id)
     }
 
     const token = await User.accessTokens.create(user)

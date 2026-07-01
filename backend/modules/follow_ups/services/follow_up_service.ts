@@ -4,6 +4,7 @@ import FollowUpSchedule, { type FollowUpInterval } from '#models/follow_up_sched
 import AiReplyService from '#services/ai_reply_service'
 import ChatRulesService from '../../chat_rules/services/chat_rules_service.js'
 import BusinessSettingsService from '../../business_settings/services/business_settings_service.js'
+import CreditsService from '#services/credits_service'
 import whatsAppClientManager from '../../whatsapp/services/whatsapp_client_manager.js'
 import { buildConversationHistory } from '../../whatsapp/helpers/conversation_history.js'
 import { resolveChatDisplayName } from '../../whatsapp/helpers/serialization.js'
@@ -226,7 +227,18 @@ export default class FollowUpService {
       return
     }
 
+    if (!(await CreditsService.hasSufficientCredits(userId))) {
+      await this.deferNextRun(schedule, 60)
+      return
+    }
+
     await chat.sendMessage(message)
+    await CreditsService.chargeMessageSent(userId, {
+      chatId,
+      source: 'follow_up',
+      preview: message,
+      chatLabel: contactLabel,
+    })
 
     const sentAt = DateTime.now()
     schedule.lastSentAt = sentAt

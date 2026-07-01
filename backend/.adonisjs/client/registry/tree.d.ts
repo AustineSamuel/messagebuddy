@@ -176,4 +176,19 @@ export interface ApiDefinition {
       update: typeof routes['businessSettings.business_settings.update']
     }
   }
+  credits: {
+    credits: {
+      show: typeof routes['credits.credits.show']
+      usage: typeof routes['credits.credits.usage']
+      purchase: typeof routes['credits.credits.purchase']
+    }
+  }
+  analytics: {
+    analytics: {
+      summary: typeof routes['analytics.analytics.summary']
+      hourly: typeof routes['analytics.analytics.hourly']
+      topContacts: typeof routes['analytics.analytics.top_contacts']
+      recentMessages: typeof routes['analytics.analytics.recent_messages']
+    }
+  }
 }
