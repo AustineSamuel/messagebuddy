@@ -37,8 +37,14 @@ type SerializedMessage = {
 
 function messagePreviewBody(message: { body?: string; type?: string; hasMedia?: boolean }) {
   if (message.body?.trim()) return message.body.trim()
+  if (message.hasMedia && isAudioMessageType(message.type)) return ''
   if (message.hasMedia) return `[${message.type || 'media'}]`
   return `[${message.type || 'message'}]`
+}
+
+export function isAudioMessageType(type?: string) {
+  const normalized = (type || '').toLowerCase()
+  return normalized === 'ptt' || normalized === 'audio' || normalized === 'voice'
 }
 
 /** Resolve display title per wwebjs Chat + Contact APIs (formattedTitle is often empty for DMs). */

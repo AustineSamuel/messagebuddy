@@ -242,3 +242,38 @@ export class UserSchema extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
 }
+
+export class WebsiteServiceOrderSchema extends BaseModel {
+  static $columns = ['amountNgn', 'businessName', 'contactEmail', 'contactName', 'contactPhone', 'createdAt', 'id', 'notes', 'packageId', 'packageName', 'paymentMethod', 'status', 'updatedAt', 'userId', 'websiteUrl'] as const
+  $columns = WebsiteServiceOrderSchema.$columns
+  @column()
+  declare amountNgn: number
+  @column()
+  declare businessName: string | null
+  @column()
+  declare contactEmail: string | null
+  @column()
+  declare contactName: string | null
+  @column()
+  declare contactPhone: string | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare notes: string | null
+  @column()
+  declare packageId: string
+  @column()
+  declare packageName: string
+  @column()
+  declare paymentMethod: string
+  @column()
+  declare status: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare userId: number
+  @column()
+  declare websiteUrl: string | null
+}

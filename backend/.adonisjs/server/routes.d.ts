@@ -50,6 +50,7 @@ export type ScannedRoutes = {
     'whatsapp.whatsapp_messages.reply': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }
     'whatsapp.whatsapp_messages.forward': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }
     'whatsapp.whatsapp_messages.media': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }
+    'whatsapp.whatsapp_messages.transcribe': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }
     'whatsapp.whatsapp_messages.reactions': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }
     'whatsapp.whatsapp_messages.poll_votes': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }
     'whatsapp.whatsapp_messages.star': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }
@@ -146,6 +147,10 @@ export type ScannedRoutes = {
     'products.products.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'store.products.public_show': { paramsTuple: [ParamValue,ParamValue]; params: {'userId': ParamValue,'slug': ParamValue} }
     'store.products.checkout_intent': { paramsTuple: [ParamValue,ParamValue]; params: {'userId': ParamValue,'slug': ParamValue} }
+    'websiteServices.website_services.packages': { paramsTuple?: []; params?: {} }
+    'websiteServices.website_services.admin_index': { paramsTuple?: []; params?: {} }
+    'websiteServices.website_services.my_orders': { paramsTuple?: []; params?: {} }
+    'websiteServices.website_services.store': { paramsTuple?: []; params?: {} }
   }
   GET: {
     'profile.profile.show': { paramsTuple?: []; params?: {} }
@@ -195,6 +200,9 @@ export type ScannedRoutes = {
     'products.products.index': { paramsTuple?: []; params?: {} }
     'products.products.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'store.products.public_show': { paramsTuple: [ParamValue,ParamValue]; params: {'userId': ParamValue,'slug': ParamValue} }
+    'websiteServices.website_services.packages': { paramsTuple?: []; params?: {} }
+    'websiteServices.website_services.admin_index': { paramsTuple?: []; params?: {} }
+    'websiteServices.website_services.my_orders': { paramsTuple?: []; params?: {} }
   }
   HEAD: {
     'profile.profile.show': { paramsTuple?: []; params?: {} }
@@ -244,6 +252,9 @@ export type ScannedRoutes = {
     'products.products.index': { paramsTuple?: []; params?: {} }
     'products.products.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'store.products.public_show': { paramsTuple: [ParamValue,ParamValue]; params: {'userId': ParamValue,'slug': ParamValue} }
+    'websiteServices.website_services.packages': { paramsTuple?: []; params?: {} }
+    'websiteServices.website_services.admin_index': { paramsTuple?: []; params?: {} }
+    'websiteServices.website_services.my_orders': { paramsTuple?: []; params?: {} }
   }
   POST: {
     'auth.new_account.store': { paramsTuple?: []; params?: {} }
@@ -271,6 +282,7 @@ export type ScannedRoutes = {
     'whatsapp.whatsapp_messages.react': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }
     'whatsapp.whatsapp_messages.reply': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }
     'whatsapp.whatsapp_messages.forward': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }
+    'whatsapp.whatsapp_messages.transcribe': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }
     'whatsapp.whatsapp_messages.star': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }
     'whatsapp.whatsapp_messages.unstar': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }
     'whatsapp.whatsapp_messages.pin': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }
@@ -312,6 +324,7 @@ export type ScannedRoutes = {
     'credits.credits.purchase': { paramsTuple?: []; params?: {} }
     'products.products.store': { paramsTuple?: []; params?: {} }
     'store.products.checkout_intent': { paramsTuple: [ParamValue,ParamValue]; params: {'userId': ParamValue,'slug': ParamValue} }
+    'websiteServices.website_services.store': { paramsTuple?: []; params?: {} }
   }
   DELETE: {
     'whatsapp.whatsapp_session.destroy': { paramsTuple?: []; params?: {} }

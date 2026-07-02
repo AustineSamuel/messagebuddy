@@ -282,6 +282,12 @@ const routes = {
     tokens: [{"old":"/api/v1/whatsapp/messages/:messageId/media","type":0,"val":"api","end":""},{"old":"/api/v1/whatsapp/messages/:messageId/media","type":0,"val":"v1","end":""},{"old":"/api/v1/whatsapp/messages/:messageId/media","type":0,"val":"whatsapp","end":""},{"old":"/api/v1/whatsapp/messages/:messageId/media","type":0,"val":"messages","end":""},{"old":"/api/v1/whatsapp/messages/:messageId/media","type":1,"val":"messageId","end":""},{"old":"/api/v1/whatsapp/messages/:messageId/media","type":0,"val":"media","end":""}],
     types: placeholder as Registry['whatsapp.whatsapp_messages.media']['types'],
   },
+  'whatsapp.whatsapp_messages.transcribe': {
+    methods: ["POST"],
+    pattern: '/api/v1/whatsapp/messages/:messageId/transcribe',
+    tokens: [{"old":"/api/v1/whatsapp/messages/:messageId/transcribe","type":0,"val":"api","end":""},{"old":"/api/v1/whatsapp/messages/:messageId/transcribe","type":0,"val":"v1","end":""},{"old":"/api/v1/whatsapp/messages/:messageId/transcribe","type":0,"val":"whatsapp","end":""},{"old":"/api/v1/whatsapp/messages/:messageId/transcribe","type":0,"val":"messages","end":""},{"old":"/api/v1/whatsapp/messages/:messageId/transcribe","type":1,"val":"messageId","end":""},{"old":"/api/v1/whatsapp/messages/:messageId/transcribe","type":0,"val":"transcribe","end":""}],
+    types: placeholder as Registry['whatsapp.whatsapp_messages.transcribe']['types'],
+  },
   'whatsapp.whatsapp_messages.reactions': {
     methods: ["GET","HEAD"],
     pattern: '/api/v1/whatsapp/messages/:messageId/reactions',
@@ -857,6 +863,30 @@ const routes = {
     pattern: '/api/v1/store/:userId/products/:slug/checkout',
     tokens: [{"old":"/api/v1/store/:userId/products/:slug/checkout","type":0,"val":"api","end":""},{"old":"/api/v1/store/:userId/products/:slug/checkout","type":0,"val":"v1","end":""},{"old":"/api/v1/store/:userId/products/:slug/checkout","type":0,"val":"store","end":""},{"old":"/api/v1/store/:userId/products/:slug/checkout","type":1,"val":"userId","end":""},{"old":"/api/v1/store/:userId/products/:slug/checkout","type":0,"val":"products","end":""},{"old":"/api/v1/store/:userId/products/:slug/checkout","type":1,"val":"slug","end":""},{"old":"/api/v1/store/:userId/products/:slug/checkout","type":0,"val":"checkout","end":""}],
     types: placeholder as Registry['store.products.checkout_intent']['types'],
+  },
+  'websiteServices.website_services.packages': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/website-services/packages',
+    tokens: [{"old":"/api/v1/website-services/packages","type":0,"val":"api","end":""},{"old":"/api/v1/website-services/packages","type":0,"val":"v1","end":""},{"old":"/api/v1/website-services/packages","type":0,"val":"website-services","end":""},{"old":"/api/v1/website-services/packages","type":0,"val":"packages","end":""}],
+    types: placeholder as Registry['websiteServices.website_services.packages']['types'],
+  },
+  'websiteServices.website_services.admin_index': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/website-services/orders/admin',
+    tokens: [{"old":"/api/v1/website-services/orders/admin","type":0,"val":"api","end":""},{"old":"/api/v1/website-services/orders/admin","type":0,"val":"v1","end":""},{"old":"/api/v1/website-services/orders/admin","type":0,"val":"website-services","end":""},{"old":"/api/v1/website-services/orders/admin","type":0,"val":"orders","end":""},{"old":"/api/v1/website-services/orders/admin","type":0,"val":"admin","end":""}],
+    types: placeholder as Registry['websiteServices.website_services.admin_index']['types'],
+  },
+  'websiteServices.website_services.my_orders': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/website-services/orders',
+    tokens: [{"old":"/api/v1/website-services/orders","type":0,"val":"api","end":""},{"old":"/api/v1/website-services/orders","type":0,"val":"v1","end":""},{"old":"/api/v1/website-services/orders","type":0,"val":"website-services","end":""},{"old":"/api/v1/website-services/orders","type":0,"val":"orders","end":""}],
+    types: placeholder as Registry['websiteServices.website_services.my_orders']['types'],
+  },
+  'websiteServices.website_services.store': {
+    methods: ["POST"],
+    pattern: '/api/v1/website-services/orders',
+    tokens: [{"old":"/api/v1/website-services/orders","type":0,"val":"api","end":""},{"old":"/api/v1/website-services/orders","type":0,"val":"v1","end":""},{"old":"/api/v1/website-services/orders","type":0,"val":"website-services","end":""},{"old":"/api/v1/website-services/orders","type":0,"val":"orders","end":""}],
+    types: placeholder as Registry['websiteServices.website_services.store']['types'],
   },
 } as const satisfies Record<string, AdonisEndpoint>
 

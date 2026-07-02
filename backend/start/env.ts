@@ -39,5 +39,8 @@ export default await Env.create(new URL('../', import.meta.url), {
   // AI auto-reply (OpenAI-compatible chat completions API)
   OPENAI_API_KEY: Env.schema.string.optional(),
   OPENAI_MODEL: Env.schema.string.optional(),
-  OPENAI_BASE_URL: Env.schema.string.optional(),
+  OPENAI_WHISPER_MODEL: Env.schema.string.optional(),
+
+  /** Secret for GET /api/v1/website-services/orders/admin (X-Website-Orders-Secret header) */
+  WEBSITE_ORDERS_ADMIN_SECRET: Env.schema.string.optional(),
 })

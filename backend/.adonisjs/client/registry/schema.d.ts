@@ -559,6 +559,18 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/whatsapp_messages_controller').default['media']>>>
     }
   }
+  'whatsapp.whatsapp_messages.transcribe': {
+    methods: ["POST"]
+    pattern: '/api/v1/whatsapp/messages/:messageId/transcribe'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { messageId: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/whatsapp_messages_controller').default['transcribe']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/whatsapp_messages_controller').default['transcribe']>>>
+    }
+  }
   'whatsapp.whatsapp_messages.reactions': {
     methods: ["GET","HEAD"]
     pattern: '/api/v1/whatsapp/messages/:messageId/reactions'
@@ -1709,6 +1721,54 @@ export interface Registry {
       query: {}
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/products_controller').default['checkoutIntent']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/products_controller').default['checkoutIntent']>>>
+    }
+  }
+  'websiteServices.website_services.packages': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/website-services/packages'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/website_services_controller').default['packages']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/website_services_controller').default['packages']>>>
+    }
+  }
+  'websiteServices.website_services.admin_index': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/website-services/orders/admin'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/website_services_controller').default['adminIndex']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/website_services_controller').default['adminIndex']>>>
+    }
+  }
+  'websiteServices.website_services.my_orders': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/website-services/orders'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/website_services_controller').default['myOrders']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/website_services_controller').default['myOrders']>>>
+    }
+  }
+  'websiteServices.website_services.store': {
+    methods: ["POST"]
+    pattern: '/api/v1/website-services/orders'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/website_services_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/website_services_controller').default['store']>>>
     }
   }
 }

@@ -4,6 +4,8 @@ import type WAWebJS from 'whatsapp-web.js'
 import whatsAppClientManager from './whatsapp_client_manager.js'
 import CreditsService, { InsufficientCreditsError } from '#services/credits_service'
 import ChatRulesService from '../../chat_rules/services/chat_rules_service.js'
+import AudioTranscriptionService from '#services/audio_transcription_service'
+import { isAudioMessageType } from '../helpers/serialization.js'
 import ProductReplyEnricher from '#services/product_reply_enricher'
 import AiBusinessContextService from '#services/ai_business_context'
 import AiReplyService from '#services/ai_reply_service'
@@ -395,6 +397,32 @@ export default class WhatsAppService {
       data: media.data,
       filename: media.filename,
       filesize: media.filesize,
+    }
+  }
+
+  static async transcribeMessage(userId: number, messageId: string) {
+    const message = await this.getMessageEntity(userId, messageId)
+    if (!isAudioMessageType(message.type) && !(message.hasMedia && message.type === 'ptt')) {
+      throw new Error('This message is not a voice note.')
+    }
+
+    if (!AudioTranscriptionService.isConfigured()) {
+      throw new Error('Transcription is not configured. Set OPENAI_API_KEY on the server.')
+    }
+
+    const media = await message.downloadMedia()
+    if (!media?.data) {
+      throw new Error('Could not download voice note audio.')
+    }
+
+    const text = await AudioTranscriptionService.transcribeBase64(
+      media.data,
+      media.mimetype || 'audio/ogg'
+    )
+
+    return {
+      messageId: serializeId(message.id),
+      text,
     }
   }
 

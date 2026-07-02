@@ -14,6 +14,7 @@ export const controllers = {
   NewAccount: () => import('#controllers/new_account_controller'),
   Products: () => import('#controllers/products_controller'),
   Profile: () => import('#controllers/profile_controller'),
+  WebsiteServices: () => import('#controllers/website_services_controller'),
   WhatsappBroadcasts: () => import('#controllers/whatsapp_broadcasts_controller'),
   WhatsappChannels: () => import('#controllers/whatsapp_channels_controller'),
   WhatsappChats: () => import('#controllers/whatsapp_chats_controller'),

@@ -94,6 +94,14 @@ export default class WhatsappMessagesController {
     }
   }
 
+  async transcribe(ctx: HttpContext) {
+    try {
+      return ctx.serialize(await WhatsAppService.transcribeMessage(uid(ctx), ctx.params.messageId))
+    } catch (error) {
+      return handleWhatsAppError(error, ctx.response)
+    }
+  }
+
   async reactions(ctx: HttpContext) {
     try {
       return ctx.serialize(await WhatsAppService.getMessageReactions(uid(ctx), ctx.params.messageId))

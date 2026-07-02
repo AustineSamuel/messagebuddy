@@ -66,6 +66,7 @@ export interface ApiDefinition {
       reply: typeof routes['whatsapp.whatsapp_messages.reply']
       forward: typeof routes['whatsapp.whatsapp_messages.forward']
       media: typeof routes['whatsapp.whatsapp_messages.media']
+      transcribe: typeof routes['whatsapp.whatsapp_messages.transcribe']
       reactions: typeof routes['whatsapp.whatsapp_messages.reactions']
       pollVotes: typeof routes['whatsapp.whatsapp_messages.poll_votes']
       star: typeof routes['whatsapp.whatsapp_messages.star']
@@ -204,6 +205,14 @@ export interface ApiDefinition {
     products: {
       publicShow: typeof routes['store.products.public_show']
       checkoutIntent: typeof routes['store.products.checkout_intent']
+    }
+  }
+  websiteServices: {
+    websiteServices: {
+      packages: typeof routes['websiteServices.website_services.packages']
+      adminIndex: typeof routes['websiteServices.website_services.admin_index']
+      myOrders: typeof routes['websiteServices.website_services.my_orders']
+      store: typeof routes['websiteServices.website_services.store']
     }
   }
 }

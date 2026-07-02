@@ -59,6 +59,7 @@ export function registerWhatsappRoutes() {
       router.post('messages/:messageId/reply', [controllers.WhatsappMessages, 'reply'])
       router.post('messages/:messageId/forward', [controllers.WhatsappMessages, 'forward'])
       router.get('messages/:messageId/media', [controllers.WhatsappMessages, 'media'])
+      router.post('messages/:messageId/transcribe', [controllers.WhatsappMessages, 'transcribe'])
       router.get('messages/:messageId/reactions', [controllers.WhatsappMessages, 'reactions'])
       router.get('messages/:messageId/poll-votes', [controllers.WhatsappMessages, 'pollVotes'])
       router.post('messages/:messageId/star', [controllers.WhatsappMessages, 'star'])
