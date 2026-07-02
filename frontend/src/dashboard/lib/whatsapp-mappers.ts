@@ -26,6 +26,20 @@ export type ApiChat = {
   } | null;
 };
 
+export type ApiQuotedMessage = {
+  id: string;
+  body?: string;
+  type?: string;
+  fromMe?: boolean;
+  hasMedia?: boolean;
+};
+
+export type ApiMessageReaction = {
+  emoji: string;
+  count: number;
+  fromMe?: boolean;
+};
+
 export type ApiMessage = {
   id: string;
   body?: string;
@@ -36,6 +50,9 @@ export type ApiMessage = {
   from?: string;
   to?: string;
   hasMedia?: boolean;
+  hasQuotedMsg?: boolean;
+  quotedMessage?: ApiQuotedMessage | null;
+  reactions?: ApiMessageReaction[];
   ack?: number;
 };
 
@@ -137,6 +154,26 @@ export function apiMessageToMessage(message: ApiMessage, ctx?: MessageMapContext
     messageType: message.type,
     isAudio,
     hasMedia: message.hasMedia,
+    hasQuotedMsg: message.hasQuotedMsg,
+    quotedMessage: message.quotedMessage
+      ? {
+          id: message.quotedMessage.id,
+          text:
+            message.quotedMessage.body?.trim() ||
+            (isAudioApiMessage(message.quotedMessage)
+              ? "Voice message"
+              : message.quotedMessage.type
+                ? `[${message.quotedMessage.type}]`
+                : "Message"),
+          fromMe: Boolean(message.quotedMessage.fromMe),
+          isAudio: isAudioApiMessage(message.quotedMessage),
+        }
+      : null,
+    reactions: message.reactions?.map((reaction) => ({
+      emoji: reaction.emoji,
+      count: reaction.count,
+      fromMe: reaction.fromMe,
+    })),
     senderLabel,
     senderColor: senderId ? avatarColorForId(senderId) : undefined,
     senderId,

@@ -59,11 +59,11 @@ function formFromSettings(
   if (isUsingDefault) {
     const defaults = defaultChatSettings ?? chatSettings;
     return {
-      rule: defaults.rule,
+      rule: "default",
       notes: "",
-      aiReply: defaults.aiAutoReply,
-      sendCatalog: defaults.sendCatalog,
-      notifyMe: defaults.notifyOnReply,
+      aiReply: defaults?.aiAutoReply ?? true,
+      sendCatalog: defaults?.sendCatalog ?? false,
+      notifyMe: defaults?.notifyOnReply ?? true,
       customInstructions: "",
     };
   }
@@ -105,9 +105,11 @@ export default function RightPanel({
   const [customInstructions, setCustomInstructions] = useState("");
   const [saved, setSaved] = useState(false);
   const syncedContactIdRef = useRef<string | null>(null);
+  const pendingRuleRef = useRef<ContactRule | null>(null);
 
   useEffect(() => {
     if (loadingSettings) return;
+    if (pendingRuleRef.current) return;
 
     const form = formFromSettings(chatSettings, defaultChatSettings, isUsingDefault, contact);
     setRule(form.rule);
@@ -203,8 +205,11 @@ export default function RightPanel({
                   key={opt.key}
                   type="button"
                   onClick={() => {
+                    pendingRuleRef.current = opt.key;
                     setRule(opt.key);
-                    void onRuleChange(contact.id, opt.key);
+                    void onRuleChange(contact.id, opt.key).finally(() => {
+                      pendingRuleRef.current = null;
+                    });
                   }}
                   style={{
                     textAlign: "left",

@@ -25,7 +25,11 @@ export async function sendMessage(
 }
 
 export async function reactToMessage(messageId: string, reaction: string) {
-  return waPost(`/messages/${encodeURIComponent(messageId)}/react`, { reaction });
+  return waPost<{
+    messageId: string;
+    reaction: string;
+    reactions: Array<{ emoji: string; count: number; fromMe?: boolean }>;
+  }>(`/messages/${encodeURIComponent(messageId)}/react`, { reaction });
 }
 
 export async function replyToMessage(

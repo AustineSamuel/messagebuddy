@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import EmojiPicker, { Theme, type EmojiClickData } from "emoji-picker-react";
 import { Avatar, IconButton } from "@/dashboard/components/ui/primitives";
 import MessageBubble from "./MessageBubble";
 import EditMessageModal from "./EditMessageModal";
@@ -14,6 +15,8 @@ interface ChatAreaProps {
   contact: Contact | undefined;
   conversation: Conversation | undefined;
   onSendMessage: (text: string) => void;
+  onSendReply: (messageId: string, text: string) => void;
+  onReactToMessage: (messageId: string, emoji: string) => void;
   onEditMessage: (messageId: string, newText: string) => void;
   creditsToday: number;
   loadingMessages?: boolean;
@@ -23,24 +26,50 @@ export default function ChatArea({
   contact,
   conversation,
   onSendMessage,
+  onSendReply,
+  onReactToMessage,
   onEditMessage,
   creditsToday,
   loadingMessages,
 }: ChatAreaProps) {
   const [inputValue, setInputValue] = useState("");
   const [editingMsg, setEditingMsg] = useState<Message | null>(null);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [generatingAi, setGeneratingAi] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [conversation?.messages]);
 
+  useEffect(() => {
+    setReplyingTo(null);
+    setShowEmojiPicker(false);
+  }, [contact?.id]);
+
+  useEffect(() => {
+    if (!showEmojiPicker) return;
+    const handleOutside = (event: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [showEmojiPicker]);
+
   const handleSend = () => {
     if (!inputValue.trim()) return;
-    onSendMessage(inputValue);
+    if (replyingTo) {
+      onSendReply(replyingTo.id, inputValue.trim());
+      setReplyingTo(null);
+    } else {
+      onSendMessage(inputValue.trim());
+    }
     setInputValue("");
     inputRef.current?.focus();
   };
@@ -240,6 +269,9 @@ export default function ChatArea({
               isGroup={isGroup}
               showSender={shouldShowSenderHeader(msg, messages[index - 1], isGroup)}
               onEdit={msg.aiGenerated ? setEditingMsg : undefined}
+              onReply={setReplyingTo}
+              onReact={(message, emoji) => onReactToMessage(message.id, emoji)}
+              contactName={contact.name}
             />
           ))
         )}
@@ -272,7 +304,52 @@ export default function ChatArea({
             {generateError}
           </div>
         ) : null}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        {replyingTo ? (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              marginBottom: 10,
+              padding: "10px 12px",
+              borderRadius: 10,
+              background: "var(--bg-2)",
+              border: "1px solid var(--border-1)",
+            }}
+          >
+            <div style={{ borderLeft: "3px solid var(--wa-green)", paddingLeft: 10, flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--wa-green)", marginBottom: 2 }}>
+                Replying to {replyingTo.direction === "out" ? "yourself" : contact.name}
+              </div>
+              <div
+                style={{
+                  fontSize: 12,
+                  color: "var(--text-2)",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {replyingTo.text || (replyingTo.isAudio ? "Voice message" : "Message")}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setReplyingTo(null)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "var(--text-2)",
+                cursor: "pointer",
+                fontSize: 18,
+                lineHeight: 1,
+              }}
+            >
+              ×
+            </button>
+          </div>
+        ) : null}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, position: "relative" }}>
         <IconButton title="Attach file">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width={15} height={15}>
             <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
@@ -283,7 +360,7 @@ export default function ChatArea({
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Type a message..."
+          placeholder={replyingTo ? "Type your reply..." : "Type a message..."}
           style={{
             flex: 1,
             background: "var(--bg-3)",
@@ -300,14 +377,39 @@ export default function ChatArea({
           onFocus={(e) => (e.target.style.borderColor = "var(--wa-green)")}
           onBlur={(e) => (e.target.style.borderColor = "var(--border-1)")}
         />
-        <IconButton title="Emoji">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width={15} height={15}>
-            <circle cx="12" cy="12" r="10" />
-            <path d="M8 13s1.5 2 4 2 4-2 4-2" />
-            <line x1="9" y1="9" x2="9.01" y2="9" strokeWidth="2.5" strokeLinecap="round" />
-            <line x1="15" y1="9" x2="15.01" y2="9" strokeWidth="2.5" strokeLinecap="round" />
-          </svg>
-        </IconButton>
+        <div ref={emojiPickerRef} style={{ position: "relative" }}>
+          {showEmojiPicker ? (
+            <div
+              style={{
+                position: "absolute",
+                bottom: "100%",
+                right: 0,
+                marginBottom: 8,
+                zIndex: 20,
+              }}
+            >
+              <EmojiPicker
+                onEmojiClick={(emojiData: EmojiClickData) => {
+                  setInputValue((prev) => `${prev}${emojiData.emoji}`);
+                  inputRef.current?.focus();
+                }}
+                theme={Theme.DARK}
+                width={320}
+                height={380}
+                searchPlaceholder="Search emoji"
+                previewConfig={{ showPreview: false }}
+              />
+            </div>
+          ) : null}
+          <IconButton title="Emoji" onClick={() => setShowEmojiPicker((prev) => !prev)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width={15} height={15}>
+              <circle cx="12" cy="12" r="10" />
+              <path d="M8 13s1.5 2 4 2 4-2 4-2" />
+              <line x1="9" y1="9" x2="9.01" y2="9" strokeWidth="2.5" strokeLinecap="round" />
+              <line x1="15" y1="9" x2="15.01" y2="9" strokeWidth="2.5" strokeLinecap="round" />
+            </svg>
+          </IconButton>
+        </div>
         <button
           type="button"
           onClick={() => void handleGenerateAi()}

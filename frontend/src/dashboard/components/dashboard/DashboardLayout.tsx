@@ -63,6 +63,27 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
 
   const toggleTheme = () => setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   const creditsToday = store.creditsUsedToday;
+  const totalUnread = useMemo(
+    () => store.contacts.reduce((sum, contact) => sum + contact.unreadCount, 0),
+    [store.contacts]
+  );
+
+  useEffect(() => {
+    const baseTitle = "MessageBuddy";
+
+    if (!wa.isReady || totalUnread <= 0) {
+      document.title = baseTitle;
+      return;
+    }
+
+    const label = totalUnread === 1 ? "unread message" : "unread messages";
+    document.title = `(${totalUnread}) ${label} — ${baseTitle}`;
+
+    return () => {
+      document.title = baseTitle;
+    };
+  }, [totalUnread, wa.isReady]);
+
   const contactsForPage = useMemo(() => {
     const source = store.waContacts.length > 0 ? store.waContacts : store.contacts;
     return dedupeContactsById(source);
@@ -160,6 +181,8 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
               contact={store.activeContact}
               conversation={store.activeConversation}
               onSendMessage={store.sendMessage}
+              onSendReply={store.sendReply}
+              onReactToMessage={store.reactToMessage}
               onEditMessage={(msgId, newText) =>
                 store.editMessage(store.activeContactId, msgId, newText)
               }

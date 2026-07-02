@@ -17,6 +17,19 @@ export interface Contact {
   notes?: string;
 }
 
+export interface MessageReaction {
+  emoji: string;
+  count: number;
+  fromMe?: boolean;
+}
+
+export interface QuotedMessage {
+  id: string;
+  text: string;
+  fromMe: boolean;
+  isAudio?: boolean;
+}
+
 export interface Message {
   id: string;
   direction: "in" | "out";
@@ -29,6 +42,9 @@ export interface Message {
   /** True for voice notes and audio attachments */
   isAudio?: boolean;
   hasMedia?: boolean;
+  hasQuotedMsg?: boolean;
+  quotedMessage?: QuotedMessage | null;
+  reactions?: MessageReaction[];
   /** Display name or phone for the sender */
   senderLabel?: string | null;
   /** Accent color for group sender names */
