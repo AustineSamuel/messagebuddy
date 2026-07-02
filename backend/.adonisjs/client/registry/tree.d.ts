@@ -191,4 +191,19 @@ export interface ApiDefinition {
       recentMessages: typeof routes['analytics.analytics.recent_messages']
     }
   }
+  products: {
+    products: {
+      index: typeof routes['products.products.index']
+      show: typeof routes['products.products.show']
+      store: typeof routes['products.products.store']
+      update: typeof routes['products.products.update']
+      destroy: typeof routes['products.products.destroy']
+    }
+  }
+  store: {
+    products: {
+      publicShow: typeof routes['store.products.public_show']
+      checkoutIntent: typeof routes['store.products.checkout_intent']
+    }
+  }
 }

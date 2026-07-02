@@ -12,6 +12,7 @@ export const controllers = {
   FirebaseAuths: () => import('#controllers/firebase_auths_controller'),
   FollowUps: () => import('#controllers/follow_ups_controller'),
   NewAccount: () => import('#controllers/new_account_controller'),
+  Products: () => import('#controllers/products_controller'),
   Profile: () => import('#controllers/profile_controller'),
   WhatsappBroadcasts: () => import('#controllers/whatsapp_broadcasts_controller'),
   WhatsappChannels: () => import('#controllers/whatsapp_channels_controller'),

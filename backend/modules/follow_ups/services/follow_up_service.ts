@@ -3,7 +3,7 @@ import logger from '@adonisjs/core/services/logger'
 import FollowUpSchedule, { type FollowUpInterval } from '#models/follow_up_schedule'
 import AiReplyService from '#services/ai_reply_service'
 import ChatRulesService from '../../chat_rules/services/chat_rules_service.js'
-import BusinessSettingsService from '../../business_settings/services/business_settings_service.js'
+import AiBusinessContextService from '#services/ai_business_context'
 import CreditsService from '#services/credits_service'
 import whatsAppClientManager from '../../whatsapp/services/whatsapp_client_manager.js'
 import { buildConversationHistory } from '../../whatsapp/helpers/conversation_history.js'
@@ -181,7 +181,7 @@ export default class FollowUpService {
     // Load DB context first, then release connections before slow WhatsApp / AI work.
     const [{ settings: rules, default: defaultRules }, business] = await Promise.all([
       ChatRulesService.getForChat(userId, chatId),
-      BusinessSettingsService.getAiContext(userId),
+      AiBusinessContextService.forUser(userId),
     ])
 
     if (rules.rule === 'never') {

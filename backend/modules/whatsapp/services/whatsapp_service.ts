@@ -4,7 +4,8 @@ import type WAWebJS from 'whatsapp-web.js'
 import whatsAppClientManager from './whatsapp_client_manager.js'
 import CreditsService, { InsufficientCreditsError } from '#services/credits_service'
 import ChatRulesService from '../../chat_rules/services/chat_rules_service.js'
-import BusinessSettingsService from '../../business_settings/services/business_settings_service.js'
+import ProductReplyEnricher from '#services/product_reply_enricher'
+import AiBusinessContextService from '#services/ai_business_context'
 import AiReplyService from '#services/ai_reply_service'
 import { buildConversationHistory } from '../helpers/conversation_history.js'
 import {
@@ -213,7 +214,14 @@ export default class WhatsAppService {
     const history = await buildConversationHistory(chat, { limit: historyLimit })
     const contactLabel = await resolveChatDisplayName(chat, normalizedId).catch(() => normalizedId)
 
-    const business = await BusinessSettingsService.getAiContext(userId)
+    const business = await AiBusinessContextService.forUser(userId)
+
+    const lastCustomerMessage =
+      [...history].reverse().find((turn) => turn.role === 'user')?.content ?? ''
+    const matchedProducts = await ProductReplyEnricher.findRelevantProducts(
+      userId,
+      lastCustomerMessage
+    )
 
     const suggestion = await AiReplyService.generateDraftReply({
       history,
@@ -223,13 +231,19 @@ export default class WhatsAppService {
       defaultNotes: defaultRules.notes,
       contactLabel,
       business,
+      incomingMessage: lastCustomerMessage,
+      matchedProducts,
     })
 
     if (!suggestion) {
       throw new Error('Could not generate a reply suggestion. Try again.')
     }
 
-    return { suggestion, messageCount: history.length }
+    return {
+      suggestion: ProductReplyEnricher.enrich(suggestion, matchedProducts),
+      messageCount: history.length,
+      matchedProducts: matchedProducts.map((p) => ({ name: p.name, checkoutUrl: p.checkoutUrl })),
+    }
   }
 
   static async sendChatMessage(

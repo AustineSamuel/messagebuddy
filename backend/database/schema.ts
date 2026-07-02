@@ -178,6 +178,39 @@ export class MessageLogSchema extends BaseModel {
   declare userId: number
 }
 
+export class ProductSchema extends BaseModel {
+  static $columns = ['active', 'createdAt', 'currency', 'description', 'emoji', 'id', 'images', 'name', 'price', 'slug', 'stock', 'totalSold', 'updatedAt', 'userId'] as const
+  $columns = ProductSchema.$columns
+  @column()
+  declare active: boolean
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare currency: string
+  @column()
+  declare description: string | null
+  @column()
+  declare emoji: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare images: any
+  @column()
+  declare name: string
+  @column()
+  declare price: string
+  @column()
+  declare slug: string
+  @column()
+  declare stock: string
+  @column()
+  declare totalSold: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare userId: number
+}
+
 export class SessionSchema extends BaseModel {
   static $columns = ['data', 'expiresAt', 'id', 'userId'] as const
   $columns = SessionSchema.$columns

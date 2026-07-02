@@ -1627,4 +1627,88 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/analytics_controller').default['recentMessages']>>>
     }
   }
+  'products.products.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/products'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/products_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/products_controller').default['index']>>>
+    }
+  }
+  'products.products.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/products/:id'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/products_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/products_controller').default['show']>>>
+    }
+  }
+  'products.products.store': {
+    methods: ["POST"]
+    pattern: '/api/v1/products'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/products_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/products_controller').default['store']>>>
+    }
+  }
+  'products.products.update': {
+    methods: ["PUT"]
+    pattern: '/api/v1/products/:id'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/products_controller').default['update']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/products_controller').default['update']>>>
+    }
+  }
+  'products.products.destroy': {
+    methods: ["DELETE"]
+    pattern: '/api/v1/products/:id'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/products_controller').default['destroy']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/products_controller').default['destroy']>>>
+    }
+  }
+  'store.products.public_show': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/store/:userId/products/:slug'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue, ParamValue]
+      params: { userId: ParamValue; slug: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/products_controller').default['publicShow']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/products_controller').default['publicShow']>>>
+    }
+  }
+  'store.products.checkout_intent': {
+    methods: ["POST"]
+    pattern: '/api/v1/store/:userId/products/:slug/checkout'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue, ParamValue]
+      params: { userId: ParamValue; slug: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/products_controller').default['checkoutIntent']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/products_controller').default['checkoutIntent']>>>
+    }
+  }
 }

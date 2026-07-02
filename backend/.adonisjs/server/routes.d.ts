@@ -139,6 +139,13 @@ export type ScannedRoutes = {
     'analytics.analytics.hourly': { paramsTuple?: []; params?: {} }
     'analytics.analytics.top_contacts': { paramsTuple?: []; params?: {} }
     'analytics.analytics.recent_messages': { paramsTuple?: []; params?: {} }
+    'products.products.index': { paramsTuple?: []; params?: {} }
+    'products.products.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'products.products.store': { paramsTuple?: []; params?: {} }
+    'products.products.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'products.products.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'store.products.public_show': { paramsTuple: [ParamValue,ParamValue]; params: {'userId': ParamValue,'slug': ParamValue} }
+    'store.products.checkout_intent': { paramsTuple: [ParamValue,ParamValue]; params: {'userId': ParamValue,'slug': ParamValue} }
   }
   GET: {
     'profile.profile.show': { paramsTuple?: []; params?: {} }
@@ -185,6 +192,9 @@ export type ScannedRoutes = {
     'analytics.analytics.hourly': { paramsTuple?: []; params?: {} }
     'analytics.analytics.top_contacts': { paramsTuple?: []; params?: {} }
     'analytics.analytics.recent_messages': { paramsTuple?: []; params?: {} }
+    'products.products.index': { paramsTuple?: []; params?: {} }
+    'products.products.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'store.products.public_show': { paramsTuple: [ParamValue,ParamValue]; params: {'userId': ParamValue,'slug': ParamValue} }
   }
   HEAD: {
     'profile.profile.show': { paramsTuple?: []; params?: {} }
@@ -231,6 +241,9 @@ export type ScannedRoutes = {
     'analytics.analytics.hourly': { paramsTuple?: []; params?: {} }
     'analytics.analytics.top_contacts': { paramsTuple?: []; params?: {} }
     'analytics.analytics.recent_messages': { paramsTuple?: []; params?: {} }
+    'products.products.index': { paramsTuple?: []; params?: {} }
+    'products.products.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'store.products.public_show': { paramsTuple: [ParamValue,ParamValue]; params: {'userId': ParamValue,'slug': ParamValue} }
   }
   POST: {
     'auth.new_account.store': { paramsTuple?: []; params?: {} }
@@ -297,6 +310,8 @@ export type ScannedRoutes = {
     'whatsapp.whatsapp_profile.presence_unavailable': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_profile.revoke_status': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }
     'credits.credits.purchase': { paramsTuple?: []; params?: {} }
+    'products.products.store': { paramsTuple?: []; params?: {} }
+    'store.products.checkout_intent': { paramsTuple: [ParamValue,ParamValue]; params: {'userId': ParamValue,'slug': ParamValue} }
   }
   DELETE: {
     'whatsapp.whatsapp_session.destroy': { paramsTuple?: []; params?: {} }
@@ -306,6 +321,7 @@ export type ScannedRoutes = {
     'whatsapp.whatsapp_groups.delete_picture': { paramsTuple: [ParamValue]; params: {'groupId': ParamValue} }
     'whatsapp.whatsapp_channels.destroy': { paramsTuple: [ParamValue]; params: {'channelId': ParamValue} }
     'whatsapp.whatsapp_profile.delete_picture': { paramsTuple?: []; params?: {} }
+    'products.products.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
   }
   PUT: {
     'whatsapp.whatsapp_chats.set_labels': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
@@ -314,6 +330,7 @@ export type ScannedRoutes = {
     'chatRules.chat_rules.update': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'followUps.follow_ups.sync': { paramsTuple?: []; params?: {} }
     'businessSettings.business_settings.update': { paramsTuple?: []; params?: {} }
+    'products.products.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
   }
   PATCH: {
     'whatsapp.whatsapp_messages.update': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }

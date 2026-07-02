@@ -66,9 +66,12 @@ export type BusinessAiContext = {
   tone: string
   products: Array<{
     name: string
+    slug?: string
+    description?: string | null
     price: string
     stock: string
     emoji?: string
+    checkoutUrl?: string
   }>
 }
 
@@ -126,10 +129,29 @@ export function formatProductCatalogBlock(business: BusinessAiContext): string |
       const stock = STOCK_LABELS[p.stock] ?? p.stock
       const emoji = p.emoji?.trim() ? `${p.emoji.trim()} ` : ''
       const price = isUsableText(p.price) ? p.price.trim() : 'price on request'
-      return `- ${emoji}${p.name.trim()}: ${price} (${stock})`
+      const desc = isUsableText(p.description) ? ` — ${p.description.trim()}` : ''
+      const link = p.checkoutUrl?.trim() ? ` | Checkout: ${p.checkoutUrl.trim()}` : ''
+      return `- ${emoji}${p.name.trim()}: ${price} (${stock})${desc}${link}`
     })
   if (!lines.length) return null
-  return `PRODUCT CATALOG (reference for pricing and availability):\n${lines.join('\n')}`
+  return `PRODUCT CATALOG (reference for pricing, availability, and checkout links):\n${lines.join('\n')}\nWhen a customer asks about buying or a specific product, share the matching checkout link on its own line and invite them to tap the link to view details and complete checkout.`
+}
+
+export function formatMatchedProductsBlock(
+  products: BusinessAiContext['products']
+): string | null {
+  if (!products.length) return null
+  const lines = products.map((p) => {
+    const stock = STOCK_LABELS[p.stock] ?? p.stock
+    const emoji = p.emoji?.trim() ? `${p.emoji.trim()} ` : ''
+    const price = isUsableText(p.price) ? p.price.trim() : 'price on request'
+    const desc = isUsableText(p.description) ? `\n  Description: ${p.description.trim()}` : ''
+    const link = p.checkoutUrl?.trim()
+      ? `\n  Checkout link (share this URL with the customer): ${p.checkoutUrl.trim()}`
+      : ''
+    return `- ${emoji}${p.name.trim()}: ${price} (${stock})${desc}${link}`
+  })
+  return `CUSTOMER ASKED ABOUT THESE PRODUCTS (prioritize these in your reply):\n${lines.join('\n')}\nInclude the checkout link in your message. Tell the customer to tap the link to view the product and checkout. Be enthusiastic but concise.`
 }
 
 export function resolveAiContext(input: ResolveAiContextInput): ResolvedAiContext {

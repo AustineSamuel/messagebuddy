@@ -1,8 +1,9 @@
 import logger from '@adonisjs/core/services/logger'
 import type { Client, Message } from 'whatsapp-web.js'
 import ChatRulesService from '../../chat_rules/services/chat_rules_service.js'
-import BusinessSettingsService from '../../business_settings/services/business_settings_service.js'
+import AiBusinessContextService from '#services/ai_business_context'
 import AiReplyService from '#services/ai_reply_service'
+import ProductReplyEnricher from '#services/product_reply_enricher'
 import CreditsService, { InsufficientCreditsError } from '#services/credits_service'
 import { buildConversationHistory, messageBodyFromWweb } from '../helpers/conversation_history.js'
 import { resolveChatDisplayName, serializeId } from '../helpers/serialization.js'
@@ -96,7 +97,7 @@ export default class WhatsAppAutoReplyService {
         }
 
         const defaultRules = await ChatRulesService.getDefault(userId)
-        const business = await BusinessSettingsService.getAiContext(userId)
+        const business = await AiBusinessContextService.forUser(userId)
 
         const history = await buildConversationHistory(chat, {
           limit: HISTORY_LIMIT,
@@ -104,6 +105,8 @@ export default class WhatsAppAutoReplyService {
         })
         const incoming = messageBodyFromWweb(message)
         const contactLabel = await resolveChatDisplayName(chat, chatId).catch(() => chatId)
+
+        const matchedProducts = await ProductReplyEnricher.findRelevantProducts(userId, incoming)
 
         const replyText = await AiReplyService.generateReply({
           incomingMessage: incoming,
@@ -114,6 +117,7 @@ export default class WhatsAppAutoReplyService {
           defaultNotes: defaultRules.notes,
           contactLabel,
           business,
+          matchedProducts,
         })
 
         if (!replyText) {
@@ -121,11 +125,13 @@ export default class WhatsAppAutoReplyService {
           return
         }
 
-        await message.reply(replyText)
+        const finalReply = ProductReplyEnricher.enrich(replyText, matchedProducts)
+
+        await message.reply(finalReply)
         await CreditsService.chargeMessageSent(userId, {
           chatId,
           source: 'auto_reply',
-          preview: replyText,
+          preview: finalReply,
           chatLabel: contactLabel,
         }).catch((err) => {
           if (err instanceof InsufficientCreditsError) {

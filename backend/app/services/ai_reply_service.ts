@@ -4,12 +4,14 @@ import {
   antiPlaceholderRule,
   formatBusinessIdentityBlock,
   formatBusinessRulesBlock,
+  formatMatchedProductsBlock,
   formatProductCatalogBlock,
   resolveAiContext,
   sanitizeAiOutput,
   type BusinessAiContext,
   type ResolveAiContextInput,
 } from '#services/ai_context_resolver'
+import ProductsService, { type AiProduct } from '../../modules/products/services/products_service.js'
 
 export type ConversationTurn = {
   role: 'user' | 'assistant'
@@ -19,15 +21,19 @@ export type ConversationTurn = {
 type AiPromptInput = ResolveAiContextInput & {
   contactLabel?: string
   business?: BusinessAiContext | null
+  incomingMessage?: string
+  matchedProducts?: AiProduct[]
 }
 
 export type GenerateReplyInput = AiPromptInput & {
   incomingMessage: string
   history: ConversationTurn[]
+  matchedProducts?: AiProduct[]
 }
 
 export type GenerateDraftInput = AiPromptInput & {
   history: ConversationTurn[]
+  matchedProducts?: AiProduct[]
 }
 
 export type GenerateFollowUpInput = GenerateDraftInput & {
@@ -68,6 +74,35 @@ export default class AiReplyService {
 
       const catalog = formatProductCatalogBlock(input.business)
       if (catalog) systemParts.push(catalog)
+
+      if (input.incomingMessage && input.business.products.length) {
+        const matched =
+          input.matchedProducts ??
+          ProductsService.searchForMessage(
+            input.incomingMessage,
+            input.business.products.map((p) => ({
+              name: p.name,
+              slug: p.slug ?? '',
+              description: p.description ?? null,
+              price: p.price,
+              stock: p.stock,
+              emoji: p.emoji,
+              checkoutUrl: p.checkoutUrl ?? '',
+            }))
+          )
+        const matchedBlock = formatMatchedProductsBlock(
+          matched.map((p) => ({
+            name: p.name,
+            slug: p.slug,
+            description: p.description,
+            price: p.price,
+            stock: p.stock,
+            emoji: p.emoji,
+            checkoutUrl: p.checkoutUrl,
+          }))
+        )
+        if (matchedBlock) systemParts.push(matchedBlock)
+      }
     }
 
     systemParts.push(
@@ -133,7 +168,13 @@ export default class AiReplyService {
 
   static async generateReply(input: GenerateReplyInput): Promise<string | null> {
     const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
-      { role: 'system', content: this.buildSystemContent(SYSTEM_PROMPT, input) },
+      {
+        role: 'system',
+        content: this.buildSystemContent(SYSTEM_PROMPT, {
+          ...input,
+          incomingMessage: input.incomingMessage,
+        }),
+      },
       ...input.history.map((turn) => ({ role: turn.role, content: turn.content })),
       { role: 'user', content: input.incomingMessage },
     ]
@@ -143,7 +184,14 @@ export default class AiReplyService {
 
   static async generateDraftReply(input: GenerateDraftInput): Promise<string | null> {
     const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
-      { role: 'system', content: this.buildSystemContent(DRAFT_SYSTEM_PROMPT, input) },
+      {
+        role: 'system',
+        content: this.buildSystemContent(DRAFT_SYSTEM_PROMPT, {
+          ...input,
+          incomingMessage: input.incomingMessage,
+          matchedProducts: input.matchedProducts,
+        }),
+      },
       ...input.history.map((turn) => ({ role: turn.role, content: turn.content })),
       {
         role: 'user',
