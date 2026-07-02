@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Avatar } from "@/dashboard/components/ui/primitives";
 import type { NavView } from "@/dashboard/types";
 
@@ -53,6 +54,17 @@ const NAV_ITEMS: {
     ),
   },
   {
+    view: "products",
+    title: "Products",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width={20} height={20}>
+        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <path d="M16 10a4 4 0 0 1-8 0" />
+      </svg>
+    ),
+  },
+  {
     view: "contacts",
     title: "Contacts & Rules",
     icon: (
@@ -61,6 +73,17 @@ const NAV_ITEMS: {
         <circle cx="9" cy="7" r="4" />
         <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
         <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    ),
+  },
+  {
+    view: "website",
+    title: "Get Website",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width={20} height={20}>
+        <circle cx="12" cy="12" r="10" />
+        <line x1="2" y1="12" x2="22" y2="12" />
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
       </svg>
     ),
   },
@@ -81,6 +104,101 @@ interface SidebarProps {
   onNavigate: (view: NavView) => void;
 }
 
+function SidebarNavItem({
+  title,
+  isActive,
+  badge,
+  onClick,
+  children,
+}: {
+  title: string;
+  isActive: boolean;
+  badge?: number;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      style={{ position: "relative" }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={title}
+        style={{
+          width: 44,
+          height: 44,
+          borderRadius: 12,
+          border: "none",
+          background: isActive ? "var(--wa-green)" : hovered ? "var(--bg-3)" : "transparent",
+          color: isActive ? "#fff" : hovered ? "var(--text-0)" : "var(--text-2)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          position: "relative",
+          transition: "all 0.15s",
+          flexShrink: 0,
+        }}
+      >
+        {children}
+        {badge && !isActive ? (
+          <span
+            style={{
+              position: "absolute",
+              top: 6,
+              right: 6,
+              background: "var(--red)",
+              color: "#fff",
+              borderRadius: 99,
+              fontSize: 9,
+              fontWeight: 700,
+              width: 14,
+              height: 14,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {badge}
+          </span>
+        ) : null}
+      </button>
+
+      <span
+        role="tooltip"
+        style={{
+          position: "absolute",
+          left: "calc(100% + 10px)",
+          top: "50%",
+          transform: `translateY(-50%) translateX(${hovered ? 0 : -4}px)`,
+          padding: "6px 10px",
+          borderRadius: 8,
+          background: "var(--bg-3)",
+          border: "1px solid var(--border-2)",
+          color: "var(--text-0)",
+          fontSize: 12,
+          fontWeight: 600,
+          whiteSpace: "nowrap",
+          pointerEvents: "none",
+          opacity: hovered ? 1 : 0,
+          visibility: hovered ? "visible" : "hidden",
+          transition: "opacity 0.15s ease, transform 0.15s ease, visibility 0.15s",
+          zIndex: 100,
+          boxShadow: "0 8px 24px rgba(0,0,0,0.28)",
+          fontFamily: "var(--font-sans)",
+        }}
+      >
+        {title}
+      </span>
+    </div>
+  );
+}
+
 export default function Sidebar({ activeView, onNavigate }: SidebarProps) {
   return (
     <nav
@@ -94,7 +212,8 @@ export default function Sidebar({ activeView, onNavigate }: SidebarProps) {
         padding: "16px 0",
         gap: 6,
         flexShrink: 0,
-        zIndex: 10,
+        zIndex: 20,
+        overflow: "visible",
       }}
     >
       {/* Logo */}
@@ -122,61 +241,15 @@ export default function Sidebar({ activeView, onNavigate }: SidebarProps) {
       {NAV_ITEMS.map((item) => {
         const isActive = activeView === item.view;
         return (
-          <button
+          <SidebarNavItem
             key={item.view}
-            onClick={() => onNavigate(item.view)}
             title={item.title}
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 12,
-              border: "none",
-              background: isActive ? "var(--wa-green)" : "transparent",
-              color: isActive ? "#fff" : "var(--text-2)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              position: "relative",
-              transition: "all 0.15s",
-              flexShrink: 0,
-            }}
-            onMouseEnter={(e) => {
-              if (!isActive) {
-                e.currentTarget.style.background = "var(--bg-3)";
-                e.currentTarget.style.color = "var(--text-0)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isActive) {
-                e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.color = "var(--text-2)";
-              }
-            }}
+            isActive={isActive}
+            badge={item.badge}
+            onClick={() => onNavigate(item.view)}
           >
             {item.icon}
-            {item.badge && !isActive && (
-              <span
-                style={{
-                  position: "absolute",
-                  top: 6,
-                  right: 6,
-                  background: "var(--red)",
-                  color: "#fff",
-                  borderRadius: 99,
-                  fontSize: 9,
-                  fontWeight: 700,
-                  width: 14,
-                  height: 14,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                {item.badge}
-              </span>
-            )}
-          </button>
+          </SidebarNavItem>
         );
       })}
 

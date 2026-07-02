@@ -24,6 +24,11 @@ export interface Message {
   time: string;
   aiGenerated: boolean;
   edited?: boolean;
+  /** WhatsApp message type e.g. chat, ptt, audio, image */
+  messageType?: string;
+  /** True for voice notes and audio attachments */
+  isAudio?: boolean;
+  hasMedia?: boolean;
   /** Display name or phone for the sender */
   senderLabel?: string | null;
   /** Accent color for group sender names */
@@ -45,10 +50,19 @@ export interface DailyCredits {
 
 export interface Product {
   id: number;
-  emoji: string;
   name: string;
+  slug: string;
+  description: string | null;
   price: string;
+  currency: string;
+  emoji: string | null;
   stock: "in" | "low" | "out";
+  images: string[];
+  totalSold: number;
+  active: boolean;
+  checkoutUrl: string;
+  createdAt?: string;
+  updatedAt?: string | null;
 }
 
 export interface BusinessSettings {
@@ -68,5 +82,5 @@ export interface TriggerRule {
   action: string;
 }
 
-export type NavView = "chats" | "dashboard" | "contacts" | "followups" | "credits" | "settings";
+export type NavView = "chats" | "dashboard" | "contacts" | "followups" | "credits" | "settings" | "products" | "website";
 export type RightTab = "info" | "ai" | "credits";

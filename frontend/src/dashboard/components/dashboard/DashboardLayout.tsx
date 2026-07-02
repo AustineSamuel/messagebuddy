@@ -10,6 +10,8 @@ import ContactsPage from "@/dashboard/components/contacts/ContactsPage";
 import FollowUpsPage from "@/dashboard/components/followups/FollowUpsPage";
 import BuyCreditsPage from "@/dashboard/components/credits/BuyCreditsPage";
 import SettingsPage from "@/dashboard/components/settings/SettingsPage";
+import ProductsPage from "@/dashboard/components/products/ProductsPage";
+import WebsiteServicesPage from "@/dashboard/components/website/WebsiteServicesPage";
 import ThemeToggle from "@/dashboard/components/ui/ThemeToggle";
 import WhatsAppConnectScreen from "@/dashboard/components/whatsapp/WhatsAppConnectScreen";
 import WhatsAppSyncingScreen from "@/dashboard/components/whatsapp/WhatsAppSyncingScreen";
@@ -209,21 +211,29 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
           <FollowUpsPage contacts={contactsForPage} />
         )}
 
+        {store.activeView === "products" && <ProductsPage />}
+
+        {store.activeView === "website" && (
+          <WebsiteServicesPage
+            businessName={store.settings.name}
+            websiteUrl={store.settings.website}
+          />
+        )}
+
         {store.activeView === "settings" && (
           store.loadingRules || store.loadingBusinessSettings ? (
             <SettingsPageSkeleton />
           ) : (
           <SettingsPage
             settings={store.settings}
-            products={store.products}
             triggerRules={store.triggerRules}
             defaultChatSettings={store.defaultChatSettings}
             savingDefaultSettings={store.savingDefaultSettings}
             savingBusinessSettings={store.savingBusinessSettings}
             onSaveDefaultChatSettings={store.saveDefaultChatSettings}
             onUpdateSettings={store.updateSettings}
-            onAddProduct={store.addProduct}
-            onRemoveProduct={store.removeProduct}
+            onOpenProducts={() => store.setActiveView("products")}
+            onOpenWebsite={() => store.setActiveView("website")}
           />
           )
         )}

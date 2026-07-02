@@ -12,6 +12,10 @@ import {
   type FollowUpSchedule,
 } from "@/app/services/follow-ups";
 import { dedupeContactsById } from "@/dashboard/lib/contacts";
+import {
+  FollowUpsAddSkeleton,
+  FollowUpsSelectedSkeleton,
+} from "@/dashboard/components/ui/WhatsAppSkeleton";
 import type { Contact } from "@/dashboard/types";
 
 type Props = {
@@ -549,9 +553,7 @@ export default function FollowUpsPage({ contacts }: Props) {
 
             <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
               {loading ? (
-                <div style={{ padding: 60, textAlign: "center", color: "var(--text-2)", fontSize: 14 }}>
-                  Loading schedules…
-                </div>
+                <FollowUpsSelectedSkeleton />
               ) : selectedList.length === 0 ? (
                 <div
                   style={{
@@ -606,6 +608,10 @@ export default function FollowUpsPage({ contacts }: Props) {
               padding: "20px 40px",
             }}
           >
+            {loading ? (
+              <FollowUpsAddSkeleton />
+            ) : (
+              <>
             <div
               style={{
                 background: "var(--surface-1)",
@@ -687,11 +693,7 @@ export default function FollowUpsPage({ contacts }: Props) {
                 background: "var(--surface-1)",
               }}
             >
-              {loading ? (
-                <div style={{ padding: 60, textAlign: "center", color: "var(--text-2)", fontSize: 14 }}>
-                  Loading contacts…
-                </div>
-              ) : filtered.length === 0 ? (
+              {filtered.length === 0 ? (
                 <div style={{ padding: 60, textAlign: "center", color: "var(--text-2)", fontSize: 14 }}>
                   No contacts found.
                 </div>
@@ -706,6 +708,8 @@ export default function FollowUpsPage({ contacts }: Props) {
                 ))
               )}
             </div>
+              </>
+            )}
           </div>
         )}
 

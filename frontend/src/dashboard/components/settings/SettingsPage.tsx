@@ -7,30 +7,21 @@ import {
   PrimaryBtn,
   SectionLabel,
   Toggle,
-  AddBtn,
-  Badge,
 } from "@/dashboard/components/ui/primitives";
 import type { ChatRuleSettings } from "@/app/services/chat-rules";
-import type { BusinessSettings, ContactRule, Product, TriggerRule } from "@/dashboard/types";
+import type { BusinessSettings, ContactRule, TriggerRule } from "@/dashboard/types";
 
 interface SettingsPageProps {
   settings: BusinessSettings;
-  products: Product[];
   triggerRules: TriggerRule[];
   defaultChatSettings: ChatRuleSettings | null;
   savingDefaultSettings?: boolean;
   onSaveDefaultChatSettings: (data: Partial<Omit<ChatRuleSettings, "chatId">>) => Promise<void>;
-  onUpdateSettings: (patch: Partial<BusinessSettings>, products?: Product[]) => Promise<void>;
+  onUpdateSettings: (patch: Partial<BusinessSettings>) => Promise<void>;
   savingBusinessSettings?: boolean;
-  onAddProduct: (p: Omit<Product, "id">) => void;
-  onRemoveProduct: (id: number) => void;
+  onOpenProducts?: () => void;
+  onOpenWebsite?: () => void;
 }
-
-const STOCK_CONFIG = {
-  in: { label: "In Stock", variant: "green" as const },
-  low: { label: "Low Stock", variant: "amber" as const },
-  out: { label: "Out of Stock", variant: "red" as const },
-};
 
 const TONES = ["professional", "casual", "formal", "energetic"] as const;
 
@@ -56,14 +47,13 @@ function SettingsSection({ title, subtitle, children }: { title: string; subtitl
 
 export default function SettingsPage({
   settings,
-  products,
   triggerRules,
   defaultChatSettings,
   savingDefaultSettings,
   onSaveDefaultChatSettings,
   onUpdateSettings,
-  onAddProduct,
-  onRemoveProduct,
+  onOpenProducts,
+  onOpenWebsite,
   savingBusinessSettings,
 }: SettingsPageProps) {
   const [local, setLocal] = useState(settings);
@@ -107,12 +97,9 @@ export default function SettingsPage({
     setLocal((prev) => ({ ...prev, [key]: e.target.value }));
   };
 
-  const handleSave = async (section: "profile" | "ai" | "products") => {
+  const handleSave = async (section: "profile" | "ai") => {
     try {
-      await onUpdateSettings(
-        local,
-        section === "products" ? products : undefined
-      );
+      await onUpdateSettings(local);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch {
@@ -186,6 +173,34 @@ export default function SettingsPage({
           <FormInput label="Business Name" value={local.name} onChange={set("name")} placeholder="e.g. Obi's Electronics" />
           <FormInput label="Website / Store Link" value={local.website} onChange={set("website")} placeholder="https://..." />
         </div>
+        {onOpenWebsite ? (
+          <div
+            style={{
+              marginBottom: 14,
+              padding: "14px 16px",
+              borderRadius: "var(--radius-sm)",
+              background: "linear-gradient(135deg, rgba(59,130,246,0.1), rgba(37,211,102,0.08))",
+              border: "1px solid rgba(59,130,246,0.25)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 16,
+              flexWrap: "wrap",
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-0)", marginBottom: 4 }}>
+                Need a professional business website?
+              </div>
+              <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.5, maxWidth: 420 }}>
+                Landing pages from ₦50,000 — customers shop your products online, with analytics & full e-commerce at higher tiers.
+              </p>
+            </div>
+            <PrimaryBtn variant="green" onClick={onOpenWebsite}>
+              View packages
+            </PrimaryBtn>
+          </div>
+        ) : null}
         <div style={{ marginBottom: 14 }}>
           <FormTextarea
             label="What You Sell"
@@ -362,90 +377,36 @@ export default function SettingsPage({
         </div>
       </SettingsSection>
 
-      {/* Products Catalog */}
+      {/* Product catalog — managed in Products tab */}
       <SettingsSection
-        title="Products Catalog"
-        subtitle="The AI references these when customers ask about pricing or availability"
+        title="Product Store"
+        subtitle="Create products with images, prices, and checkout links for AI to recommend"
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
-          {products.map((product) => {
-            const stockCfg = STOCK_CONFIG[product.stock];
-            return (
-              <div
-                key={product.id}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  padding: "11px 14px",
-                  background: "var(--bg-2)",
-                  border: "1px solid var(--border-1)",
-                  borderRadius: "var(--radius-sm)",
-                  transition: "background 0.1s",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-3)")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "var(--bg-2)")}
-              >
-                <div
-                  style={{
-                    width: 36, height: 36,
-                    background: "var(--bg-3)",
-                    borderRadius: 8,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 18, flexShrink: 0,
-                  }}
-                >
-                  {product.emoji}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-0)", marginBottom: 2 }}>
-                    {product.name}
-                  </div>
-                  <div style={{ fontSize: 13, color: "var(--wa-green)", fontWeight: 700 }}>
-                    {product.price}
-                  </div>
-                </div>
-                <Badge variant={stockCfg.variant}>{stockCfg.label}</Badge>
-                <button
-                  style={{
-                    background: "none", border: "none", cursor: "pointer",
-                    color: "var(--text-3)", fontSize: 16, padding: "0 4px",
-                    transition: "color 0.15s",
-                  }}
-                  onClick={() => onRemoveProduct(product.id)}
-                  title="Remove product"
-                  onMouseEnter={(e) => (e.currentTarget.style.color = "var(--red)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-3)")}
-                >
-                  ✕
-                </button>
-              </div>
-            );
-          })}
-        </div>
-        <AddBtn
-          onClick={() =>
-            onAddProduct({
-              emoji: "📦",
-              name: "New Product",
-              price: "₦0",
-              stock: "in",
-            })
-          }
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 16,
+            padding: "16px 18px",
+            background: "var(--bg-2)",
+            border: "1px solid var(--border-1)",
+            borderRadius: "var(--radius-sm)",
+          }}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width={13} height={13}>
-            <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-          Add Product
-        </AddBtn>
-        <div style={{ marginTop: 14 }}>
-          <PrimaryBtn
-            variant="green"
-            onClick={() => void handleSave("products")}
-            style={{ opacity: savingBusinessSettings ? 0.7 : 1 }}
-          >
-            {savingBusinessSettings ? "Saving…" : "Save Catalog"}
-          </PrimaryBtn>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-0)", marginBottom: 4 }}>
+              Manage your catalog
+            </div>
+            <p style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.5, maxWidth: 420 }}>
+              Add products in the Products tab. When customers ask on WhatsApp, AI searches your catalog and sends checkout links automatically.
+            </p>
+          </div>
+          {onOpenProducts ? (
+            <PrimaryBtn variant="green" onClick={onOpenProducts}>
+              Open Products
+            </PrimaryBtn>
+          ) : null}
         </div>
       </SettingsSection>
 

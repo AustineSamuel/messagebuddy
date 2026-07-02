@@ -66,7 +66,18 @@ export async function deleteMessage(
 }
 
 export async function downloadMessageMedia(messageId: string) {
-  return waGet(`/messages/${encodeURIComponent(messageId)}/media`);
+  return waGet<{
+    mimetype: string;
+    data: string;
+    filename?: string;
+    filesize?: number;
+  }>(`/messages/${encodeURIComponent(messageId)}/media`);
+}
+
+export async function transcribeMessage(messageId: string) {
+  return waPost<{ messageId: string; text: string }>(
+    `/messages/${encodeURIComponent(messageId)}/transcribe`
+  );
 }
 
 export async function getMessageReactions(messageId: string) {

@@ -13,6 +13,7 @@ import {
 } from "@/app/services/analytics";
 import { getCreditsUsage } from "@/app/services/credits";
 import { getErrorMessage } from "@/app/lib/api";
+import { AnalyticsPageSkeleton } from "@/dashboard/components/ui/WhatsAppSkeleton";
 
 const PERIOD_OPTIONS: { key: AnalyticsPeriod; label: string }[] = [
   { key: "today", label: "Today" },
@@ -237,8 +238,8 @@ export default function DashboardAnalytics({ onBuyCredits }: Props) {
         </div>
       ) : null}
 
-      {loading && !summary ? (
-        <div style={{ padding: 60, textAlign: "center", color: "var(--text-2)" }}>Loading analytics…</div>
+      {loading ? (
+        <AnalyticsPageSkeleton />
       ) : summary ? (
         <>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12, marginBottom: 20 }}>

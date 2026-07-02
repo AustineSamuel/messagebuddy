@@ -14,16 +14,7 @@ import {
   type ChatRuleSettings,
   type ChatRulesIndex,
 } from "@/app/services/chat-rules";
-import type {
-  Contact,
-  ContactRule,
-  NavView,
-  RightTab,
-  Product,
-  BusinessSettings,
-  TriggerRule,
-  Conversation,
-} from "@/dashboard/types";
+import type { BusinessSettings, ContactRule, TriggerRule, Conversation, Contact, NavView, RightTab } from "@/dashboard/types";
 import {
   getCreditsAccount,
   getCreditsUsage,
@@ -103,7 +94,6 @@ export function useDashboardStore({ whatsAppReady }: Props) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [waContacts, setWaContacts] = useState<Contact[]>([]);
   const [conversations, setConversations] = useState<Record<string, Conversation>>({});
-  const [products, setProducts] = useState<Product[]>([]);
   const [settings, setSettings] = useState<BusinessSettings>(EMPTY_BUSINESS_SETTINGS);
   const [triggerRules, setTriggerRules] = useState<TriggerRule[]>(DEMO_TRIGGER_RULES);
   const [creditsBalance, setCreditsBalance] = useState(0);
@@ -163,9 +153,8 @@ export function useDashboardStore({ whatsAppReady }: Props) {
     setLoadingBusinessSettings(true);
     try {
       const data = await getBusinessSettings();
-      const { products: savedProducts, ...businessFields } = data;
+      const { products: _legacyProducts, ...businessFields } = data;
       setSettings(businessFields);
-      setProducts(savedProducts ?? []);
     } catch (err) {
       setSyncError(getErrorMessage(err));
     } finally {
@@ -477,18 +466,16 @@ export function useDashboardStore({ whatsAppReady }: Props) {
   );
 
   const updateSettings = useCallback(
-    async (patch: Partial<BusinessSettings>, catalogProducts?: Product[]) => {
+    async (patch: Partial<BusinessSettings>) => {
       setSavingBusinessSettings(true);
       setSyncError(null);
       try {
         const saved = await saveBusinessSettings({
           ...settings,
           ...patch,
-          products: catalogProducts ?? products,
         });
-        const { products: savedProducts, ...businessFields } = saved;
+        const { products: _legacyProducts, ...businessFields } = saved;
         setSettings(businessFields);
-        setProducts(savedProducts ?? []);
         try {
           if (patch.name) await setDisplayName(patch.name);
           if (patch.description) await setStatus(patch.description);
@@ -502,16 +489,8 @@ export function useDashboardStore({ whatsAppReady }: Props) {
         setSavingBusinessSettings(false);
       }
     },
-    [settings, products]
+    [settings]
   );
-
-  const addProduct = useCallback((product: Omit<Product, "id">) => {
-    setProducts((prev) => [...prev, { ...product, id: Date.now() }]);
-  }, []);
-
-  const removeProduct = useCallback((id: number) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
-  }, []);
 
   const addTriggerRule = useCallback((rule: Omit<TriggerRule, "id">) => {
     setTriggerRules((prev) => [...prev, { ...rule, id: Date.now() }]);
@@ -537,7 +516,6 @@ export function useDashboardStore({ whatsAppReady }: Props) {
     contacts,
     waContacts,
     conversations,
-    products,
     settings,
     triggerRules,
     creditsBalance,
@@ -570,8 +548,6 @@ export function useDashboardStore({ whatsAppReady }: Props) {
     saveActiveContactSettings,
     saveDefaultChatSettings,
     updateSettings,
-    addProduct,
-    removeProduct,
     addTriggerRule,
     removeTriggerRule,
     setCreditsBalance,

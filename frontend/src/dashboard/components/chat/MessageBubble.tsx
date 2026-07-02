@@ -1,6 +1,7 @@
 "use client";
 
 import type { Message } from "@/dashboard/types";
+import AudioMessageContent from "@/dashboard/components/chat/AudioMessageContent";
 
 interface MessageBubbleProps {
   message: Message;
@@ -79,7 +80,7 @@ export default function MessageBubble({
           fontSize: 13,
           lineHeight: 1.55,
           color: "var(--text-0)",
-          cursor: message.aiGenerated ? "pointer" : "default",
+          cursor: message.aiGenerated && !message.isAudio ? "pointer" : "default",
           position: "relative",
           transition: "filter 0.15s",
           wordBreak: "break-word",
@@ -91,16 +92,24 @@ export default function MessageBubble({
           e.currentTarget.style.filter = "none";
         }}
         onClick={() => {
-          if (message.aiGenerated && onEdit) onEdit(message);
+          if (message.aiGenerated && !message.isAudio && onEdit) onEdit(message);
         }}
-        title={message.aiGenerated ? "Click to edit AI message" : undefined}
+        title={message.aiGenerated && !message.isAudio ? "Click to edit AI message" : undefined}
       >
-        {message.text.split("\n").map((line, i) => (
-          <span key={i}>
-            {i > 0 && <br />}
-            {line}
-          </span>
-        ))}
+        {message.isAudio ? (
+          <AudioMessageContent
+            messageId={message.id}
+            caption={message.text || undefined}
+            isOut={isOut}
+          />
+        ) : (
+          message.text.split("\n").map((line, i) => (
+            <span key={i}>
+              {i > 0 && <br />}
+              {line}
+            </span>
+          ))
+        )}
         {message.edited && (
           <span style={{ fontSize: 10, color: "var(--text-2)", marginLeft: 6, fontStyle: "italic" }}>
             edited

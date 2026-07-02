@@ -1,3 +1,4 @@
+import { isAudioApiMessage } from "@/dashboard/lib/audio-messages";
 import type { Contact, ContactRule, Message } from "@/dashboard/types";
 
 const AVATAR_COLORS = [
@@ -104,9 +105,11 @@ export type MessageMapContext = {
 };
 
 export function apiMessageToMessage(message: ApiMessage, ctx?: MessageMapContext): Message {
-  const text =
-    message.body?.trim() ||
-    (message.type ? `[${message.type}]` : "Message");
+  const isAudio = isAudioApiMessage(message);
+  const text = isAudio
+    ? message.body?.trim() || ""
+    : message.body?.trim() ||
+      (message.type ? `[${message.type}]` : "Message");
 
   const isOut = Boolean(message.fromMe);
   const senderId = isOut
@@ -131,6 +134,9 @@ export function apiMessageToMessage(message: ApiMessage, ctx?: MessageMapContext
     text,
     time: formatMessageTime(message.timestamp),
     aiGenerated: false,
+    messageType: message.type,
+    isAudio,
+    hasMedia: message.hasMedia,
     senderLabel,
     senderColor: senderId ? avatarColorForId(senderId) : undefined,
     senderId,
@@ -223,7 +229,11 @@ export function chatToContact(chat: ApiChat, rule: ContactRule = "default"): Con
   const name = displayNameFromChat(chat)
   const lastBody =
     chat.lastMessage?.body?.trim() ||
-    (chat.lastMessage?.hasMedia ? `[${chat.lastMessage.type || "media"}]` : "") ||
+    (chat.lastMessage && isAudioApiMessage(chat.lastMessage)
+      ? "🎤 Voice message"
+      : chat.lastMessage?.hasMedia
+        ? `[${chat.lastMessage.type || "media"}]`
+        : "") ||
     (chat.lastMessage?.type ? `[${chat.lastMessage.type}]` : "")
   return {
     id: chat.id,
