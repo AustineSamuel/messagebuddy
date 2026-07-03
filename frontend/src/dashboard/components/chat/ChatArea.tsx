@@ -39,8 +39,22 @@ export default function ChatArea({
   const [generatingAi, setGeneratingAi] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+
+  const MIN_INPUT_HEIGHT = 42;
+  const MAX_INPUT_HEIGHT = 132;
+
+  const adjustInputHeight = () => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = `${MIN_INPUT_HEIGHT}px`;
+    el.style.height = `${Math.min(Math.max(el.scrollHeight, MIN_INPUT_HEIGHT), MAX_INPUT_HEIGHT)}px`;
+  };
+
+  useEffect(() => {
+    adjustInputHeight();
+  }, [inputValue]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -64,21 +78,45 @@ export default function ChatArea({
 
   const handleSend = () => {
     if (!inputValue.trim()) return;
+    const text = inputValue.replace(/\r\n/g, "\n");
     if (replyingTo) {
-      onSendReply(replyingTo.id, inputValue.trim());
+      onSendReply(replyingTo.id, text.trim());
       setReplyingTo(null);
     } else {
-      onSendMessage(inputValue.trim());
+      onSendMessage(text.trim());
     }
     setInputValue("");
+    requestAnimationFrame(adjustInputHeight);
     inputRef.current?.focus();
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const plain = e.clipboardData.getData("text/plain");
+    if (!plain.includes("\n") && !plain.includes("\r")) return;
+
+    e.preventDefault();
+    const normalized = plain.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    const el = inputRef.current;
+    if (!el) return;
+
+    const start = el.selectionStart ?? inputValue.length;
+    const end = el.selectionEnd ?? inputValue.length;
+    const next = inputValue.slice(0, start) + normalized + inputValue.slice(end);
+    setInputValue(next);
+
+    requestAnimationFrame(() => {
+      const cursor = start + normalized.length;
+      el.selectionStart = cursor;
+      el.selectionEnd = cursor;
+      adjustInputHeight();
+    });
   };
 
   const handleGenerateAi = async () => {
@@ -349,17 +387,19 @@ export default function ChatArea({
             </button>
           </div>
         ) : null}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, position: "relative" }}>
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 10, position: "relative" }}>
         <IconButton title="Attach file">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width={15} height={15}>
             <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
           </svg>
         </IconButton>
-        <input
+        <textarea
           ref={inputRef}
           value={inputValue}
+          rows={1}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
+          onPaste={handlePaste}
           placeholder={replyingTo ? "Type your reply..." : "Type a message..."}
           style={{
             flex: 1,
@@ -368,10 +408,17 @@ export default function ChatArea({
             borderRadius: 22,
             padding: "10px 16px",
             fontSize: 13,
+            lineHeight: 1.45,
             color: "var(--text-0)",
             fontFamily: "var(--font-sans)",
             outline: "none",
-            height: 42,
+            minHeight: MIN_INPUT_HEIGHT,
+            maxHeight: MAX_INPUT_HEIGHT,
+            height: MIN_INPUT_HEIGHT,
+            resize: "none",
+            overflowY: "auto",
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
             transition: "border-color 0.15s",
           }}
           onFocus={(e) => (e.target.style.borderColor = "var(--wa-green)")}

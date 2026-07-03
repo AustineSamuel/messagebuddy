@@ -1,6 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
+import InstallAppButton from "@/app/components/InstallAppButton";
 import { Avatar } from "@/dashboard/components/ui/primitives";
 import type { NavView } from "@/dashboard/types";
 
@@ -214,6 +216,7 @@ export default function Sidebar({ activeView, onNavigate }: SidebarProps) {
         flexShrink: 0,
         zIndex: 20,
         overflow: "visible",
+        position: "relative",
       }}
     >
       {/* Logo */}
@@ -221,20 +224,21 @@ export default function Sidebar({ activeView, onNavigate }: SidebarProps) {
         style={{
           width: 40,
           height: 40,
-          background: "linear-gradient(135deg, var(--wa-green), var(--wa-teal))",
           borderRadius: 12,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontWeight: 800,
-          fontSize: 16,
-          color: "#fff",
+          overflow: "hidden",
           marginBottom: 10,
-          letterSpacing: "-0.5px",
           flexShrink: 0,
+          boxShadow: "0 4px 12px rgba(37,211,102,0.25)",
         }}
       >
-        W
+        <Image
+          src="/icon.png"
+          alt="MessageBuddy"
+          width={40}
+          height={40}
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          priority
+        />
       </div>
 
       {/* Nav items */}
@@ -253,8 +257,10 @@ export default function Sidebar({ activeView, onNavigate }: SidebarProps) {
         );
       })}
 
+      <InstallAppButton variant="sidebar" />
+
       {/* User avatar at bottom */}
-      <div style={{ marginTop: "auto" }}>
+      <div style={{ marginBottom: 4 }}>
         <Avatar initials="OB" color="#1e2d44" size={36} />
       </div>
     </nav>

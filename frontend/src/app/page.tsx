@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
+import InstallAppButton from "@/app/components/InstallAppButton";
 
 export default function Home() {
   return (
@@ -15,9 +17,13 @@ export default function Home() {
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-5xl flex-col px-6 pb-16 pt-8 md:px-10">
         <header className="flex flex-wrap items-center justify-between gap-4 text-xs font-medium uppercase tracking-[0.2em]">
           <Link href="/" className="flex items-center gap-2 text-[#1a5c3a]">
-            <span
-              className="h-8 w-8 shrink-0 rounded-full bg-[#2d7a4f]"
-              aria-hidden
+            <Image
+              src="/icon.png"
+              alt="MessageBuddy"
+              width={32}
+              height={32}
+              className="h-8 w-8 shrink-0 rounded-full"
+              priority
             />
             <span className="text-sm tracking-[0.25em]">MessageBuddy</span>
           </Link>
@@ -35,6 +41,7 @@ export default function Home() {
           </nav>
 
           <div className="flex items-center gap-4">
+            <InstallAppButton variant="header" />
             <button
               type="button"
               className="text-[#2d8f55] transition hover:text-[#1a5c3a]"

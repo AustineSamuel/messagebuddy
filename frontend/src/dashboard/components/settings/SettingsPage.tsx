@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import InstallAppButton from "@/app/components/InstallAppButton";
 import {
   FormInput,
   FormTextarea,
@@ -166,6 +167,10 @@ export default function SettingsPage({
           Configure your AI agent personality, products, and business information.
         </p>
       </div>
+
+      <SettingsSection title="Install app" subtitle="Add MessageBuddy to your home screen for quick access like a native app">
+        <InstallAppButton variant="settings" />
+      </SettingsSection>
 
       {/* Business Profile */}
       <SettingsSection title="Business Profile" subtitle="Your business identity — the AI uses this context in every conversation">
