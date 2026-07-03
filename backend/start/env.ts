@@ -37,9 +37,20 @@ export default await Env.create(new URL('../', import.meta.url), {
   FIREBASE_CREDENTIALS_PATH: Env.schema.string.optional(),
 
   // AI auto-reply (OpenAI-compatible chat completions API)
+  AI_REPLY_PROVIDER: Env.schema.enum.optional(['openai', 'nvidia'] as const),
   OPENAI_API_KEY: Env.schema.string.optional(),
+  OPENAI_BASE_URL: Env.schema.string.optional(),
   OPENAI_MODEL: Env.schema.string.optional(),
   OPENAI_WHISPER_MODEL: Env.schema.string.optional(),
+
+  // NVIDIA NIM (OpenAI-compatible chat completions API)
+  NVIDIA_API_KEY: Env.schema.string.optional(),
+  NVIDIA_BASE_URL: Env.schema.string.optional(),
+  NVIDIA_MODEL: Env.schema.string.optional(),
+  NVIDIA_TEMPERATURE: Env.schema.string.optional(),
+  NVIDIA_TOP_P: Env.schema.string.optional(),
+  NVIDIA_MAX_TOKENS: Env.schema.string.optional(),
+  NVIDIA_THINKING: Env.schema.string.optional(),
 
   /** Secret for GET /api/v1/website-services/orders/admin (X-Website-Orders-Secret header) */
   WEBSITE_ORDERS_ADMIN_SECRET: Env.schema.string.optional(),

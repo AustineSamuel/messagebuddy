@@ -1,4 +1,19 @@
 import type { Chat, Contact, Message } from 'whatsapp-web.js'
+import type { ReactionList } from 'whatsapp-web.js'
+
+export type SerializedQuotedMessage = {
+  id: string
+  body: string
+  type: string
+  fromMe: boolean
+  hasMedia: boolean
+}
+
+export type SerializedReaction = {
+  emoji: string
+  count: number
+  fromMe: boolean
+}
 
 export function serializeId(id: unknown): string {
   if (typeof id === 'string') return id
@@ -24,6 +39,7 @@ type SerializedMessage = {
   author: string | null
   hasMedia: boolean
   hasQuotedMsg: boolean
+  quotedMessage?: SerializedQuotedMessage | null
   isForwarded: boolean
   isStarred: boolean
   isStatus: boolean
@@ -86,6 +102,42 @@ export function serializeContact(contact: Contact) {
     isBlocked: contact.isBlocked,
     isBusiness: contact.isBusiness,
     isEnterprise: contact.isEnterprise,
+  }
+}
+
+export function serializeReactions(reactionLists: ReactionList[]): SerializedReaction[] {
+  return reactionLists
+    .filter((entry) => entry.aggregateEmoji)
+    .map((entry) => ({
+      emoji: entry.aggregateEmoji,
+      count: entry.senders?.length ?? 0,
+      fromMe: entry.hasReactionByMe,
+    }))
+}
+
+export async function serializeMessageForApi(message: Message): Promise<SerializedMessage> {
+  const base = serializeMessage(message)
+
+  if (!message.hasQuotedMsg) return base
+
+  try {
+    const quoted = await message.getQuotedMessage()
+    return {
+      ...base,
+      quotedMessage: {
+        id: serializeId(quoted.id),
+        body: messagePreviewBody({
+          body: quoted.body,
+          type: quoted.type,
+          hasMedia: quoted.hasMedia,
+        }),
+        type: quoted.type,
+        fromMe: quoted.fromMe,
+        hasMedia: quoted.hasMedia,
+      },
+    }
+  } catch {
+    return base
   }
 }
 

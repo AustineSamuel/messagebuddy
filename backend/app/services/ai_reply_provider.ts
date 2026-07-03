@@ -1,0 +1,46 @@
+import env from '#start/env'
+import AiReplyService from '#services/ai_reply_service'
+import NvidiaAiReplyService from '#services/nvidia_ai_reply_service'
+import type {
+  GenerateDraftInput,
+  GenerateFollowUpInput,
+  GenerateReplyInput,
+} from '#services/ai_reply_shared'
+
+export type {
+  ConversationTurn,
+  GenerateDraftInput,
+  GenerateFollowUpInput,
+  GenerateReplyInput,
+} from '#services/ai_reply_shared'
+
+type ReplyServiceContract = {
+  isConfigured(): boolean
+  generateReply(input: GenerateReplyInput): Promise<string | null>
+  generateDraftReply(input: GenerateDraftInput): Promise<string | null>
+  generateFollowUpMessage(input: GenerateFollowUpInput): Promise<string | null>
+}
+
+function activeService(): ReplyServiceContract {
+  const provider = (env.get('AI_REPLY_PROVIDER') ?? 'openai').toLowerCase()
+  return provider === 'nvidia' ? NvidiaAiReplyService : AiReplyService
+}
+
+/** Routes AI reply calls to OpenAI or NVIDIA based on AI_REPLY_PROVIDER. */
+export default class AiReplyProvider {
+  static isConfigured() {
+    return activeService().isConfigured()
+  }
+
+  static generateReply(input: GenerateReplyInput) {
+    return activeService().generateReply(input)
+  }
+
+  static generateDraftReply(input: GenerateDraftInput) {
+    return activeService().generateDraftReply(input)
+  }
+
+  static generateFollowUpMessage(input: GenerateFollowUpInput) {
+    return activeService().generateFollowUpMessage(input)
+  }
+}

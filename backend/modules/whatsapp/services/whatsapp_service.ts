@@ -8,7 +8,7 @@ import AudioTranscriptionService from '#services/audio_transcription_service'
 import { isAudioMessageType } from '../helpers/serialization.js'
 import ProductReplyEnricher from '#services/product_reply_enricher'
 import AiBusinessContextService from '#services/ai_business_context'
-import AiReplyService from '#services/ai_reply_service'
+import AiReplyProvider from '#services/ai_reply_provider'
 import { buildConversationHistory } from '../helpers/conversation_history.js'
 import {
   serializeChatForApi,
@@ -16,6 +16,8 @@ import {
   serializeGroupChat,
   serializeId,
   serializeMessage,
+  serializeMessageForApi,
+  serializeReactions,
   resolveChatDisplayName,
 } from '../helpers/serialization.js'
 
@@ -165,7 +167,7 @@ export default class WhatsAppService {
 
     try {
       const messages = await chat.fetchMessages(searchOptions)
-      return messages.map(serializeMessage)
+      return Promise.all(messages.map((message) => serializeMessageForApi(message)))
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       const isTimeout =
@@ -179,7 +181,7 @@ export default class WhatsAppService {
           ...searchOptions,
           limit: 15,
         })
-        return fallback.map(serializeMessage)
+        return Promise.all(fallback.map((message) => serializeMessageForApi(message)))
       }
 
       throw error
@@ -193,8 +195,8 @@ export default class WhatsAppService {
   }
 
   static async suggestAiReply(userId: number, chatId: string, limit = 50) {
-    if (!AiReplyService.isConfigured()) {
-      throw new Error('AI is not configured. Set OPENAI_API_KEY on the server.')
+    if (!AiReplyProvider.isConfigured()) {
+      throw new Error('AI is not configured. Set OPENAI_API_KEY or NVIDIA_API_KEY on the server.')
     }
 
     const client = await whatsAppClientManager.getReadyClient(userId)
@@ -225,7 +227,7 @@ export default class WhatsAppService {
       lastCustomerMessage
     )
 
-    const suggestion = await AiReplyService.generateDraftReply({
+    const suggestion = await AiReplyProvider.generateDraftReply({
       history,
       customInstructions: rules.customInstructions,
       notes: rules.notes,
@@ -353,7 +355,12 @@ export default class WhatsAppService {
   static async reactToMessage(userId: number, messageId: string, reaction: string) {
     const message = await this.getMessageEntity(userId, messageId)
     await message.react(reaction)
-    return { reaction }
+    const reactionLists = await message.getReactions()
+    return {
+      messageId: serializeId(message.id),
+      reaction,
+      reactions: serializeReactions(reactionLists),
+    }
   }
 
   static async replyToMessage(
@@ -362,10 +369,32 @@ export default class WhatsAppService {
     content: string | Record<string, unknown>,
     options?: Record<string, unknown>
   ) {
+    if (!(await CreditsService.hasSufficientCredits(userId))) {
+      const account = await CreditsService.getAccount(userId)
+      throw new InsufficientCreditsError(account.balance)
+    }
+
     const message = await this.getMessageEntity(userId, messageId)
     const payload = typeof content === 'string' ? content : this.buildMessageContent(content)
+    const textPreview = typeof content === 'string' ? content : String((content as { body?: string }).body ?? '')
     const reply = await message.reply(payload as string, undefined, options)
-    return serializeMessage(reply)
+    const serialized = await serializeMessageForApi(reply)
+
+    try {
+      const chat = await message.getChat()
+      const chatId = serializeId(chat.id)
+      const contactLabel = await resolveChatDisplayName(chat, chatId).catch(() => chatId)
+      await CreditsService.chargeMessageSent(userId, {
+        chatId,
+        source: 'manual',
+        preview: textPreview,
+        chatLabel: contactLabel,
+      })
+    } catch {
+      // credit logging is best-effort for replies
+    }
+
+    return serialized
   }
 
   static async forwardMessage(userId: number, messageId: string, chatId: string) {
@@ -428,7 +457,11 @@ export default class WhatsAppService {
 
   static async getMessageReactions(userId: number, messageId: string) {
     const message = await this.getMessageEntity(userId, messageId)
-    return message.getReactions()
+    const reactionLists = await message.getReactions()
+    return {
+      messageId: serializeId(message.id),
+      reactions: serializeReactions(reactionLists),
+    }
   }
 
   static async getPollVotes(userId: number, messageId: string) {

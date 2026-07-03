@@ -1,5 +1,5 @@
 import type { Chat } from 'whatsapp-web.js'
-import type { ConversationTurn } from '#services/ai_reply_service'
+import type { ConversationTurn } from '#services/ai_reply_shared'
 import { serializeId } from './serialization.js'
 
 export function messageBodyFromWweb(message: {

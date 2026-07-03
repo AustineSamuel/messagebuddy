@@ -5,6 +5,7 @@ import path from 'node:path'
 import { Client as WWebClient, LocalAuth, WAState } from '../lib/wwebjs.js'
 import type { Client, WAState as WAStateType } from 'whatsapp-web.js'
 import WhatsAppAutoReplyService from './whatsapp_auto_reply_service.js'
+import WhatsAppRealtimeService from './whatsapp_realtime_service.js'
 
 export type WhatsAppSessionStatus =
   | 'disconnected'
@@ -229,6 +230,7 @@ function scheduleReadyCheck(userId: number, session: WhatsAppSession, client: Cl
 
 function attachAutoReplyListener(userId: number, client: Client) {
   WhatsAppAutoReplyService.attachListener(userId, client)
+  WhatsAppRealtimeService.attachListener(userId, client)
 }
 
 function attachClientEvents(userId: number, session: WhatsAppSession, client: Client) {

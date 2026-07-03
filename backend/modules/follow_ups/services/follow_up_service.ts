@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon'
 import logger from '@adonisjs/core/services/logger'
 import FollowUpSchedule, { type FollowUpInterval } from '#models/follow_up_schedule'
-import AiReplyService from '#services/ai_reply_service'
+import AiReplyProvider from '#services/ai_reply_provider'
 import ChatRulesService from '../../chat_rules/services/chat_rules_service.js'
 import AiBusinessContextService from '#services/ai_business_context'
 import CreditsService from '#services/credits_service'
@@ -140,7 +140,7 @@ export default class FollowUpService {
 
   static async processDueFollowUps() {
     if (processingDue) return
-    if (!AiReplyService.isConfigured()) return
+    if (!AiReplyProvider.isConfigured()) return
 
     processingDue = true
     try {
@@ -211,7 +211,7 @@ export default class FollowUpService {
     }
 
     const contactLabel = await resolveChatDisplayName(chat, chatId).catch(() => chatId)
-    const message = await AiReplyService.generateFollowUpMessage({
+    const message = await AiReplyProvider.generateFollowUpMessage({
       history,
       customInstructions: rules.customInstructions,
       notes: rules.notes,

@@ -2,7 +2,7 @@ import logger from '@adonisjs/core/services/logger'
 import type { Client, Message } from 'whatsapp-web.js'
 import ChatRulesService from '../../chat_rules/services/chat_rules_service.js'
 import AiBusinessContextService from '#services/ai_business_context'
-import AiReplyService from '#services/ai_reply_service'
+import AiReplyProvider from '#services/ai_reply_provider'
 import ProductReplyEnricher from '#services/product_reply_enricher'
 import CreditsService, { InsufficientCreditsError } from '#services/credits_service'
 import { buildConversationHistory, messageBodyFromWweb } from '../helpers/conversation_history.js'
@@ -89,7 +89,7 @@ export default class WhatsAppAutoReplyService {
           return
         }
 
-        if (!AiReplyService.isConfigured()) return
+        if (!AiReplyProvider.isConfigured()) return
 
         if (!(await CreditsService.hasSufficientCredits(userId))) {
           logger.debug({ userId, chatId }, 'Insufficient credits — auto-reply skipped')
@@ -108,7 +108,7 @@ export default class WhatsAppAutoReplyService {
 
         const matchedProducts = await ProductReplyEnricher.findRelevantProducts(userId, incoming)
 
-        const replyText = await AiReplyService.generateReply({
+        const replyText = await AiReplyProvider.generateReply({
           incomingMessage: incoming,
           history,
           customInstructions: rules.customInstructions,
