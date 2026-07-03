@@ -1,4 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import type { SpliterMessage } from '#services/ai_reply_shared'
 import { handleWhatsAppError } from '../helpers/handle_error.js'
 import { getAuthUserId } from '../helpers/whatsapp_context.js'
 import WhatsAppService from '../services/whatsapp_service.js'
@@ -206,6 +207,45 @@ export default class WhatsappChatsController {
     try {
       const { note } = ctx.request.only(['note'])
       return ctx.serialize(await WhatsAppService.setCustomerNote(uid(ctx), ctx.params.chatId, note))
+    } catch (error) {
+      return handleWhatsAppError(error, ctx.response)
+    }
+  }
+
+  async listContactSummaries(ctx: HttpContext) {
+    try {
+      return ctx.serialize(await WhatsAppService.listContactSummaries(uid(ctx)))
+    } catch (error) {
+      return handleWhatsAppError(error, ctx.response)
+    }
+  }
+
+  async contactSummary(ctx: HttpContext) {
+    try {
+      return ctx.serialize(await WhatsAppService.getContactSummary(uid(ctx), ctx.params.chatId))
+    } catch (error) {
+      return handleWhatsAppError(error, ctx.response)
+    }
+  }
+
+  async refreshContactSummary(ctx: HttpContext) {
+    try {
+      const { force } = ctx.request.qs()
+      const body = ctx.request.body() as {
+        spliter?: unknown
+        contactLabel?: string
+        isGroup?: boolean
+        force?: boolean
+      }
+
+      return ctx.serialize(
+        await WhatsAppService.refreshContactSummary(uid(ctx), ctx.params.chatId, {
+          force: force === 'true' || force === '1' || body.force === true,
+          spliter: body.spliter as SpliterMessage[] | undefined,
+          contactLabel: body.contactLabel,
+          isGroup: body.isGroup,
+        })
+      )
     } catch (error) {
       return handleWhatsAppError(error, ctx.response)
     }

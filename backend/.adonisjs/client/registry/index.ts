@@ -90,6 +90,12 @@ const routes = {
     tokens: [{"old":"/api/v1/whatsapp/session/logout","type":0,"val":"api","end":""},{"old":"/api/v1/whatsapp/session/logout","type":0,"val":"v1","end":""},{"old":"/api/v1/whatsapp/session/logout","type":0,"val":"whatsapp","end":""},{"old":"/api/v1/whatsapp/session/logout","type":0,"val":"session","end":""},{"old":"/api/v1/whatsapp/session/logout","type":0,"val":"logout","end":""}],
     types: placeholder as Registry['whatsapp.whatsapp_session.logout']['types'],
   },
+  'whatsapp.whatsapp_chats.list_contact_summaries': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/whatsapp/contact-summaries',
+    tokens: [{"old":"/api/v1/whatsapp/contact-summaries","type":0,"val":"api","end":""},{"old":"/api/v1/whatsapp/contact-summaries","type":0,"val":"v1","end":""},{"old":"/api/v1/whatsapp/contact-summaries","type":0,"val":"whatsapp","end":""},{"old":"/api/v1/whatsapp/contact-summaries","type":0,"val":"contact-summaries","end":""}],
+    types: placeholder as Registry['whatsapp.whatsapp_chats.list_contact_summaries']['types'],
+  },
   'whatsapp.whatsapp_chats.index': {
     methods: ["GET","HEAD"],
     pattern: '/api/v1/whatsapp/chats',
@@ -227,6 +233,18 @@ const routes = {
     pattern: '/api/v1/whatsapp/chats/:chatId/customer-note',
     tokens: [{"old":"/api/v1/whatsapp/chats/:chatId/customer-note","type":0,"val":"api","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/customer-note","type":0,"val":"v1","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/customer-note","type":0,"val":"whatsapp","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/customer-note","type":0,"val":"chats","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/customer-note","type":1,"val":"chatId","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/customer-note","type":0,"val":"customer-note","end":""}],
     types: placeholder as Registry['whatsapp.whatsapp_chats.set_customer_note']['types'],
+  },
+  'whatsapp.whatsapp_chats.contact_summary': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/whatsapp/chats/:chatId/contact-summary',
+    tokens: [{"old":"/api/v1/whatsapp/chats/:chatId/contact-summary","type":0,"val":"api","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/contact-summary","type":0,"val":"v1","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/contact-summary","type":0,"val":"whatsapp","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/contact-summary","type":0,"val":"chats","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/contact-summary","type":1,"val":"chatId","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/contact-summary","type":0,"val":"contact-summary","end":""}],
+    types: placeholder as Registry['whatsapp.whatsapp_chats.contact_summary']['types'],
+  },
+  'whatsapp.whatsapp_chats.refresh_contact_summary': {
+    methods: ["POST"],
+    pattern: '/api/v1/whatsapp/chats/:chatId/contact-summary/refresh',
+    tokens: [{"old":"/api/v1/whatsapp/chats/:chatId/contact-summary/refresh","type":0,"val":"api","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/contact-summary/refresh","type":0,"val":"v1","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/contact-summary/refresh","type":0,"val":"whatsapp","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/contact-summary/refresh","type":0,"val":"chats","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/contact-summary/refresh","type":1,"val":"chatId","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/contact-summary/refresh","type":0,"val":"contact-summary","end":""},{"old":"/api/v1/whatsapp/chats/:chatId/contact-summary/refresh","type":0,"val":"refresh","end":""}],
+    types: placeholder as Registry['whatsapp.whatsapp_chats.refresh_contact_summary']['types'],
   },
   'whatsapp.whatsapp_messages.search': {
     methods: ["GET","HEAD"],

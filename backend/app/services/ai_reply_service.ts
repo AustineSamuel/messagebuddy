@@ -3,9 +3,11 @@ import logger from '@adonisjs/core/services/logger'
 import { sanitizeAiOutput } from '#services/ai_context_resolver'
 import {
   buildSystemContent,
+  CONTACT_SUMMARY_SYSTEM_PROMPT,
   DRAFT_SYSTEM_PROMPT,
   FOLLOW_UP_SYSTEM_PROMPT,
   SYSTEM_PROMPT,
+  type GenerateContactSummaryInput,
   type GenerateDraftInput,
   type GenerateFollowUpInput,
   type GenerateReplyInput,
@@ -98,6 +100,18 @@ export default class AiReplyService {
         role: 'user',
         content:
           'Based on the conversation above, write the next message I (the business) should send. Reply to the customer appropriately.',
+      },
+    ]
+
+    return this.completeChat(messages)
+  }
+
+  static async generateContactSummary(input: GenerateContactSummaryInput): Promise<string | null> {
+    const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+      { role: 'system', content: CONTACT_SUMMARY_SYSTEM_PROMPT },
+      {
+        role: 'user',
+        content: `Contact: ${input.contactLabel}\n\nConversation:\n${JSON.stringify(input.spliter, null, 2)}`,
       },
     ]
 

@@ -2,6 +2,7 @@ import { DateTime } from 'luxon'
 import logger from '@adonisjs/core/services/logger'
 import FollowUpSchedule, { type FollowUpInterval } from '#models/follow_up_schedule'
 import AiReplyProvider from '#services/ai_reply_provider'
+import ContactSummaryService from '#services/contact_summary_service'
 import ChatRulesService from '../../chat_rules/services/chat_rules_service.js'
 import AiBusinessContextService from '#services/ai_business_context'
 import CreditsService from '#services/credits_service'
@@ -211,6 +212,7 @@ export default class FollowUpService {
     }
 
     const contactLabel = await resolveChatDisplayName(chat, chatId).catch(() => chatId)
+    const contactSummary = await ContactSummaryService.getSummaryText(userId, chatId)
     const message = await AiReplyProvider.generateFollowUpMessage({
       history,
       customInstructions: rules.customInstructions,
@@ -218,6 +220,7 @@ export default class FollowUpService {
       defaultCustomInstructions: defaultRules.customInstructions,
       defaultNotes: defaultRules.notes,
       contactLabel,
+      contactSummary,
       interval: schedule.interval,
       business,
     })

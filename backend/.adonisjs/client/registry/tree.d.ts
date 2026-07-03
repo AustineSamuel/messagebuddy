@@ -32,6 +32,7 @@ export interface ApiDefinition {
       logout: typeof routes['whatsapp.whatsapp_session.logout']
     }
     whatsappChats: {
+      listContactSummaries: typeof routes['whatsapp.whatsapp_chats.list_contact_summaries']
       index: typeof routes['whatsapp.whatsapp_chats.index']
       show: typeof routes['whatsapp.whatsapp_chats.show']
       archive: typeof routes['whatsapp.whatsapp_chats.archive']
@@ -55,6 +56,8 @@ export interface ApiDefinition {
       setLabels: typeof routes['whatsapp.whatsapp_chats.set_labels']
       customerNote: typeof routes['whatsapp.whatsapp_chats.customer_note']
       setCustomerNote: typeof routes['whatsapp.whatsapp_chats.set_customer_note']
+      contactSummary: typeof routes['whatsapp.whatsapp_chats.contact_summary']
+      refreshContactSummary: typeof routes['whatsapp.whatsapp_chats.refresh_contact_summary']
     }
     whatsappMessages: {
       search: typeof routes['whatsapp.whatsapp_messages.search']

@@ -175,6 +175,18 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/whatsapp_session_controller').default['logout']>>>
     }
   }
+  'whatsapp.whatsapp_chats.list_contact_summaries': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/whatsapp/contact-summaries'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/whatsapp_chats_controller').default['listContactSummaries']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/whatsapp_chats_controller').default['listContactSummaries']>>>
+    }
+  }
   'whatsapp.whatsapp_chats.index': {
     methods: ["GET","HEAD"]
     pattern: '/api/v1/whatsapp/chats'
@@ -449,6 +461,30 @@ export interface Registry {
       query: {}
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/whatsapp_chats_controller').default['setCustomerNote']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/whatsapp_chats_controller').default['setCustomerNote']>>>
+    }
+  }
+  'whatsapp.whatsapp_chats.contact_summary': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/whatsapp/chats/:chatId/contact-summary'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { chatId: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/whatsapp_chats_controller').default['contactSummary']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/whatsapp_chats_controller').default['contactSummary']>>>
+    }
+  }
+  'whatsapp.whatsapp_chats.refresh_contact_summary': {
+    methods: ["POST"]
+    pattern: '/api/v1/whatsapp/chats/:chatId/contact-summary/refresh'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { chatId: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/whatsapp_chats_controller').default['refreshContactSummary']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/whatsapp_chats_controller').default['refreshContactSummary']>>>
     }
   }
   'whatsapp.whatsapp_messages.search': {

@@ -14,6 +14,7 @@ export const controllers = {
   NewAccount: () => import('#controllers/new_account_controller'),
   Products: () => import('#controllers/products_controller'),
   Profile: () => import('#controllers/profile_controller'),
+  Storefront: () => import('#controllers/storefront_controller'),
   WebsiteServices: () => import('#controllers/website_services_controller'),
   WhatsappBroadcasts: () => import('#controllers/whatsapp_broadcasts_controller'),
   WhatsappChannels: () => import('#controllers/whatsapp_channels_controller'),
@@ -25,5 +26,4 @@ export const controllers = {
   WhatsappProfile: () => import('#controllers/whatsapp_profile_controller'),
   WhatsappSession: () => import('#controllers/whatsapp_session_controller'),
   WhatsappSettings: () => import('#controllers/whatsapp_settings_controller'),
-  Storefront: () => import('#controllers/storefront_controller'),
 }

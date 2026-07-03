@@ -9,6 +9,9 @@ import { isAudioMessageType } from '../helpers/serialization.js'
 import ProductReplyEnricher from '#services/product_reply_enricher'
 import AiBusinessContextService from '#services/ai_business_context'
 import AiReplyProvider from '#services/ai_reply_provider'
+import ContactSummaryService, {
+  type RefreshContactSummaryOptions,
+} from '#services/contact_summary_service'
 import { buildConversationHistory } from '../helpers/conversation_history.js'
 import {
   serializeChatForApi,
@@ -226,6 +229,7 @@ export default class WhatsAppService {
       userId,
       lastCustomerMessage
     )
+    const contactSummary = await ContactSummaryService.getSummaryText(userId, normalizedId)
 
     const suggestion = await AiReplyProvider.generateDraftReply({
       history,
@@ -234,6 +238,7 @@ export default class WhatsAppService {
       defaultCustomInstructions: defaultRules.customInstructions,
       defaultNotes: defaultRules.notes,
       contactLabel,
+      contactSummary,
       business,
       incomingMessage: lastCustomerMessage,
       matchedProducts,
@@ -324,6 +329,22 @@ export default class WhatsAppService {
     const client = await whatsAppClientManager.getReadyClient(userId)
     await client.addOrEditCustomerNote(userOrChatId, note)
     return { note }
+  }
+
+  static listContactSummaries(userId: number) {
+    return ContactSummaryService.listForUser(userId)
+  }
+
+  static getContactSummary(userId: number, chatId: string) {
+    return ContactSummaryService.getForChat(userId, chatId)
+  }
+
+  static refreshContactSummary(
+    userId: number,
+    chatId: string,
+    options?: RefreshContactSummaryOptions
+  ) {
+    return ContactSummaryService.refreshForChat(userId, chatId, options)
   }
 
   // ── Messages ─────────────────────────────────────────────────────────────

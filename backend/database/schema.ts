@@ -106,6 +106,27 @@ export class ChatRuleSchema extends BaseModel {
   declare userId: number
 }
 
+export class ContactSummarySchema extends BaseModel {
+  static $columns = ['chatId', 'createdAt', 'id', 'latestMessageAt', 'messageCount', 'summaryText', 'updatedAt', 'userId'] as const
+  $columns = ContactSummarySchema.$columns
+  @column()
+  declare chatId: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare latestMessageAt: bigint | number | null
+  @column()
+  declare messageCount: number
+  @column()
+  declare summaryText: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare userId: number
+}
+
 export class CreditTransactionSchema extends BaseModel {
   static $columns = ['amount', 'balanceAfter', 'chatId', 'createdAt', 'description', 'id', 'metadata', 'type', 'userId'] as const
   $columns = CreditTransactionSchema.$columns

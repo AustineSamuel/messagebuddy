@@ -24,6 +24,9 @@ export function registerWhatsappRoutes() {
         })
         .prefix('session')
 
+      // Contact summaries (list — place before chats/:chatId routes)
+      router.get('contact-summaries', [controllers.WhatsappChats, 'listContactSummaries'])
+
       // Chats
       router.get('chats', [controllers.WhatsappChats, 'index'])
       router.get('chats/:chatId', [controllers.WhatsappChats, 'show'])
@@ -48,6 +51,11 @@ export function registerWhatsappRoutes() {
       router.put('chats/:chatId/labels', [controllers.WhatsappChats, 'setLabels'])
       router.get('chats/:chatId/customer-note', [controllers.WhatsappChats, 'customerNote'])
       router.put('chats/:chatId/customer-note', [controllers.WhatsappChats, 'setCustomerNote'])
+      router.get('chats/:chatId/contact-summary', [controllers.WhatsappChats, 'contactSummary'])
+      router.post('chats/:chatId/contact-summary/refresh', [
+        controllers.WhatsappChats,
+        'refreshContactSummary',
+      ])
 
       // Messages
       router.get('messages/search', [controllers.WhatsappMessages, 'search'])

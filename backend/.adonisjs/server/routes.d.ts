@@ -18,6 +18,7 @@ export type ScannedRoutes = {
     'whatsapp.whatsapp_session.wweb_version': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_session.destroy': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_session.logout': { paramsTuple?: []; params?: {} }
+    'whatsapp.whatsapp_chats.list_contact_summaries': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_chats.index': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_chats.show': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_chats.archive': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
@@ -41,6 +42,8 @@ export type ScannedRoutes = {
     'whatsapp.whatsapp_chats.set_labels': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_chats.customer_note': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_chats.set_customer_note': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
+    'whatsapp.whatsapp_chats.contact_summary': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
+    'whatsapp.whatsapp_chats.refresh_contact_summary': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_messages.search': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_messages.store': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_messages.show': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }
@@ -162,12 +165,14 @@ export type ScannedRoutes = {
     'whatsapp.whatsapp_session.qr': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_session.info': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_session.wweb_version': { paramsTuple?: []; params?: {} }
+    'whatsapp.whatsapp_chats.list_contact_summaries': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_chats.index': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_chats.show': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_chats.messages': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_chats.pinned_messages': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_chats.labels': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_chats.customer_note': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
+    'whatsapp.whatsapp_chats.contact_summary': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_messages.search': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_messages.show': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }
     'whatsapp.whatsapp_messages.media': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }
@@ -216,12 +221,14 @@ export type ScannedRoutes = {
     'whatsapp.whatsapp_session.qr': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_session.info': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_session.wweb_version': { paramsTuple?: []; params?: {} }
+    'whatsapp.whatsapp_chats.list_contact_summaries': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_chats.index': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_chats.show': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_chats.messages': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_chats.pinned_messages': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_chats.labels': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_chats.customer_note': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
+    'whatsapp.whatsapp_chats.contact_summary': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_messages.search': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_messages.show': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }
     'whatsapp.whatsapp_messages.media': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }
@@ -285,6 +292,7 @@ export type ScannedRoutes = {
     'whatsapp.whatsapp_chats.send_typing': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_chats.send_recording': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_chats.sync_history': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
+    'whatsapp.whatsapp_chats.refresh_contact_summary': { paramsTuple: [ParamValue]; params: {'chatId': ParamValue} }
     'whatsapp.whatsapp_messages.store': { paramsTuple?: []; params?: {} }
     'whatsapp.whatsapp_messages.react': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }
     'whatsapp.whatsapp_messages.reply': { paramsTuple: [ParamValue]; params: {'messageId': ParamValue} }

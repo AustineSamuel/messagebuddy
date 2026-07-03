@@ -17,9 +17,22 @@ export type ConversationTurn = {
 
 export type AiPromptInput = ResolveAiContextInput & {
   contactLabel?: string
+  contactSummary?: string | null
   business?: BusinessAiContext | null
   incomingMessage?: string
   matchedProducts?: AiProduct[]
+}
+
+export type SpliterMessage = {
+  message: string
+  sender: 'customer' | 'business'
+  sentAt: string
+  reaction: string | null
+}
+
+export type GenerateContactSummaryInput = {
+  contactLabel: string
+  spliter: SpliterMessage[]
 }
 
 export type GenerateReplyInput = AiPromptInput & {
@@ -46,6 +59,13 @@ export const DRAFT_SYSTEM_PROMPT = `You are helping a business owner compose the
 Write a single suggested reply they will review and send manually.
 Be concise and natural for WhatsApp. No markdown. Match the customer's language.
 Output only the message text — no quotes, labels, or explanation.`
+
+export const CONTACT_SUMMARY_SYSTEM_PROMPT = `You analyze WhatsApp conversations for a business.
+Given structured messages (message, sender, sentAt, reaction), write a brief internal summary in 2-4 sentences covering:
+- Who this person is (name hints, tone, relationship)
+- What they want or care about
+- Products, prices, objections, or next steps if mentioned
+Do not use markdown. Output only the summary text — no labels or quotes.`
 
 export const FOLLOW_UP_SYSTEM_PROMPT = `You are a business assistant sending a proactive WhatsApp follow-up on behalf of the owner.
 Review the conversation history and write a natural check-in message that continues the relationship — not a duplicate of the last message.
@@ -109,6 +129,10 @@ export function buildSystemContent(basePrompt: string, input: AiPromptInput) {
 
   if (input.contactLabel) {
     systemParts.push(`You are replying in a chat with: ${input.contactLabel}`)
+  }
+
+  if (input.contactSummary?.trim()) {
+    systemParts.push(`Summary customer: ${input.contactSummary.trim()}`)
   }
 
   return systemParts.join('\n\n')

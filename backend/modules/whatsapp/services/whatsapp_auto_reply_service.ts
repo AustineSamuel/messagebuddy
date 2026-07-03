@@ -3,6 +3,7 @@ import type { Client, Message } from 'whatsapp-web.js'
 import ChatRulesService from '../../chat_rules/services/chat_rules_service.js'
 import AiBusinessContextService from '#services/ai_business_context'
 import AiReplyProvider from '#services/ai_reply_provider'
+import ContactSummaryService from '#services/contact_summary_service'
 import ProductReplyEnricher from '#services/product_reply_enricher'
 import CreditsService, { InsufficientCreditsError } from '#services/credits_service'
 import { buildConversationHistory, messageBodyFromWweb } from '../helpers/conversation_history.js'
@@ -107,6 +108,7 @@ export default class WhatsAppAutoReplyService {
         const contactLabel = await resolveChatDisplayName(chat, chatId).catch(() => chatId)
 
         const matchedProducts = await ProductReplyEnricher.findRelevantProducts(userId, incoming)
+        const contactSummary = await ContactSummaryService.getSummaryText(userId, chatId)
 
         const replyText = await AiReplyProvider.generateReply({
           incomingMessage: incoming,
@@ -116,6 +118,7 @@ export default class WhatsAppAutoReplyService {
           defaultCustomInstructions: defaultRules.customInstructions,
           defaultNotes: defaultRules.notes,
           contactLabel,
+          contactSummary,
           business,
           matchedProducts,
         })

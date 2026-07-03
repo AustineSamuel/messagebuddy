@@ -2,6 +2,7 @@ import env from '#start/env'
 import AiReplyService from '#services/ai_reply_service'
 import NvidiaAiReplyService from '#services/nvidia_ai_reply_service'
 import type {
+  GenerateContactSummaryInput,
   GenerateDraftInput,
   GenerateFollowUpInput,
   GenerateReplyInput,
@@ -9,9 +10,11 @@ import type {
 
 export type {
   ConversationTurn,
+  GenerateContactSummaryInput,
   GenerateDraftInput,
   GenerateFollowUpInput,
   GenerateReplyInput,
+  SpliterMessage,
 } from '#services/ai_reply_shared'
 
 type ReplyServiceContract = {
@@ -19,6 +22,7 @@ type ReplyServiceContract = {
   generateReply(input: GenerateReplyInput): Promise<string | null>
   generateDraftReply(input: GenerateDraftInput): Promise<string | null>
   generateFollowUpMessage(input: GenerateFollowUpInput): Promise<string | null>
+  generateContactSummary(input: GenerateContactSummaryInput): Promise<string | null>
 }
 
 function activeService(): ReplyServiceContract {
@@ -42,5 +46,9 @@ export default class AiReplyProvider {
 
   static generateFollowUpMessage(input: GenerateFollowUpInput) {
     return activeService().generateFollowUpMessage(input)
+  }
+
+  static generateContactSummary(input: GenerateContactSummaryInput) {
+    return activeService().generateContactSummary(input)
   }
 }
