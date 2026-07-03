@@ -55,6 +55,11 @@ import {
 import { dedupeContactsById } from "@/dashboard/lib/contacts";
 import { isAudioApiMessage } from "@/dashboard/lib/audio-messages";
 import {
+  apiMessagesToSpliter,
+  dashboardMessagesToSpliter,
+  type SpliterMessage,
+} from "@/dashboard/lib/spliter-messages";
+import {
   useWhatsAppRealtime,
   type RealtimeEvent,
   type RealtimeMessageEvent,
@@ -63,9 +68,13 @@ import {
 import {
   fetchChatMessages,
   getChats,
+  getContactSummary,
+  listContactSummaries,
+  refreshContactSummary,
   sendChatMessage,
   sendSeen,
 } from "@/whatsappjs-services/chats";
+import type { ContactSummaryResponse } from "@/whatsappjs-services/contact-summary-types";
 import {
   editMessage as editWhatsAppMessage,
   reactToMessage as reactWhatsAppMessage,
@@ -116,6 +125,11 @@ function lastMessagePreview(message: ApiMessage) {
   return "";
 }
 
+function spliterFingerprint(spliter: SpliterMessage[]) {
+  const last = spliter[spliter.length - 1];
+  return `${spliter.length}:${last?.sentAt ?? ""}:${last?.message?.slice(0, 40) ?? ""}`;
+}
+
 export function useDashboardStore({ whatsAppReady }: Props) {
   const [activeView, setActiveView] = useState<NavView>("chats");
   const [activeContactId, setActiveContactId] = useState<string>("");
@@ -145,6 +159,10 @@ export function useDashboardStore({ whatsAppReady }: Props) {
   const [savingDefaultSettings, setSavingDefaultSettings] = useState(false);
   const [savingBusinessSettings, setSavingBusinessSettings] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [contactSummaries, setContactSummaries] = useState<
+    Record<string, ContactSummaryResponse>
+  >({});
+  const [loadingAllSummaries, setLoadingAllSummaries] = useState(false);
   const [editingMessage, setEditingMessage] = useState<{
     contactId: string;
     messageId: string;
@@ -157,10 +175,17 @@ export function useDashboardStore({ whatsAppReady }: Props) {
   const activeContactIdRef = useRef(activeContactId);
   const contactsRef = useRef(contacts);
   const waContactsRef = useRef(waContacts);
+  const conversationsRef = useRef(conversations);
+  const summarySyncTimersRef = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  const summarySyncFingerprintRef = useRef(new Map<string, string>());
+  const contactSummariesRef = useRef(contactSummaries);
+  const summaryFetchInflightRef = useRef(new Set<string>());
 
   activeContactIdRef.current = activeContactId;
   contactsRef.current = contacts;
   waContactsRef.current = waContacts;
+  conversationsRef.current = conversations;
+  contactSummariesRef.current = contactSummaries;
 
   useEffect(() => {
     messageSoundRef.current = new Audio("/sound.wav");
@@ -179,6 +204,119 @@ export function useDashboardStore({ whatsAppReady }: Props) {
     audio.currentTime = 0;
     void audio.play().catch(() => undefined);
   }
+
+  const cacheContactSummary = useCallback((data: ContactSummaryResponse) => {
+    setContactSummaries((prev) => {
+      const existing = prev[data.chatId];
+      const summaryText = data.summaryText?.trim() || existing?.summaryText?.trim() || null;
+      if (!summaryText) return prev;
+      return {
+        ...prev,
+        [data.chatId]: {
+          ...data,
+          summaryText,
+          refreshing: undefined,
+        },
+      };
+    });
+  }, []);
+
+  const fetchContactSummary = useCallback(async (chatId: string, force = false) => {
+    if (!chatId) return null;
+
+    const cached = contactSummariesRef.current[chatId];
+    if (!force && cached?.summaryText?.trim()) {
+      return cached;
+    }
+
+    if (summaryFetchInflightRef.current.has(chatId)) {
+      return contactSummariesRef.current[chatId] ?? null;
+    }
+
+    summaryFetchInflightRef.current.add(chatId);
+    try {
+      const data = await getContactSummary(chatId);
+      const summaryText = data.summaryText?.trim() || cached?.summaryText?.trim() || null;
+      if (summaryText) {
+        const merged: ContactSummaryResponse = {
+          ...data,
+          summaryText,
+          refreshing: undefined,
+        };
+        setContactSummaries((prev) => ({ ...prev, [chatId]: merged }));
+        return merged;
+      }
+      return cached ?? null;
+    } catch {
+      return contactSummariesRef.current[chatId] ?? null;
+    } finally {
+      summaryFetchInflightRef.current.delete(chatId);
+    }
+  }, []);
+
+  const loadAllContactSummaries = useCallback(async () => {
+    setLoadingAllSummaries(true);
+    try {
+      const list = await listContactSummaries();
+      setContactSummaries((prev) => {
+        const next = { ...prev };
+        for (const item of list) {
+          if (!item.summaryText?.trim()) continue;
+          next[item.chatId] = { ...item, refreshing: undefined };
+        }
+        return next;
+      });
+      return list;
+    } catch {
+      return [];
+    } finally {
+      setLoadingAllSummaries(false);
+    }
+  }, []);
+
+  const pushContactSummary = useCallback(async (chatId: string, spliter: SpliterMessage[]) => {
+    if (!spliter.length) return;
+
+    const contact =
+      contactsRef.current.find((c) => c.id === chatId) ??
+      waContactsRef.current.find((c) => c.id === chatId);
+
+    if (contact?.isGroup) return;
+
+    const fingerprint = spliterFingerprint(spliter);
+    if (summarySyncFingerprintRef.current.get(chatId) === fingerprint) return;
+
+    try {
+      const data = await refreshContactSummary(chatId, {
+        spliter,
+        contactLabel: contact?.name,
+        isGroup: contact?.isGroup,
+      });
+      cacheContactSummary(data);
+      summarySyncFingerprintRef.current.set(chatId, fingerprint);
+    } catch {
+      // Non-critical — do not block chat UI or session polling.
+    }
+  }, [cacheContactSummary]);
+
+  const scheduleContactSummarySync = useCallback(
+    (chatId: string, spliter: SpliterMessage[], delayMs = 3000) => {
+      if (!spliter.length) return;
+
+      const timers = summarySyncTimersRef.current;
+      const existing = timers.get(chatId);
+      if (existing) clearTimeout(existing);
+
+      timers.set(
+        chatId,
+        setTimeout(() => {
+          timers.delete(chatId);
+          void pushContactSummary(chatId, spliter);
+        }, delayMs)
+      );
+    },
+    [pushContactSummary]
+  );
 
   const activeContact =
     contacts.find((c) => c.id === activeContactId) ?? contacts[0];
@@ -309,24 +447,31 @@ export function useDashboardStore({ whatsAppReady }: Props) {
   const loadMessages = useCallback(
     async (chatId: string) => {
       if (loadedChatsRef.current.has(chatId)) return;
+
       setLoadingMessages(true);
       try {
         const raw = (await fetchChatMessages(chatId, { limit: 30 })) as ApiMessage[];
         loadedChatsRef.current.add(chatId);
-        const chatContact = contacts.find((c) => c.id === chatId);
-        const lookup = buildContactLookup([...contacts, ...waContacts]);
+        const chatContact = contactsRef.current.find((c) => c.id === chatId);
+        const lookup = buildContactLookup([
+          ...contactsRef.current,
+          ...waContactsRef.current,
+        ]);
         const ctx = {
           lookup,
           chatContact,
           isGroup: chatContact?.isGroup ?? false,
         };
+        const mapped = raw.map((m) => apiMessageToMessage(m, ctx));
         setConversations((prev) => ({
           ...prev,
           [chatId]: {
             contactId: chatId,
-            messages: raw.map((m) => apiMessageToMessage(m, ctx)),
+            messages: mapped,
           },
         }));
+
+        scheduleContactSummarySync(chatId, apiMessagesToSpliter(raw));
         void sendSeen(chatId).catch(() => undefined);
       } catch (err) {
         setSyncError(getErrorMessage(err));
@@ -334,7 +479,7 @@ export function useDashboardStore({ whatsAppReady }: Props) {
         setLoadingMessages(false);
       }
     },
-    [contacts, waContacts]
+    [scheduleContactSummarySync]
   );
 
   const loadProfileIntoSettings = useCallback(async () => {
@@ -415,25 +560,29 @@ export function useDashboardStore({ whatsAppReady }: Props) {
       isActiveChat || loadedChatsRef.current.has(chatId);
 
     if (shouldAppendToConversation) {
-      setConversations((prev) => {
-        const existing = prev[chatId];
-        const messages = existing?.messages ?? [];
-        if (messages.some((m) => m.id === message.id)) return prev;
-
+      const existing = conversationsRef.current[chatId];
+      const messages = existing?.messages ?? [];
+      if (!messages.some((m) => m.id === message.id)) {
         const mapped = apiMessageToMessage(message, {
           lookup,
           chatContact,
           isGroup: chatContact?.isGroup ?? chat?.isGroup ?? false,
         });
 
-        return {
+        setConversations((prev) => ({
           ...prev,
           [chatId]: {
             contactId: chatId,
-            messages: [...messages, mapped],
+            messages: [...(prev[chatId]?.messages ?? []), mapped],
           },
-        };
-      });
+        }));
+
+        scheduleContactSummarySync(
+          chatId,
+          dashboardMessagesToSpliter([...messages, mapped]),
+          5000
+        );
+      }
     }
 
     if (isActiveChat) {
@@ -759,6 +908,10 @@ export function useDashboardStore({ whatsAppReady }: Props) {
 
   const workspaceLoading = loadingRules || (whatsAppReady && loadingChats && contacts.length === 0);
 
+  const activeContactSummary = activeContactId
+    ? contactSummaries[activeContactId] ?? null
+    : null;
+
   return {
     activeView,
     activeContactId,
@@ -793,6 +946,11 @@ export function useDashboardStore({ whatsAppReady }: Props) {
     workspaceLoading,
     syncError,
     dismissSyncError,
+    contactSummaries,
+    activeContactSummary,
+    loadingAllSummaries,
+    fetchContactSummary,
+    loadAllContactSummaries,
     setActiveView,
     setActiveRightTab,
     openContact,

@@ -133,6 +133,7 @@ export function apiMessageToMessage(message: ApiMessage, ctx?: MessageMapContext
     direction: isOut ? "out" : "in",
     text,
     time: formatMessageTime(message.timestamp),
+    timestamp: message.timestamp,
     aiGenerated: false,
     messageType: message.type,
     isAudio,

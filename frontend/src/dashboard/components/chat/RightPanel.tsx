@@ -5,6 +5,7 @@ import { Avatar, Badge, SectionLabel, Toggle, FormTextarea, AddBtn, PrimaryBtn }
 import { RightPanelSkeleton } from "@/dashboard/components/ui/WhatsAppSkeleton";
 import type { ChatRuleSettings } from "@/app/services/chat-rules";
 import type { Contact, ContactRule, RightTab, TriggerRule, DailyCredits } from "@/dashboard/types";
+import type { ContactSummaryResponse } from "@/whatsappjs-services/contact-summary-types";
 
 interface RightPanelProps {
   contact: Contact;
@@ -24,6 +25,8 @@ interface RightPanelProps {
   savingSettings?: boolean;
   onSaveSettings: (data: Partial<Omit<ChatRuleSettings, "chatId">>) => Promise<void>;
   onRuleChange: (contactId: string, rule: ContactRule) => void | Promise<void>;
+  contactSummary?: ContactSummaryResponse | null;
+  onRefreshSummary?: () => void;
 }
 
 const TABS: { key: RightTab; label: string }[] = [
@@ -96,6 +99,8 @@ export default function RightPanel({
   savingSettings,
   onSaveSettings,
   onRuleChange,
+  contactSummary,
+  onRefreshSummary,
 }: RightPanelProps) {
   const [rule, setRule] = useState<ContactRule>(contact.rule);
   const [notes, setNotes] = useState("");
@@ -274,6 +279,53 @@ export default function RightPanel({
             >
               {savingSettings ? "Saving…" : saved ? "Saved ✓" : "Save contact rules"}
             </PrimaryBtn>
+
+            <SectionLabel>AI contact summary</SectionLabel>
+            <div
+              style={{
+                background: "var(--bg-2)",
+                border: "1px solid var(--border-1)",
+                borderRadius: "var(--radius-sm)",
+                padding: 12,
+                marginBottom: 12,
+              }}
+            >
+              {contactSummary?.summaryText?.trim() ? (
+                <>
+                  <p style={{ margin: 0, fontSize: 12, color: "var(--text-1)", lineHeight: 1.55 }}>
+                    {contactSummary.summaryText}
+                  </p>
+                  {contactSummary.updatedAt ? (
+                    <p style={{ margin: "8px 0 0", fontSize: 10, color: "var(--text-3)" }}>
+                      Updated {new Date(contactSummary.updatedAt).toLocaleString()}
+                    </p>
+                  ) : null}
+                </>
+              ) : (
+                <p style={{ margin: 0, fontSize: 12, color: "var(--text-2)", lineHeight: 1.5 }}>
+                  No summary yet. Open this chat, then tap refresh below.
+                </p>
+              )}
+              {onRefreshSummary ? (
+                <button
+                  type="button"
+                  onClick={onRefreshSummary}
+                  style={{
+                    marginTop: 10,
+                    padding: 0,
+                    border: "none",
+                    background: "none",
+                    color: "var(--wa-green)",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontFamily: "var(--font-sans)",
+                  }}
+                >
+                  Refresh summary
+                </button>
+              ) : null}
+            </div>
           </div>
         )}
 

@@ -35,6 +35,8 @@ export interface Message {
   direction: "in" | "out";
   text: string;
   time: string;
+  /** Unix seconds — used when syncing contact summaries to the backend */
+  timestamp?: number;
   aiGenerated: boolean;
   edited?: boolean;
   /** WhatsApp message type e.g. chat, ptt, audio, image */

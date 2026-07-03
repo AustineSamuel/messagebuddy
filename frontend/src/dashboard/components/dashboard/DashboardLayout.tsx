@@ -176,6 +176,10 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
               onSelectContact={store.openContact}
               loading={store.loadingChats}
               onRefresh={store.refreshChats}
+              contactSummaries={store.contactSummaries}
+              onPrefetchSummary={(chatId) => void store.fetchContactSummary(chatId)}
+              onLoadAllSummaries={store.loadAllContactSummaries}
+              loadingAllSummaries={store.loadingAllSummaries}
             />
             <ChatArea
               contact={store.activeContact}
@@ -208,6 +212,10 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
                 savingSettings={store.savingChatSettings}
                 onSaveSettings={store.saveActiveContactSettings}
                 onRuleChange={store.setContactRule}
+                contactSummary={store.activeContactSummary}
+                onRefreshSummary={() =>
+                  void store.fetchContactSummary(store.activeContactId, true)
+                }
               />
             ) : null}
           </>

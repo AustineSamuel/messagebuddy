@@ -1,4 +1,14 @@
 import { waDelete, waGet, waPost, waPut } from "./client";
+import type {
+  ContactSummaryResponse,
+  SyncContactSummaryInput,
+} from "./contact-summary-types";
+
+export type {
+  ContactSummaryResponse,
+  SpliterMessage,
+  SyncContactSummaryInput,
+} from "./contact-summary-types";
 
 export type WhatsAppChat = Record<string, unknown>;
 export type WhatsAppMessage = Record<string, unknown>;
@@ -105,6 +115,30 @@ export async function getCustomerNote(chatId: string) {
 
 export async function setCustomerNote(chatId: string, note: string) {
   return waPut(`/chats/${encodeURIComponent(chatId)}/customer-note`, { note });
+}
+
+export async function getContactSummary(chatId: string) {
+  return waGet<ContactSummaryResponse>(
+    `/chats/${encodeURIComponent(chatId)}/contact-summary`
+  );
+}
+
+export async function listContactSummaries() {
+  return waGet<ContactSummaryResponse[]>("/contact-summaries");
+}
+
+export async function refreshContactSummary(
+  chatId: string,
+  options?: SyncContactSummaryInput
+) {
+  const params = new URLSearchParams();
+  if (options?.force) params.set("force", "true");
+  const qs = params.toString();
+  const { force: _force, ...body } = options ?? {};
+  return waPost<ContactSummaryResponse>(
+    `/chats/${encodeURIComponent(chatId)}/contact-summary/refresh${qs ? `?${qs}` : ""}`,
+    body
+  );
 }
 
 export type AiSuggestReplyResponse = {

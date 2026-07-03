@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { shareStoreUrl } from "@/app/lib/share-store";
 import "./storefront.css";
@@ -33,6 +34,12 @@ function StoreQrModal({
   businessName: string;
   onClose: () => void;
 }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -47,31 +54,32 @@ function StoreQrModal({
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-label="Store QR code"
       onClick={onClose}
-      className="sf-modal-backdrop fixed inset-0 z-[100] flex items-center justify-center p-6"
+      className="sf-modal-backdrop fixed inset-0 z-[9999] flex items-center justify-center p-6"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="sf-band w-full max-w-sm bg-white p-6 text-center sf-rise"
+        className="sf-band w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl"
       >
-        <h2 className="mb-1 text-lg font-bold text-gray-900">Scan to visit {businessName}</h2>
-        <p className="mb-5 text-sm text-gray-500">Open your camera and scan this code.</p>
-        <div className="mb-4 inline-block rounded-2xl border border-gray-100 bg-white p-4 shadow-inner">
+        <h2 className="mb-1 text-lg font-bold text-[#1d1d1f]">Scan to visit {businessName}</h2>
+        <p className="mb-5 text-sm text-[#6e6e73]">Open your camera and scan this code.</p>
+        <div className="mb-4 inline-block rounded-2xl border border-[#d2d2d7] bg-white p-4">
           <QRCodeSVG value={url} size={200} level="M" includeMargin={false} />
         </div>
-        <p className="mb-5 break-all text-xs text-gray-400">{url}</p>
+        <p className="mb-5 break-all text-xs text-[#86868b]">{url}</p>
         <button type="button" onClick={onClose} className="sf-btn-secondary w-full">
           Close
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
