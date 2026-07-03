@@ -84,6 +84,9 @@ export default class ProductsController {
         seller: {
           name: business.name,
           website: business.website,
+          phone: business.phone,
+          slug: business.slug,
+          storeUrl: business.storeUrl,
         },
       })
     } catch (error) {

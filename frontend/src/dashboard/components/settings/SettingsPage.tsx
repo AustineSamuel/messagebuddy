@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import InstallAppButton from "@/app/components/InstallAppButton";
+import StoreLinkShare from "@/dashboard/components/settings/StoreLinkShare";
 import {
   FormInput,
   FormTextarea,
@@ -71,7 +72,9 @@ export default function SettingsPage({
   const [notifyFail, setNotifyFail] = useState(true);
   const [sendReceipts, setSendReceipts] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [storeSaved, setStoreSaved] = useState(false);
   const [defaultSaved, setDefaultSaved] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   useEffect(() => {
     const stamp = JSON.stringify(settings);
@@ -96,6 +99,50 @@ export default function SettingsPage({
 
   const set = (key: keyof BusinessSettings) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setLocal((prev) => ({ ...prev, [key]: e.target.value }));
+  };
+
+  const setOptional = (key: keyof BusinessSettings) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const value = e.target.value.trim();
+    setLocal((prev) => ({ ...prev, [key]: value || null }));
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 800_000) {
+      window.alert("Logo must be under 800KB. Try a smaller image.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setLocal((prev) => ({ ...prev, logoUrl: reader.result as string }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const previewStoreUrl =
+    local.storeUrl ||
+    (local.slug ? `${typeof window !== "undefined" ? window.location.origin : ""}/${local.slug}` : "");
+
+  const handleCopyStoreLink = async () => {
+    if (!previewStoreUrl) return;
+    try {
+      await navigator.clipboard.writeText(previewStoreUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      window.prompt("Copy your store link:", previewStoreUrl);
+    }
+  };
+
+  const handleSaveStore = async () => {
+    try {
+      await onUpdateSettings(local);
+      setStoreSaved(true);
+      setTimeout(() => setStoreSaved(false), 2000);
+    } catch {
+      // syncError is set in the store
+    }
   };
 
   const handleSave = async (section: "profile" | "ai") => {
@@ -224,6 +271,173 @@ export default function SettingsPage({
           >
             {savingBusinessSettings ? "Saving…" : "Save Profile"}
           </PrimaryBtn>
+        </div>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Online store"
+        subtitle="Your public storefront at yourdomain.com/your-store — products, contact details, and SEO"
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 16,
+            marginBottom: 16,
+            padding: "12px 14px",
+            borderRadius: "var(--radius-sm)",
+            background: "var(--surface-2)",
+            border: "1px solid var(--border-1)",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-0)" }}>Public store</div>
+            <p style={{ fontSize: 12, color: "var(--text-2)", marginTop: 2 }}>
+              When off, your store link returns “not found”.
+            </p>
+          </div>
+          <Toggle
+            checked={local.publicStoreEnabled}
+            onChange={(v) => setLocal((prev) => ({ ...prev, publicStoreEnabled: v }))}
+          />
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
+          <FormInput
+            label="Store URL slug"
+            value={local.slug ?? ""}
+            onChange={setOptional("slug")}
+            placeholder="obis-electronics"
+          />
+          <FormInput
+            label="Contact phone"
+            value={local.phone ?? ""}
+            onChange={setOptional("phone")}
+            placeholder="+234 801 234 5678"
+          />
+        </div>
+
+        {previewStoreUrl ? (
+          <StoreLinkShare
+            url={previewStoreUrl}
+            businessName={local.name}
+            onCopy={handleCopyStoreLink}
+            linkCopied={linkCopied}
+          />
+        ) : null}
+
+        <FormInput
+          label="Tagline"
+          value={local.tagline ?? ""}
+          onChange={setOptional("tagline")}
+          placeholder="Quality electronics delivered fast"
+        />
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginTop: 14, marginBottom: 14 }}>
+          <div>
+            <SectionLabel>Logo</SectionLabel>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8 }}>
+              {local.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={local.logoUrl}
+                  alt="Logo preview"
+                  style={{ width: 48, height: 48, borderRadius: 10, objectFit: "cover", border: "1px solid var(--border-1)" }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 10,
+                    background: "var(--surface-2)",
+                    border: "1px dashed var(--border-1)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 20,
+                  }}
+                >
+                  🏪
+                </div>
+              )}
+              <label style={{ fontSize: 12, fontWeight: 600, color: "var(--wa-green)", cursor: "pointer" }}>
+                Upload logo
+                <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: "none" }} />
+              </label>
+            </div>
+            <FormInput
+              label="Or logo URL"
+              value={local.logoUrl ?? ""}
+              onChange={setOptional("logoUrl")}
+              placeholder="https://..."
+              style={{ marginTop: 10 }}
+            />
+          </div>
+          <div>
+            <SectionLabel>Accent color</SectionLabel>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
+              <input
+                type="color"
+                value={local.accentColor || "#25D366"}
+                onChange={(e) => setLocal((prev) => ({ ...prev, accentColor: e.target.value }))}
+                style={{ width: 44, height: 36, border: "none", cursor: "pointer", borderRadius: 8 }}
+              />
+              <FormInput
+                label=""
+                value={local.accentColor || "#25D366"}
+                onChange={set("accentColor")}
+                placeholder="#25D366"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div style={{ marginTop: 4, marginBottom: 8 }}>
+          <SectionLabel>SEO (search engines & social sharing)</SectionLabel>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 14, marginBottom: 14 }}>
+          <FormInput
+            label="SEO title"
+            value={local.seoTitle ?? ""}
+            onChange={setOptional("seoTitle")}
+            placeholder={`${local.name || "Your business"} — shop online`}
+          />
+          <FormTextarea
+            label="SEO description"
+            value={local.seoDescription ?? ""}
+            onChange={setOptional("seoDescription")}
+            placeholder="Short description for Google and WhatsApp link previews…"
+            style={{ minHeight: 56 }}
+          />
+        </div>
+
+        {onOpenProducts ? (
+          <p style={{ fontSize: 12, color: "var(--text-2)", marginBottom: 14 }}>
+            Products shown on your store come from the{" "}
+            <button
+              type="button"
+              onClick={onOpenProducts}
+              style={{ background: "none", border: "none", padding: 0, color: "var(--wa-green)", fontWeight: 700, cursor: "pointer" }}
+            >
+              Products
+            </button>{" "}
+            tab — mark them active to publish.
+          </p>
+        ) : null}
+
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <PrimaryBtn
+            variant="green"
+            onClick={() => void handleSaveStore()}
+            style={{ opacity: savingBusinessSettings ? 0.7 : 1 }}
+          >
+            {savingBusinessSettings ? "Saving…" : "Save store settings"}
+          </PrimaryBtn>
+          {storeSaved ? (
+            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--wa-green)" }}>✓ Saved</span>
+          ) : null}
         </div>
       </SettingsSection>
 

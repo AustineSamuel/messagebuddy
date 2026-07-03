@@ -207,6 +207,13 @@ export interface ApiDefinition {
       checkoutIntent: typeof routes['store.products.checkout_intent']
     }
   }
+  storefront: {
+    storefront: {
+      showBusiness: typeof routes['storefront.storefront.show_business']
+      showProduct: typeof routes['storefront.storefront.show_product']
+      checkout: typeof routes['storefront.storefront.checkout']
+    }
+  }
   websiteServices: {
     websiteServices: {
       packages: typeof routes['websiteServices.website_services.packages']

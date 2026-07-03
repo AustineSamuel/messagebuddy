@@ -33,8 +33,10 @@ export class AuthAccessTokenSchema extends BaseModel {
 }
 
 export class BusinessSettingSchema extends BaseModel {
-  static $columns = ['address', 'aiRules', 'createdAt', 'description', 'escalationRules', 'id', 'name', 'products', 'responseLanguage', 'tone', 'updatedAt', 'userId', 'website'] as const
+  static $columns = ['accentColor', 'address', 'aiRules', 'createdAt', 'description', 'escalationRules', 'id', 'logoUrl', 'name', 'phone', 'products', 'publicStoreEnabled', 'responseLanguage', 'seoDescription', 'seoTitle', 'slug', 'tagline', 'tone', 'updatedAt', 'userId', 'website'] as const
   $columns = BusinessSettingSchema.$columns
+  @column()
+  declare accentColor: string | null
   @column()
   declare address: string | null
   @column()
@@ -48,11 +50,25 @@ export class BusinessSettingSchema extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
   @column()
+  declare logoUrl: string | null
+  @column()
   declare name: string
+  @column()
+  declare phone: string | null
   @column()
   declare products: any
   @column()
+  declare publicStoreEnabled: boolean
+  @column()
   declare responseLanguage: string
+  @column()
+  declare seoDescription: string | null
+  @column()
+  declare seoTitle: string | null
+  @column()
+  declare slug: string | null
+  @column()
+  declare tagline: string | null
   @column()
   declare tone: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })

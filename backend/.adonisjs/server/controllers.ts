@@ -25,4 +25,5 @@ export const controllers = {
   WhatsappProfile: () => import('#controllers/whatsapp_profile_controller'),
   WhatsappSession: () => import('#controllers/whatsapp_session_controller'),
   WhatsappSettings: () => import('#controllers/whatsapp_settings_controller'),
+  Storefront: () => import('#controllers/storefront_controller'),
 }

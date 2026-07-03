@@ -32,6 +32,15 @@ const EMPTY_BUSINESS_SETTINGS: BusinessSettings = {
   responseLanguage: "auto",
   escalationRules: "",
   tone: "professional",
+  slug: null,
+  phone: null,
+  logoUrl: null,
+  tagline: null,
+  seoTitle: null,
+  seoDescription: null,
+  accentColor: "#25D366",
+  publicStoreEnabled: true,
+  storeUrl: null,
 };
 import {
   apiMessageToMessage,

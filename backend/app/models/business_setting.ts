@@ -30,6 +30,30 @@ export default class BusinessSetting extends BaseModel {
   declare website: string | null
 
   @column()
+  declare slug: string | null
+
+  @column()
+  declare phone: string | null
+
+  @column()
+  declare logoUrl: string | null
+
+  @column()
+  declare tagline: string | null
+
+  @column()
+  declare seoTitle: string | null
+
+  @column()
+  declare seoDescription: string | null
+
+  @column()
+  declare accentColor: string | null
+
+  @column()
+  declare publicStoreEnabled: boolean
+
+  @column()
   declare address: string | null
 
   @column()

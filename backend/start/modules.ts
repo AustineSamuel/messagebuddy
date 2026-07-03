@@ -11,4 +11,5 @@ export { registerBusinessSettingsRoutes } from '../modules/business_settings/rou
 export { registerCreditsRoutes } from '../modules/credits/routes.js'
 export { registerAnalyticsRoutes } from '../modules/analytics/routes.js'
 export { registerProductsRoutes } from '../modules/products/routes.js'
+export { registerStorefrontRoutes } from '../modules/storefront/routes.js'
 export { registerWebsiteServicesRoutes } from '../modules/website_services/routes.js'

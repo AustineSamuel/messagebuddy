@@ -864,6 +864,24 @@ const routes = {
     tokens: [{"old":"/api/v1/store/:userId/products/:slug/checkout","type":0,"val":"api","end":""},{"old":"/api/v1/store/:userId/products/:slug/checkout","type":0,"val":"v1","end":""},{"old":"/api/v1/store/:userId/products/:slug/checkout","type":0,"val":"store","end":""},{"old":"/api/v1/store/:userId/products/:slug/checkout","type":1,"val":"userId","end":""},{"old":"/api/v1/store/:userId/products/:slug/checkout","type":0,"val":"products","end":""},{"old":"/api/v1/store/:userId/products/:slug/checkout","type":1,"val":"slug","end":""},{"old":"/api/v1/store/:userId/products/:slug/checkout","type":0,"val":"checkout","end":""}],
     types: placeholder as Registry['store.products.checkout_intent']['types'],
   },
+  'storefront.storefront.show_business': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/store/business/:businessSlug',
+    tokens: [{"old":"/api/v1/store/business/:businessSlug","type":0,"val":"api","end":""},{"old":"/api/v1/store/business/:businessSlug","type":0,"val":"v1","end":""},{"old":"/api/v1/store/business/:businessSlug","type":0,"val":"store","end":""},{"old":"/api/v1/store/business/:businessSlug","type":0,"val":"business","end":""},{"old":"/api/v1/store/business/:businessSlug","type":1,"val":"businessSlug","end":""}],
+    types: placeholder as Registry['storefront.storefront.show_business']['types'],
+  },
+  'storefront.storefront.show_product': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/store/business/:businessSlug/products/:productSlug',
+    tokens: [{"old":"/api/v1/store/business/:businessSlug/products/:productSlug","type":0,"val":"api","end":""},{"old":"/api/v1/store/business/:businessSlug/products/:productSlug","type":0,"val":"v1","end":""},{"old":"/api/v1/store/business/:businessSlug/products/:productSlug","type":0,"val":"store","end":""},{"old":"/api/v1/store/business/:businessSlug/products/:productSlug","type":0,"val":"business","end":""},{"old":"/api/v1/store/business/:businessSlug/products/:productSlug","type":1,"val":"businessSlug","end":""},{"old":"/api/v1/store/business/:businessSlug/products/:productSlug","type":0,"val":"products","end":""},{"old":"/api/v1/store/business/:businessSlug/products/:productSlug","type":1,"val":"productSlug","end":""}],
+    types: placeholder as Registry['storefront.storefront.show_product']['types'],
+  },
+  'storefront.storefront.checkout': {
+    methods: ["POST"],
+    pattern: '/api/v1/store/business/:businessSlug/products/:productSlug/checkout',
+    tokens: [{"old":"/api/v1/store/business/:businessSlug/products/:productSlug/checkout","type":0,"val":"api","end":""},{"old":"/api/v1/store/business/:businessSlug/products/:productSlug/checkout","type":0,"val":"v1","end":""},{"old":"/api/v1/store/business/:businessSlug/products/:productSlug/checkout","type":0,"val":"store","end":""},{"old":"/api/v1/store/business/:businessSlug/products/:productSlug/checkout","type":0,"val":"business","end":""},{"old":"/api/v1/store/business/:businessSlug/products/:productSlug/checkout","type":1,"val":"businessSlug","end":""},{"old":"/api/v1/store/business/:businessSlug/products/:productSlug/checkout","type":0,"val":"products","end":""},{"old":"/api/v1/store/business/:businessSlug/products/:productSlug/checkout","type":1,"val":"productSlug","end":""},{"old":"/api/v1/store/business/:businessSlug/products/:productSlug/checkout","type":0,"val":"checkout","end":""}],
+    types: placeholder as Registry['storefront.storefront.checkout']['types'],
+  },
   'websiteServices.website_services.packages': {
     methods: ["GET","HEAD"],
     pattern: '/api/v1/website-services/packages',

@@ -1723,6 +1723,42 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/products_controller').default['checkoutIntent']>>>
     }
   }
+  'storefront.storefront.show_business': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/store/business/:businessSlug'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { businessSlug: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/storefront_controller').default['showBusiness']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/storefront_controller').default['showBusiness']>>>
+    }
+  }
+  'storefront.storefront.show_product': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/store/business/:businessSlug/products/:productSlug'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue, ParamValue]
+      params: { businessSlug: ParamValue; productSlug: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/storefront_controller').default['showProduct']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/storefront_controller').default['showProduct']>>>
+    }
+  }
+  'storefront.storefront.checkout': {
+    methods: ["POST"]
+    pattern: '/api/v1/store/business/:businessSlug/products/:productSlug/checkout'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue, ParamValue]
+      params: { businessSlug: ParamValue; productSlug: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/storefront_controller').default['checkout']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/storefront_controller').default['checkout']>>>
+    }
+  }
   'websiteServices.website_services.packages': {
     methods: ["GET","HEAD"]
     pattern: '/api/v1/website-services/packages'

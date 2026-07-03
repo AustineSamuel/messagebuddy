@@ -90,6 +90,15 @@ export interface BusinessSettings {
   responseLanguage: string;
   escalationRules: string;
   tone: "professional" | "casual" | "formal" | "energetic";
+  slug: string | null;
+  phone: string | null;
+  logoUrl: string | null;
+  tagline: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  accentColor: string;
+  publicStoreEnabled: boolean;
+  storeUrl: string | null;
 }
 
 export interface TriggerRule {

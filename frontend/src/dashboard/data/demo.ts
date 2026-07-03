@@ -271,6 +271,15 @@ export const DEMO_BUSINESS_SETTINGS: BusinessSettings = {
   escalationRules:
     "Customer requests a refund, order is above ₦500,000, customer uses aggressive language",
   tone: "professional",
+  slug: "obis-electronics",
+  phone: "+234 801 234 5678",
+  logoUrl: null,
+  tagline: "Quality gadgets, honest prices",
+  seoTitle: "Obi's Electronics — Phones & Laptops in Lagos",
+  seoDescription: "Shop iPhones, MacBooks, accessories and repairs. Fast delivery across Lagos.",
+  accentColor: "#25D366",
+  publicStoreEnabled: true,
+  storeUrl: null,
 };
 
 export const DEMO_TRIGGER_RULES: TriggerRule[] = [

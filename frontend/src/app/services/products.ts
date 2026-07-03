@@ -1,3 +1,4 @@
+import { getApiBase } from "@/app/lib/api-base";
 import { apiFetch } from "@/app/lib/api";
 import type { Product } from "@/dashboard/types";
 
@@ -45,8 +46,7 @@ export async function deleteProduct(id: number) {
   }) as Promise<{ deleted: boolean }>;
 }
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:3333";
+const API_BASE = getApiBase();
 
 export async function getStorefront(userId: number, slug: string) {
   const res = await fetch(`${API_BASE}/api/v1/store/${userId}/products/${slug}`, {

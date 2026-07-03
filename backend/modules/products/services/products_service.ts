@@ -44,8 +44,46 @@ function frontendBaseUrl() {
   return (env.get('FRONTEND_URL') ?? env.get('APP_URL')).replace(/\/$/, '')
 }
 
-export function buildProductCheckoutUrl(userId: number, slug: string) {
+export function buildProductCheckoutUrl(
+  userId: number,
+  slug: string,
+  businessSlug?: string | null
+) {
+  if (businessSlug) {
+    return `${frontendBaseUrl()}/${businessSlug}/${slug}`
+  }
   return `${frontendBaseUrl()}/shop/${userId}/${slug}`
+}
+
+function serializeRow(row: Product, businessSlug?: string | null): ProductPayload {
+  return {
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    description: row.description,
+    price: String(row.price),
+    currency: row.currency,
+    emoji: row.emoji,
+    stock: row.stock,
+    images: row.images ?? [],
+    totalSold: row.totalSold,
+    active: row.active,
+    checkoutUrl: buildProductCheckoutUrl(row.userId, row.slug, businessSlug),
+    createdAt: row.createdAt.toISO()!,
+    updatedAt: row.updatedAt?.toISO() ?? null,
+  }
+}
+
+function toAiProduct(row: Product, businessSlug?: string | null): AiProduct {
+  return {
+    name: row.name,
+    slug: row.slug,
+    description: row.description,
+    price: formatPrice(row.price, row.currency),
+    stock: row.stock,
+    emoji: row.emoji ?? undefined,
+    checkoutUrl: buildProductCheckoutUrl(row.userId, row.slug, businessSlug),
+  }
 }
 
 function slugify(name: string) {
@@ -69,35 +107,10 @@ async function uniqueSlug(userId: number, base: string, excludeId?: number) {
   }
 }
 
-function serializeRow(row: Product): ProductPayload {
-  return {
-    id: row.id,
-    name: row.name,
-    slug: row.slug,
-    description: row.description,
-    price: String(row.price),
-    currency: row.currency,
-    emoji: row.emoji,
-    stock: row.stock,
-    images: row.images ?? [],
-    totalSold: row.totalSold,
-    active: row.active,
-    checkoutUrl: buildProductCheckoutUrl(row.userId, row.slug),
-    createdAt: row.createdAt.toISO()!,
-    updatedAt: row.updatedAt?.toISO() ?? null,
-  }
-}
-
-function toAiProduct(row: Product): AiProduct {
-  return {
-    name: row.name,
-    slug: row.slug,
-    description: row.description,
-    price: formatPrice(row.price, row.currency),
-    stock: row.stock,
-    emoji: row.emoji ?? undefined,
-    checkoutUrl: buildProductCheckoutUrl(row.userId, row.slug),
-  }
+async function businessSlugForUser(userId: number) {
+  const BusinessSetting = (await import('#models/business_setting')).default
+  const row = await BusinessSetting.query().where('user_id', userId).first()
+  return row?.slug && row.publicStoreEnabled ? row.slug : null
 }
 
 export function formatPrice(price: string | number, currency: string) {
@@ -108,34 +121,45 @@ export function formatPrice(price: string | number, currency: string) {
 
 export default class ProductsService {
   static async listForUser(userId: number) {
+    const businessSlug = await businessSlugForUser(userId)
     const rows = await Product.query()
       .where('user_id', userId)
       .orderBy('updated_at', 'desc')
-    return rows.map(serializeRow)
+    return rows.map((row) => serializeRow(row, businessSlug))
+  }
+
+  static async listPublicForUser(userId: number, businessSlug?: string | null) {
+    const rows = await Product.query()
+      .where('user_id', userId)
+      .where('active', true)
+      .orderBy('updated_at', 'desc')
+    return rows.map((row) => serializeRow(row, businessSlug))
   }
 
   static async getActiveForAi(userId: number): Promise<AiProduct[]> {
+    const businessSlug = await businessSlugForUser(userId)
     const rows = await Product.query()
       .where('user_id', userId)
       .where('active', true)
       .orderBy('total_sold', 'desc')
-    return rows.map(toAiProduct)
+    return rows.map((row) => toAiProduct(row, businessSlug))
   }
 
   static async getForUser(userId: number, id: number) {
+    const businessSlug = await businessSlugForUser(userId)
     const row = await Product.query().where('user_id', userId).where('id', id).first()
     if (!row) throw new Error('Product not found.')
-    return serializeRow(row)
+    return serializeRow(row, businessSlug)
   }
 
-  static async getPublicProduct(userId: number, slug: string) {
+  static async getPublicProduct(userId: number, slug: string, businessSlug?: string | null) {
     const row = await Product.query()
       .where('user_id', userId)
       .where('slug', slug)
       .where('active', true)
       .first()
     if (!row) throw new Error('Product not found.')
-    return serializeRow(row)
+    return serializeRow(row, businessSlug ?? (await businessSlugForUser(userId)))
   }
 
   static async create(userId: number, data: ProductInput) {
@@ -154,7 +178,8 @@ export default class ProductsService {
       totalSold: data.totalSold ?? 0,
       active: data.active ?? true,
     })
-    return serializeRow(row)
+    const businessSlug = await businessSlugForUser(userId)
+    return serializeRow(row, businessSlug)
   }
 
   static async update(userId: number, id: number, data: Partial<ProductInput>) {
@@ -177,7 +202,8 @@ export default class ProductsService {
     if (data.active !== undefined) row.active = data.active
 
     await row.save()
-    return serializeRow(row)
+    const businessSlug = await businessSlugForUser(userId)
+    return serializeRow(row, businessSlug)
   }
 
   static async delete(userId: number, id: number) {
@@ -241,7 +267,7 @@ export default class ProductsService {
     return this.searchForMessage(message, catalog)
   }
 
-  static async recordCheckoutIntent(userId: number, slug: string) {
+  static async recordCheckoutIntent(userId: number, slug: string, businessSlug?: string | null) {
     const row = await Product.query()
       .where('user_id', userId)
       .where('slug', slug)
@@ -250,6 +276,6 @@ export default class ProductsService {
     if (!row) throw new Error('Product not found.')
     row.totalSold += 1
     await row.save()
-    return serializeRow(row)
+    return serializeRow(row, businessSlug ?? (await businessSlugForUser(userId)))
   }
 }

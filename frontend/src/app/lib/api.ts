@@ -2,9 +2,9 @@
 
 import { ApiError, extractApiErrorMessage } from "./api-error";
 import { getAuthToken } from "./auth-token";
+import { getApiBase } from "./api-base";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:3333";
+const API_BASE = getApiBase();
 
 function unwrapEnvelope(body: unknown): unknown {
   if (body && typeof body === "object" && "data" in body) {
