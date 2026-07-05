@@ -19,8 +19,7 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "backend-data": ["../backend/.adonisjs/client/data.d.ts"]
+      "@/*": ["./src/*"]
     }
   },
   "include": [
