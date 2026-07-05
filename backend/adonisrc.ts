@@ -54,6 +54,7 @@ export default defineConfig({
     () => import('@adonisjs/auth/auth_provider'),
     () => import('#providers/api_provider'),
     () => import('#providers/follow_up_provider'),
+    () => import('#providers/keep_alive_provider'),
     () => import('#providers/websocket_provider'),
   ],
 
