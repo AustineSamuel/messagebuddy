@@ -2,7 +2,8 @@
 
 import { getAuthToken } from "@/app/lib/auth-token";
 import { useEffect, useRef } from "react";
-import type { ApiChat, ApiMessage, ApiMessageReaction } from "@/dashboard/lib/whatsapp-mappers";
+import type { ApiChat, ApiMessage } from "@/dashboard/lib/whatsapp-mappers";
+import type { MessageReaction } from "@/dashboard/types";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:3333";
@@ -18,7 +19,7 @@ export type RealtimeReactionEvent = {
   type: "message:reaction";
   chatId: string;
   messageId: string;
-  reactions: ApiMessageReaction[];
+  reactions: MessageReaction[];
 };
 
 export type RealtimeEvent = RealtimeMessageEvent | RealtimeReactionEvent;
@@ -50,8 +51,10 @@ export function useWhatsAppRealtime({
     let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
     let closed = false;
 
+    const authToken = token;
+
     function connect() {
-      ws = new WebSocket(buildWebSocketUrl(token));
+      ws = new WebSocket(buildWebSocketUrl(authToken));
 
       ws.onmessage = (event) => {
         try {

@@ -47,7 +47,14 @@ function formFromSettings(
   defaultChatSettings: ChatRuleSettings | null,
   isUsingDefault: boolean,
   contact: Contact
-) {
+): {
+  rule: ContactRule;
+  notes: string;
+  aiReply: boolean;
+  sendCatalog: boolean;
+  notifyMe: boolean;
+  customInstructions: string;
+} {
   if (!chatSettings) {
     return {
       rule: contact.rule,
@@ -212,7 +219,7 @@ export default function RightPanel({
                   onClick={() => {
                     pendingRuleRef.current = opt.key;
                     setRule(opt.key);
-                    void onRuleChange(contact.id, opt.key).finally(() => {
+                    void Promise.resolve(onRuleChange(contact.id, opt.key)).finally(() => {
                       pendingRuleRef.current = null;
                     });
                   }}

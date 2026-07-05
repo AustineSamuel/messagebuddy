@@ -246,10 +246,10 @@ export default function MessageBubble({
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.filter = "none";
+          clearLongPress();
         }}
         onMouseDown={startLongPress}
         onMouseUp={clearLongPress}
-        onMouseLeave={clearLongPress}
         onTouchStart={startLongPress}
         onTouchEnd={clearLongPress}
         onTouchCancel={clearLongPress}
