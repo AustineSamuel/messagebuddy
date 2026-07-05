@@ -1,0 +1,19 @@
+# Render native deploy (no Docker) — WhatsApp needs Chrome installed at build time.
+# Dashboard: set Root Directory to `backend`, then use these settings.
+
+services:
+  - type: web
+    name: messagebuddy-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: cd build && npm ci --omit=dev && node bin/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: WHATSAPP_PUPPETEER_SINGLE_PROCESS
+        value: "true"
+      - key: WHATSAPP_STALE_INIT_MS
+        value: "90000"
+      # Do NOT set PUPPETEER_SKIP_CHROMIUM_DOWNLOAD — build installs Chrome automatically.
+      # Do NOT set WHATSAPP_CHROME_PATH unless you install system Chromium yourself.

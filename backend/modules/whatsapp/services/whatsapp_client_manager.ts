@@ -134,9 +134,16 @@ function isBrowserAlreadyRunningError(error: unknown) {
 }
 
 function resolveChromeExecutable(): string | undefined {
-  const fromEnv = process.env.WHATSAPP_CHROME_PATH?.trim()
-  if (fromEnv && existsSync(fromEnv)) {
-    return fromEnv
+  const envPaths = [
+    process.env.WHATSAPP_CHROME_PATH?.trim(),
+    process.env.PUPPETEER_EXECUTABLE_PATH?.trim(),
+    process.env.CHROME_BIN?.trim(),
+  ].filter(Boolean) as string[]
+
+  for (const candidate of envPaths) {
+    if (existsSync(candidate)) {
+      return candidate
+    }
   }
 
   const candidates = [
@@ -162,6 +169,16 @@ function resolveChromeExecutable(): string | undefined {
   }
 
   return undefined
+}
+
+function chromeNotFoundMessage(): string {
+  return (
+    'Chrome/Chromium not found for WhatsApp. ' +
+    'Render without Docker: set Build Command to `npm install && npm run build` (installs Chrome via Puppeteer). ' +
+    'Do NOT set PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true. ' +
+    'Or use Docker with WHATSAPP_CHROME_PATH=/usr/bin/chromium. ' +
+    'Need at least 1GB RAM on the instance.'
+  )
 }
 
 function buildPuppeteerOptions() {
@@ -196,13 +213,20 @@ function buildPuppeteerOptions() {
   const executablePath = resolveChromeExecutable()
   if (executablePath) {
     options.executablePath = executablePath
+    console.info(`[whatsapp] Using Chrome at ${executablePath}`)
   } else {
-    console.warn(
-      '[whatsapp] No Chrome/Chromium executable found. Set WHATSAPP_CHROME_PATH on the server.'
-    )
+    console.warn(`[whatsapp] ${chromeNotFoundMessage()}`)
   }
 
   return options
+}
+
+function requireChromeExecutable(): string {
+  const executablePath = resolveChromeExecutable()
+  if (!executablePath) {
+    throw new Error(chromeNotFoundMessage())
+  }
+  return executablePath
 }
 
 function withTimeout<T>(promise: Promise<T>, ms: number, message: string) {
@@ -460,12 +484,17 @@ function attachClientEvents(userId: number, session: WhatsAppSession, client: Cl
 async function launchClient(userId: number, session: WhatsAppSession, retryOnLock = true) {
   clearStaleBrowserProfileLocks(userId)
 
+  const puppeteerOptions = buildPuppeteerOptions()
+  if (!puppeteerOptions.executablePath) {
+    requireChromeExecutable()
+  }
+
   const client = new WWebClient({
     authStrategy: new LocalAuth({
       clientId: String(userId),
       dataPath: AUTH_DATA_PATH,
     }),
-    puppeteer: buildPuppeteerOptions(),
+    puppeteer: puppeteerOptions,
     takeoverOnConflict: true,
   })
 
