@@ -20,11 +20,12 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "backend-data": ["../backend/.adonisjs/client/data.d.ts"]
+      "@backend-types/*": ["./backend-types/*"]
     }
   },
   "include": [
     "next-env.d.ts",
+    "backend-types/**/*.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "app/**/*.ts",
@@ -36,10 +37,5 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "../backend",
-    "../backend/**/*",
-    "**/backend/**"
-  ]
+  "exclude": ["node_modules"]
 }

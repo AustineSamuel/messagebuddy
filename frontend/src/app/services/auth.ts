@@ -1,4 +1,4 @@
-import type { Data } from "backend-data";
+import type { Data } from "@backend-types/data";
 import { apiFetch } from "../lib/api";
 import { clearAuthToken, setAuthToken } from "../lib/auth-token";
 
