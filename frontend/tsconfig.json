@@ -15,22 +15,30 @@
     "incremental": true,
     "plugins": [
       {
-        
         "name": "next"
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "backend-data": ["../backend/.adonisjs/client/data.d.ts"]
+      "@/*": ["./src/*"]
     }
   },
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "pages/**/*.ts",
+    "pages/**/*.tsx",
+    "components/**/*.ts",
+    "components/**/*.tsx",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "../backend",
+    "../backend/**/*",
+    "**/backend/**"
+  ]
 }
