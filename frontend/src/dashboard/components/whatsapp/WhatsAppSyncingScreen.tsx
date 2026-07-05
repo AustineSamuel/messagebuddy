@@ -1,10 +1,13 @@
 "use client";
 
+import DismissibleAlert from "@/dashboard/components/ui/DismissibleAlert";
 import type { WhatsAppSession } from "@/whatsappjs-services/session";
 
 type Props = {
   session: WhatsAppSession | null;
+  error?: string | null;
   onRefresh: () => void;
+  onRetry?: () => void;
 };
 
 function statusLabel(status: string) {
@@ -18,7 +21,12 @@ function statusLabel(status: string) {
   }
 }
 
-export default function WhatsAppSyncingScreen({ session, onRefresh }: Props) {
+export default function WhatsAppSyncingScreen({
+  session,
+  error,
+  onRefresh,
+  onRetry,
+}: Props) {
   const status = session?.status ?? "initializing";
   const rawPercent = session?.loadingPercent;
   const percent =
@@ -65,6 +73,12 @@ export default function WhatsAppSyncingScreen({ session, onRefresh }: Props) {
             {statusLabel(status)}
           </p>
         </div>
+
+        {error || session?.lastError ? (
+          <div style={{ marginBottom: 16 }}>
+            <DismissibleAlert message={error ?? session?.lastError ?? ""} />
+          </div>
+        ) : null}
 
         <div style={{ marginBottom: 12 }}>
           <div
@@ -119,10 +133,31 @@ export default function WhatsAppSyncingScreen({ session, onRefresh }: Props) {
             color: "var(--text-1)",
             fontSize: 13,
             cursor: "pointer",
+            marginBottom: onRetry ? 10 : 0,
           }}
         >
           Refresh status
         </button>
+
+        {onRetry ? (
+          <button
+            type="button"
+            onClick={onRetry}
+            style={{
+              width: "100%",
+              padding: "10px 16px",
+              borderRadius: 10,
+              border: "none",
+              background: "var(--wa-green)",
+              color: "#fff",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            Stop and try again
+          </button>
+        ) : null}
       </div>
     </div>
   );

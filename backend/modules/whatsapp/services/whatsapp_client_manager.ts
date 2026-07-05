@@ -2,6 +2,7 @@ import app from '@adonisjs/core/services/app'
 import { execSync } from 'node:child_process'
 import { existsSync, mkdirSync, unlinkSync } from 'node:fs'
 import path from 'node:path'
+import puppeteer from 'puppeteer'
 import { Client as WWebClient, LocalAuth, WAState } from '../lib/wwebjs.js'
 import type { Client, WAState as WAStateType } from 'whatsapp-web.js'
 import WhatsAppAutoReplyService from './whatsapp_auto_reply_service.js'
@@ -43,6 +44,7 @@ const PUPPETEER_PROTOCOL_TIMEOUT_MS = Number(
 const PUPPETEER_LAUNCH_TIMEOUT_MS = Number(
   process.env.WHATSAPP_PUPPETEER_LAUNCH_TIMEOUT_MS ?? 120_000
 )
+const INIT_TIMEOUT_MS = Number(process.env.WHATSAPP_INIT_TIMEOUT_MS ?? 180_000)
 
 const sessions = new Map<number, WhatsAppSession>()
 /** One in-flight initialize() per user. */
@@ -111,7 +113,54 @@ function isBrowserAlreadyRunningError(error: unknown) {
   return message.includes('browser is already running') || message.includes('userDataDir')
 }
 
+function resolveChromeExecutable(): string | undefined {
+  const fromEnv = process.env.WHATSAPP_CHROME_PATH?.trim()
+  if (fromEnv && existsSync(fromEnv)) {
+    return fromEnv
+  }
+
+  const candidates = [
+    CHROME_EXECUTABLE,
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+    '/snap/bin/chromium',
+  ]
+
+  for (const candidate of candidates) {
+    if (candidate && existsSync(candidate)) {
+      return candidate
+    }
+  }
+
+  try {
+    const bundled = puppeteer.executablePath()
+    if (bundled && existsSync(bundled)) {
+      return bundled
+    }
+  } catch {
+    // ignore — fall through
+  }
+
+  return undefined
+}
+
 function buildPuppeteerOptions() {
+  const singleProcess = process.env.WHATSAPP_PUPPETEER_SINGLE_PROCESS === 'true'
+  const args = [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-dev-shm-usage',
+    '--disable-gpu',
+    '--disable-software-rasterizer',
+    '--disable-extensions',
+    '--no-first-run',
+    '--no-zygote',
+  ]
+
+  if (singleProcess) {
+    args.push('--single-process')
+  }
+
   const options: {
     headless: boolean
     args: string[]
@@ -120,16 +169,30 @@ function buildPuppeteerOptions() {
     executablePath?: string
   } = {
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    args,
     protocolTimeout: PUPPETEER_PROTOCOL_TIMEOUT_MS,
     timeout: PUPPETEER_LAUNCH_TIMEOUT_MS,
   }
 
-  if (CHROME_EXECUTABLE && existsSync(CHROME_EXECUTABLE)) {
-    options.executablePath = CHROME_EXECUTABLE
+  const executablePath = resolveChromeExecutable()
+  if (executablePath) {
+    options.executablePath = executablePath
+  } else {
+    console.warn(
+      '[whatsapp] No Chrome/Chromium executable found. Set WHATSAPP_CHROME_PATH on the server.'
+    )
   }
 
   return options
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number, message: string) {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      setTimeout(() => reject(new Error(message)), ms)
+    }),
+  ])
 }
 
 function waitFor<T>(getter: () => T | undefined | null, timeoutMs: number, intervalMs = 250) {
@@ -219,13 +282,38 @@ function scheduleReadyCheck(userId: number, session: WhatsAppSession, client: Cl
   readyCheckTimers.set(userId, timer)
 
   setTimeout(() => {
-    clearReadyCheck(userId)
-    if (session.status === 'initializing' || session.status === 'authenticated') {
-      session.lastError =
-        session.lastError ??
+    void forceResetStuckSession(
+      userId,
+      session.lastError ??
         'WhatsApp sync is taking longer than expected. Try Refresh status or reconnect.'
-    }
+    )
   }, STALE_INIT_MS)
+}
+
+async function forceResetStuckSession(userId: number, message: string) {
+  const session = sessions.get(userId)
+  if (!session) return
+
+  if (session.status !== 'initializing' && session.status !== 'authenticated') {
+    return
+  }
+
+  clearReadyCheck(userId)
+  initPromises.delete(userId)
+  launchingUsers.delete(userId)
+  initStartedAt.delete(userId)
+
+  if (session.client) {
+    await session.client.destroy().catch(() => undefined)
+  }
+
+  session.status = 'disconnected'
+  session.lastError = message
+  session.qr = null
+  session.pairingCode = null
+  session.loadingPercent = null
+  session.client = null
+  rejectReadyWaiters(userId)
 }
 
 function attachAutoReplyListener(userId: number, client: Client) {
@@ -323,7 +411,11 @@ async function launchClient(userId: number, session: WhatsAppSession, retryOnLoc
   attachClientEvents(userId, session, client)
 
   try {
-    await client.initialize()
+    await withTimeout(
+      client.initialize(),
+      INIT_TIMEOUT_MS,
+      'WhatsApp client startup timed out. Install Chromium on the server (WHATSAPP_CHROME_PATH) and use at least 1GB RAM, then try again.'
+    )
   } catch (error) {
     if (retryOnLock && isBrowserAlreadyRunningError(error)) {
       await client.destroy().catch(() => undefined)
@@ -342,6 +434,21 @@ class WhatsAppClientManager {
       sessions.set(userId, createSession())
     }
     return sessions.get(userId)!
+  }
+
+  /** Reset sessions stuck in initializing/authenticated beyond STALE_INIT_MS. */
+  recoverStaleSession(userId: number) {
+    const session = this.getSession(userId)
+    const started = initStartedAt.get(userId)
+    if (!started) return
+    if (session.status !== 'initializing' && session.status !== 'authenticated') return
+    if (Date.now() - started < STALE_INIT_MS) return
+
+    void forceResetStuckSession(
+      userId,
+      session.lastError ??
+        'WhatsApp startup timed out. Install Chromium on the server and try again.'
+    )
   }
 
   /**

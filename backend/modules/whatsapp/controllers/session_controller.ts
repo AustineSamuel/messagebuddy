@@ -8,7 +8,7 @@ export default class WhatsappSessionController {
     const { serialize, response } = ctx
     try {
       const userId = getAuthUserId(ctx)
-      await WhatsAppService.initialize(userId)
+      void WhatsAppService.initialize(userId).catch(() => undefined)
       return serialize(WhatsAppService.getSession(userId))
     } catch (error) {
       return handleWhatsAppError(error, response)

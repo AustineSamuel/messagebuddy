@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getErrorMessage } from "@/app/lib/api";
 import {
+  destroySession,
   getSession,
   initializeSession,
   type WhatsAppSession,
@@ -35,6 +36,20 @@ export function useWhatsAppSession() {
       await refresh();
     } catch (err) {
       setError(getErrorMessage(err, "Could not start WhatsApp session."));
+    } finally {
+      setConnecting(false);
+    }
+  }, [refresh]);
+
+  const retry = useCallback(async () => {
+    setConnecting(true);
+    setError(null);
+    try {
+      await destroySession().catch(() => undefined);
+      await initializeSession();
+      await refresh();
+    } catch (err) {
+      setError(getErrorMessage(err, "Could not restart WhatsApp session."));
     } finally {
       setConnecting(false);
     }
@@ -78,6 +93,7 @@ export function useWhatsAppSession() {
     error,
     isReady,
     connect,
+    retry,
     refresh,
     dismissError,
   };

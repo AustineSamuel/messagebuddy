@@ -33,6 +33,7 @@ export default class WhatsAppService {
 
   static getSession(userId: number) {
     whatsAppClientManager.restoreIfPersisted(userId)
+    whatsAppClientManager.recoverStaleSession(userId)
     const session = whatsAppClientManager.getSession(userId)
     return {
       status: session.status,

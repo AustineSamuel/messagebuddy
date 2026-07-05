@@ -100,7 +100,12 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
   if (!wa.isReady) {
     if (wa.connecting || isSessionBooting) {
       return (
-        <WhatsAppSyncingScreen session={wa.session} onRefresh={wa.refresh} />
+        <WhatsAppSyncingScreen
+          session={wa.session}
+          error={wa.error}
+          onRefresh={wa.refresh}
+          onRetry={wa.retry}
+        />
       );
     }
     return (
