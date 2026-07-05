@@ -42,6 +42,8 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
 
   useEffect(() => {
     const id = "dashboard-stylesheet";
+    document.documentElement.classList.add("dashboard-active");
+
     if (!document.getElementById(id)) {
       const link = document.createElement("link");
       link.id = id;
@@ -58,6 +60,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
       const el = document.getElementById(id);
       if (el) el.remove();
       root.classList.remove("light");
+      root.classList.remove("dashboard-active");
     };
   }, [theme]);
 

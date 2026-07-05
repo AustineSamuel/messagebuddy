@@ -119,17 +119,17 @@
   --scrollbar-track: #f8fafc;
 }
 
-/* ── Reset & Base ── */
-*,
-*::before,
-*::after {
+/* ── Reset & Base (dashboard only) ── */
+html.dashboard-active *,
+html.dashboard-active *::before,
+html.dashboard-active *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-html,
-body {
+html.dashboard-active,
+html.dashboard-active body {
   height: 100%;
   background: var(--bg-base);
   color: var(--text-0);

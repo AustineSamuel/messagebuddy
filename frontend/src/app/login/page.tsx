@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import AuthRedirectGate from "../components/AuthRedirectGate";
 import { GoogleSignInButton } from "../components/GoogleSignInButton";
 import { getErrorMessage } from "../lib/api";
 import { login } from "../services/auth";
@@ -29,6 +30,7 @@ export default function LoginPage() {
   }
 
   return (
+    <AuthRedirectGate>
     <div className="min-h-screen bg-[#f4f4f5] text-neutral-900">
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-4 py-10">
         <div className="mb-6 text-center">
@@ -142,5 +144,6 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+    </AuthRedirectGate>
   );
 }
