@@ -93,8 +93,10 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
   }, [store.waContacts, store.contacts]);
 
   const sessionStatus = wa.session?.status ?? "disconnected";
+  const hasQr = Boolean(wa.session?.qr || wa.session?.pairingCode);
   const isSessionBooting =
-    sessionStatus === "initializing" || sessionStatus === "authenticated";
+    !hasQr &&
+    (sessionStatus === "initializing" || sessionStatus === "authenticated");
 
   if (wa.loading && !wa.session) {
     return <ConnectScreenSkeleton />;
@@ -273,6 +275,9 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
             onUpdateSettings={store.updateSettings}
             onOpenProducts={() => store.setActiveView("products")}
             onOpenWebsite={() => store.setActiveView("website")}
+            whatsappConnected={wa.isReady}
+            onLogoutWhatsApp={wa.logoutWhatsApp}
+            onLogoutAccount={onLogout}
           />
           )
         )}

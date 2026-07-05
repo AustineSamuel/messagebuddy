@@ -5,6 +5,8 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 ENV WHATSAPP_CHROME_PATH=/usr/bin/chromium
+ENV WHATSAPP_PUPPETEER_SINGLE_PROCESS=true
+ENV WHATSAPP_STALE_INIT_MS=90000
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV NODE_ENV=production
 

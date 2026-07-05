@@ -1,6 +1,6 @@
 import app from '@adonisjs/core/services/app'
 import { execSync } from 'node:child_process'
-import { existsSync, mkdirSync, unlinkSync } from 'node:fs'
+import { existsSync, mkdirSync, rmSync, unlinkSync } from 'node:fs'
 import path from 'node:path'
 import puppeteer from 'puppeteer'
 import { Client as WWebClient, LocalAuth, WAState } from '../lib/wwebjs.js'
@@ -54,6 +54,8 @@ const readyWaiters = new Map<number, Array<(client: Client) => void>>()
 const launchingUsers = new Set<number>()
 const initStartedAt = new Map<number, number>()
 const readyCheckTimers = new Map<number, ReturnType<typeof setInterval>>()
+const qrWaitTimers = new Map<number, ReturnType<typeof setTimeout>>()
+const restoreBlockedUntil = new Map<number, number>()
 
 const STALE_INIT_MS = Number(process.env.WHATSAPP_STALE_INIT_MS ?? 120_000)
 const READY_CHECK_INTERVAL_MS = 3_000
@@ -73,8 +75,26 @@ function sessionDir(userId: number) {
   return path.join(AUTH_DATA_PATH, `session-${userId}`)
 }
 
-function hasPersistedSession(userId: number) {
-  return existsSync(sessionDir(userId))
+/** True only after a successful link — not on a failed first-time browser launch. */
+function hasAuthenticatedPersistedSession(userId: number) {
+  return existsSync(path.join(AUTH_DATA_PATH, '.wwebjs_auth', `session-${userId}`))
+}
+
+function clearPersistedAuth(userId: number) {
+  const authDir = path.join(AUTH_DATA_PATH, '.wwebjs_auth', `session-${userId}`)
+  const profileDir = sessionDir(userId)
+
+  try {
+    if (existsSync(authDir)) rmSync(authDir, { recursive: true, force: true })
+  } catch {
+    // best-effort
+  }
+
+  try {
+    if (existsSync(profileDir)) rmSync(profileDir, { recursive: true, force: true })
+  } catch {
+    // best-effort
+  }
 }
 
 function sleep(ms: number) {
@@ -145,7 +165,7 @@ function resolveChromeExecutable(): string | undefined {
 }
 
 function buildPuppeteerOptions() {
-  const singleProcess = process.env.WHATSAPP_PUPPETEER_SINGLE_PROCESS === 'true'
+  const singleProcess = process.env.WHATSAPP_PUPPETEER_SINGLE_PROCESS !== 'false'
   const args = [
     '--no-sandbox',
     '--disable-setuid-sandbox',
@@ -154,11 +174,10 @@ function buildPuppeteerOptions() {
     '--disable-software-rasterizer',
     '--disable-extensions',
     '--no-first-run',
-    '--no-zygote',
   ]
 
   if (singleProcess) {
-    args.push('--single-process')
+    args.push('--single-process', '--no-zygote')
   }
 
   const options: {
@@ -232,6 +251,37 @@ function rejectReadyWaiters(userId: number) {
   readyWaiters.delete(userId)
 }
 
+function clearQrWait(userId: number) {
+  const timer = qrWaitTimers.get(userId)
+  if (timer) {
+    clearTimeout(timer)
+    qrWaitTimers.delete(userId)
+  }
+}
+
+function scheduleQrWaitTimeout(userId: number) {
+  clearQrWait(userId)
+
+  const timer = setTimeout(() => {
+    const session = sessions.get(userId)
+    if (!session) return
+
+    const waitingForQr =
+      (session.status === 'initializing' || session.status === 'qr') &&
+      !session.qr &&
+      !session.pairingCode
+
+    if (!waitingForQr) return
+
+    void forceResetStuckSession(
+      userId,
+      'QR code did not appear. The server may need Chromium and at least 1GB RAM. Tap Stop and try again.'
+    )
+  }, STALE_INIT_MS)
+
+  qrWaitTimers.set(userId, timer)
+}
+
 function clearReadyCheck(userId: number) {
   const timer = readyCheckTimers.get(userId)
   if (timer) {
@@ -294,14 +344,19 @@ async function forceResetStuckSession(userId: number, message: string) {
   const session = sessions.get(userId)
   if (!session) return
 
-  if (session.status !== 'initializing' && session.status !== 'authenticated') {
-    return
-  }
+  const isBooting =
+    session.status === 'initializing' ||
+    session.status === 'authenticated' ||
+    (session.status === 'qr' && !session.qr && !session.pairingCode)
+
+  if (!isBooting) return
 
   clearReadyCheck(userId)
+  clearQrWait(userId)
   initPromises.delete(userId)
   launchingUsers.delete(userId)
   initStartedAt.delete(userId)
+  restoreBlockedUntil.set(userId, Date.now() + 60_000)
 
   if (session.client) {
     await session.client.destroy().catch(() => undefined)
@@ -326,12 +381,14 @@ function attachClientEvents(userId: number, session: WhatsAppSession, client: Cl
     session.qr = qr
     session.pairingCode = null
     session.status = 'qr'
+    clearQrWait(userId)
   })
 
   client.on('code', (code) => {
     session.pairingCode = code
     session.qr = null
     session.status = 'qr'
+    clearQrWait(userId)
   })
 
   client.on('authenticated', () => {
@@ -347,6 +404,7 @@ function attachClientEvents(userId: number, session: WhatsAppSession, client: Cl
     session.loadingPercent = null
     session.lastError = null
     clearReadyCheck(userId)
+    clearQrWait(userId)
     attachAutoReplyListener(userId, client)
     notifyReadyWaiters(userId, client)
   })
@@ -369,7 +427,11 @@ function attachClientEvents(userId: number, session: WhatsAppSession, client: Cl
 
   client.on('loading_screen', (percent) => {
     session.loadingPercent = Number(percent)
-    if (session.status !== 'ready' && session.status !== 'qr') {
+    if (
+      session.status !== 'ready' &&
+      session.status !== 'qr' &&
+      session.status !== 'authenticated'
+    ) {
       session.status = 'initializing'
     }
     if (Number(percent) >= 90) {
@@ -436,34 +498,48 @@ class WhatsAppClientManager {
     return sessions.get(userId)!
   }
 
-  /** Reset sessions stuck in initializing/authenticated beyond STALE_INIT_MS. */
+  /** Reset sessions stuck waiting for QR or finishing auth beyond STALE_INIT_MS. */
   recoverStaleSession(userId: number) {
     const session = this.getSession(userId)
     const started = initStartedAt.get(userId)
     if (!started) return
-    if (session.status !== 'initializing' && session.status !== 'authenticated') return
+
+    const waitingForQr =
+      (session.status === 'initializing' || session.status === 'qr') &&
+      !session.qr &&
+      !session.pairingCode
+
+    const isBooting =
+      session.status === 'authenticated' || waitingForQr
+
+    if (!isBooting) return
     if (Date.now() - started < STALE_INIT_MS) return
 
     void forceResetStuckSession(
       userId,
-      session.lastError ??
-        'WhatsApp startup timed out. Install Chromium on the server and try again.'
+      waitingForQr
+        ? 'QR code did not appear in time. Ensure Chromium is installed with at least 1GB RAM, then try again.'
+        : session.lastError ??
+            'WhatsApp startup timed out. Install Chromium on the server and try again.'
     )
   }
 
   /**
-   * Background restore for persisted LocalAuth sessions.
-   * Never throws — safe to call from GET /session polling.
+   * Background restore for users who linked WhatsApp before.
+   * Skips brand-new users whose browser profile exists but auth was never saved.
    */
   restoreIfPersisted(userId: number) {
     const session = this.getSession(userId)
 
-    if (!hasPersistedSession(userId)) return
+    if (!hasAuthenticatedPersistedSession(userId)) return
+    if ((restoreBlockedUntil.get(userId) ?? 0) > Date.now()) return
     if (session.client) return
     if (initPromises.has(userId)) return
     if (session.status !== 'disconnected' && session.status !== 'auth_failure') return
 
-    void this.initialize(userId).catch(() => undefined)
+    void this.initialize(userId).catch((error) => {
+      console.error('[whatsapp] restoreIfPersisted failed', { userId, error })
+    })
   }
 
   async initialize(userId: number): Promise<WhatsAppSession> {
@@ -531,14 +607,17 @@ class WhatsAppClientManager {
     session.lastError = null
     session.loadingPercent = null
     initStartedAt.set(userId, Date.now())
+    scheduleQrWaitTimeout(userId)
 
     try {
       await launchClient(userId, session)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to start WhatsApp client.'
+      clearQrWait(userId)
       session.status = 'disconnected'
       session.lastError = message
       session.client = null
+      restoreBlockedUntil.set(userId, Date.now() + 60_000)
       rejectReadyWaiters(userId)
     }
 
@@ -552,7 +631,7 @@ class WhatsAppClientManager {
       return session.client
     }
 
-    if (session.client || hasPersistedSession(userId)) {
+    if (session.client || hasAuthenticatedPersistedSession(userId)) {
       if (!session.client || session.status === 'disconnected') {
         await this.initialize(userId)
       }
@@ -606,6 +685,7 @@ class WhatsAppClientManager {
     const session = this.getSession(userId)
     rejectReadyWaiters(userId)
     clearReadyCheck(userId)
+    clearQrWait(userId)
     initStartedAt.delete(userId)
 
     const inFlight = initPromises.get(userId)
@@ -618,6 +698,7 @@ class WhatsAppClientManager {
       await session.client.destroy().catch(() => undefined)
     }
 
+    clearPersistedAuth(userId)
     sessions.set(userId, createSession())
   }
 
@@ -625,7 +706,9 @@ class WhatsAppClientManager {
     const session = this.getSession(userId)
     rejectReadyWaiters(userId)
     clearReadyCheck(userId)
+    clearQrWait(userId)
     initStartedAt.delete(userId)
+    restoreBlockedUntil.delete(userId)
 
     const inFlight = initPromises.get(userId)
     if (inFlight) {
@@ -638,6 +721,7 @@ class WhatsAppClientManager {
       await session.client.destroy().catch(() => undefined)
     }
 
+    clearPersistedAuth(userId)
     sessions.set(userId, createSession())
   }
 

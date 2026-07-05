@@ -23,6 +23,9 @@ interface SettingsPageProps {
   savingBusinessSettings?: boolean;
   onOpenProducts?: () => void;
   onOpenWebsite?: () => void;
+  whatsappConnected?: boolean;
+  onLogoutWhatsApp?: () => Promise<void>;
+  onLogoutAccount?: () => Promise<void>;
 }
 
 const TONES = ["professional", "casual", "formal", "energetic"] as const;
@@ -57,6 +60,9 @@ export default function SettingsPage({
   onOpenProducts,
   onOpenWebsite,
   savingBusinessSettings,
+  whatsappConnected = false,
+  onLogoutWhatsApp,
+  onLogoutAccount,
 }: SettingsPageProps) {
   const [local, setLocal] = useState(settings);
   const settingsStampRef = useRef("");
@@ -75,6 +81,9 @@ export default function SettingsPage({
   const [storeSaved, setStoreSaved] = useState(false);
   const [defaultSaved, setDefaultSaved] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [loggingOutWhatsApp, setLoggingOutWhatsApp] = useState(false);
+  const [loggingOutAccount, setLoggingOutAccount] = useState(false);
+  const [signOutError, setSignOutError] = useState<string | null>(null);
 
   useEffect(() => {
     const stamp = JSON.stringify(settings);
@@ -171,6 +180,41 @@ export default function SettingsPage({
     });
     setDefaultSaved(true);
     setTimeout(() => setDefaultSaved(false), 2000);
+  };
+
+  const handleLogoutWhatsApp = async () => {
+    if (!onLogoutWhatsApp) return;
+    const confirmed = window.confirm(
+      "Disconnect WhatsApp from MessageBuddy?\n\nThis unlinks your number from the server. You'll need to scan the QR code again to reconnect."
+    );
+    if (!confirmed) return;
+
+    setSignOutError(null);
+    setLoggingOutWhatsApp(true);
+    try {
+      await onLogoutWhatsApp();
+    } catch {
+      setSignOutError("Could not disconnect WhatsApp. Try again in a moment.");
+    } finally {
+      setLoggingOutWhatsApp(false);
+    }
+  };
+
+  const handleLogoutAccount = async () => {
+    if (!onLogoutAccount) return;
+    const confirmed = window.confirm(
+      "Sign out of MessageBuddy?\n\nThis disconnects WhatsApp and ends your account session on this device."
+    );
+    if (!confirmed) return;
+
+    setSignOutError(null);
+    setLoggingOutAccount(true);
+    try {
+      await onLogoutAccount();
+    } catch {
+      setSignOutError("Could not sign out completely. Please try again.");
+      setLoggingOutAccount(false);
+    }
   };
 
   return (
@@ -671,6 +715,83 @@ export default function SettingsPage({
           <PrimaryBtn variant="danger" size="sm">Reset All AI Rules</PrimaryBtn>
           <PrimaryBtn variant="danger" size="sm">Clear Conversation History</PrimaryBtn>
           <PrimaryBtn variant="ghost" size="sm">Export Data</PrimaryBtn>
+        </div>
+      </SettingsSection>
+
+      {/* Sign out */}
+      <SettingsSection title="Sign out" subtitle="Disconnect WhatsApp or end your MessageBuddy session">
+        {signOutError ? (
+          <div
+            style={{
+              marginBottom: 14,
+              padding: "10px 14px",
+              borderRadius: 8,
+              background: "var(--red-muted)",
+              border: "1px solid var(--red)",
+              color: "var(--red)",
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+          >
+            {signOutError}
+          </div>
+        ) : null}
+
+        <div style={{ display: "grid", gap: 12 }}>
+          <div className="settings-signout-card settings-signout-card--whatsapp">
+            <div className="settings-signout-card__icon" aria-hidden>
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+                <path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.558 4.118 1.53 5.855L0 24l6.335-1.662A11.94 11.94 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.82a9.82 9.82 0 0 1-5.01-1.37l-.36-.214-3.76.987 1.004-3.66-.234-.375A9.82 9.82 0 0 1 2.18 12C2.18 6.57 6.57 2.18 12 2.18S21.82 6.57 21.82 12 17.43 21.82 12 21.82z" />
+              </svg>
+            </div>
+            <div className="settings-signout-card__body">
+              <div className="settings-signout-card__title">Sign out WhatsApp</div>
+              <p className="settings-signout-card__desc">
+                Unlinks your number from whatsapp-web.js on the server. Your MessageBuddy account stays
+                signed in — scan QR again to reconnect.
+              </p>
+              {whatsappConnected ? (
+                <span className="settings-signout-card__badge settings-signout-card__badge--connected">
+                  Connected
+                </span>
+              ) : (
+                <span className="settings-signout-card__badge">Not connected</span>
+              )}
+            </div>
+            <button
+              type="button"
+              className="settings-signout-btn settings-signout-btn--whatsapp"
+              onClick={() => void handleLogoutWhatsApp()}
+              disabled={!onLogoutWhatsApp || loggingOutWhatsApp}
+            >
+              {loggingOutWhatsApp ? "Disconnecting…" : "Sign out WhatsApp"}
+            </button>
+          </div>
+
+          <div className="settings-signout-card settings-signout-card--account">
+            <div className="settings-signout-card__icon settings-signout-card__icon--account" aria-hidden>
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" strokeLinecap="round" />
+                <polyline points="16 17 21 12 16 7" strokeLinecap="round" strokeLinejoin="round" />
+                <line x1="21" y1="12" x2="9" y2="12" strokeLinecap="round" />
+              </svg>
+            </div>
+            <div className="settings-signout-card__body">
+              <div className="settings-signout-card__title">Sign out of MessageBuddy</div>
+              <p className="settings-signout-card__desc">
+                Ends your account session on this device and disconnects WhatsApp from the backend.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="settings-signout-btn settings-signout-btn--account"
+              onClick={() => void handleLogoutAccount()}
+              disabled={!onLogoutAccount || loggingOutAccount}
+            >
+              {loggingOutAccount ? "Signing out…" : "Sign out"}
+            </button>
+          </div>
         </div>
       </SettingsSection>
     </div>

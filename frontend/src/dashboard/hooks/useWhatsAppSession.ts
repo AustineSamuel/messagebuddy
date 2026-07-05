@@ -6,6 +6,7 @@ import {
   destroySession,
   getSession,
   initializeSession,
+  logoutSession,
   type WhatsAppSession,
 } from "@/whatsappjs-services/session";
 
@@ -55,21 +56,41 @@ export function useWhatsAppSession() {
     }
   }, [refresh]);
 
+  const logoutWhatsApp = useCallback(async () => {
+    setError(null);
+    try {
+      await logoutSession();
+      setSession({
+        status: "disconnected",
+        qr: null,
+        pairingCode: null,
+        lastError: null,
+        loadingPercent: null,
+      });
+    } catch (err) {
+      setError(getErrorMessage(err, "Could not disconnect WhatsApp."));
+      throw err;
+    }
+  }, []);
+
   useEffect(() => {
     refresh().finally(() => setLoading(false));
   }, [refresh]);
 
   useEffect(() => {
-    if (
-      session?.status === "ready" ||
-      session?.status === "disconnected" ||
-      session?.status === "auth_failure"
-    ) {
+    if (session?.status === "ready" || session?.status === "auth_failure") {
+      return;
+    }
+
+    if (session?.status === "disconnected" && !connecting) {
       return;
     }
 
     const intervalMs =
-      session?.status === "initializing" || session?.status === "authenticated"
+      connecting ||
+      session?.status === "initializing" ||
+      session?.status === "authenticated" ||
+      session?.status === "qr"
         ? 1000
         : 2500;
 
@@ -80,7 +101,7 @@ export function useWhatsAppSession() {
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, [session?.status, refresh]);
+  }, [session?.status, connecting, refresh]);
 
   const isReady = session?.status === "ready";
 
@@ -95,6 +116,7 @@ export function useWhatsAppSession() {
     connect,
     retry,
     refresh,
+    logoutWhatsApp,
     dismissError,
   };
 }

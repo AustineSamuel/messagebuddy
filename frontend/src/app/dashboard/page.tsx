@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getErrorMessage, isUnauthorizedError } from "../lib/api";
 import { clearAuthToken } from "../lib/auth-token";
+import { logoutSession } from "@/whatsappjs-services/session";
 import { logout } from "../services/auth";
 import { getProfile, type User } from "../services/users";
 import DashboardLayout from "@/dashboard/components/dashboard/DashboardLayout";
@@ -45,6 +46,7 @@ export default function DashboardPage() {
 
   async function handleLogout() {
     try {
+      await logoutSession().catch(() => undefined);
       await logout();
     } catch {
       clearAuthToken();

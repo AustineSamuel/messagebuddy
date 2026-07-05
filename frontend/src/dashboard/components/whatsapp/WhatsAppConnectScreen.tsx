@@ -13,6 +13,12 @@ type Props = {
   onDismissError?: () => void;
 };
 
+const QR_STEPS = [
+  "Open WhatsApp on your phone",
+  "Tap Menu ⋮ or Settings → Linked devices",
+  "Tap Link a device and scan this code",
+];
+
 export default function WhatsAppConnectScreen({
   session,
   connecting,
@@ -23,74 +29,51 @@ export default function WhatsAppConnectScreen({
 }: Props) {
   const status = session?.status ?? "disconnected";
   const [dismissedSessionError, setDismissedSessionError] = useState(false);
-
   const showSessionError = session?.lastError && !dismissedSessionError;
+  const hasQr = Boolean(session?.qr);
+  const hasPairingCode = Boolean(session?.pairingCode);
+  const showScanUi = hasQr || hasPairingCode;
 
   return (
-    <div
-      className="flex min-h-screen items-center justify-center px-6"
-      style={{ background: "var(--bg-base)", fontFamily: "var(--font-sans)" }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 420,
-          background: "var(--surface-1)",
-          border: "1px solid var(--border-1)",
-          borderRadius: 16,
-          padding: 28,
-        }}
-      >
-        <div style={{ textAlign: "center", marginBottom: 24 }}>
-          <div
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: 14,
-              background: "var(--wa-green-glow)",
-              color: "var(--wa-green)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              margin: "0 auto 16px",
-              fontSize: 28,
-            }}
-          >
-            ⬤
+    <div className="wa-connect-screen">
+      <div className={`wa-connect-card${showScanUi ? " wa-connect-card--scan" : ""}`}>
+        <div className="wa-connect-header">
+          <div className="wa-connect-logo" aria-hidden>
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+              <path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.558 4.118 1.53 5.855L0 24l6.335-1.662A11.94 11.94 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.82a9.82 9.82 0 0 1-5.01-1.37l-.36-.214-3.76.987 1.004-3.66-.234-.375A9.82 9.82 0 0 1 2.18 12C2.18 6.57 6.57 2.18 12 2.18S21.82 6.57 21.82 12 17.43 21.82 12 21.82z" />
+            </svg>
           </div>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: "var(--text-0)" }}>
-            Connect WhatsApp
+          <h1 className="wa-connect-title">
+            {showScanUi ? "Scan to connect" : "Connect WhatsApp"}
           </h1>
-          <p style={{ fontSize: 13, color: "var(--text-2)", marginTop: 8 }}>
-            Link your WhatsApp account to sync chats, messages, and contacts.
+          <p className="wa-connect-subtitle">
+            {showScanUi
+              ? "Point your phone at the code below to link your account."
+              : "Link your WhatsApp account to sync chats, messages, and contacts."}
           </p>
         </div>
 
-        <div
-          style={{
-            marginBottom: 16,
-            padding: "10px 14px",
-            borderRadius: 10,
-            background: "var(--bg-2)",
-            border: "1px solid var(--border-1)",
-            fontSize: 12,
-            color: "var(--text-1)",
-          }}
-        >
-          Status:{" "}
-          <strong style={{ color: "var(--wa-green)", textTransform: "capitalize" }}>
-            {status.replace("_", " ")}
-          </strong>
-        </div>
+        {!showScanUi ? (
+          <div className="wa-connect-status">
+            Status:{" "}
+            <strong className="wa-connect-status__value">{status.replace("_", " ")}</strong>
+          </div>
+        ) : (
+          <div className="wa-connect-status wa-connect-status--live">
+            <span className="wa-connect-status__dot" />
+            Waiting for scan
+          </div>
+        )}
 
         {error ? (
-          <div style={{ marginBottom: 12 }}>
+          <div className="wa-connect-alert">
             <DismissibleAlert message={error} onDismiss={() => onDismissError?.()} />
           </div>
         ) : null}
 
         {showSessionError ? (
-          <div style={{ marginBottom: 12 }}>
+          <div className="wa-connect-alert">
             <DismissibleAlert
               message={session!.lastError!}
               onDismiss={() => setDismissedSessionError(true)}
@@ -98,72 +81,52 @@ export default function WhatsAppConnectScreen({
           </div>
         ) : null}
 
-        {session?.loadingPercent !== null && session?.loadingPercent !== undefined ? (
-          <div
-            style={{
-              marginBottom: 16,
-              padding: "10px 14px",
-              borderRadius: 10,
-              background: "var(--bg-2)",
-              fontSize: 12,
-              color: "var(--text-2)",
-            }}
-          >
+        {session?.loadingPercent !== null && session?.loadingPercent !== undefined && !showScanUi ? (
+          <div className="wa-connect-progress">
             Syncing WhatsApp… {session.loadingPercent}%
           </div>
         ) : null}
 
-        {session?.qr ? (
-          <div style={{ textAlign: "center", marginBottom: 16 }}>
-            <p style={{ fontSize: 12, color: "var(--text-2)", marginBottom: 12 }}>
-              Scan with WhatsApp → Linked devices
-            </p>
-            <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(session.qr)}`}
-              alt="WhatsApp QR code"
-              width={220}
-              height={220}
-              style={{ borderRadius: 12, border: "1px solid var(--border-1)" }}
-            />
+        {hasQr ? (
+          <div className="wa-connect-scan">
+            <div className="wa-connect-qr">
+              <div className="wa-connect-qr__frame">
+                <div className="wa-connect-qr__glow" aria-hidden />
+                <div className="wa-connect-qr__canvas">
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=${encodeURIComponent(session!.qr!)}`}
+                    alt="WhatsApp QR code"
+                    width={260}
+                    height={260}
+                    className="wa-connect-qr__image"
+                  />
+                </div>
+              </div>
+            </div>
+            <ol className="wa-connect-steps">
+              {QR_STEPS.map((step, i) => (
+                <li key={step} className="wa-connect-steps__item">
+                  <span className="wa-connect-steps__num">{i + 1}</span>
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ol>
           </div>
         ) : null}
 
-        {session?.pairingCode ? (
-          <div
-            style={{
-              textAlign: "center",
-              marginBottom: 16,
-              padding: 16,
-              borderRadius: 12,
-              background: "var(--bg-2)",
-            }}
-          >
-            <p style={{ fontSize: 12, color: "var(--text-2)", marginBottom: 8 }}>
-              Pairing code
-            </p>
-            <code style={{ fontSize: 24, letterSpacing: 6, color: "var(--wa-green)" }}>
-              {session.pairingCode}
-            </code>
+        {hasPairingCode ? (
+          <div className="wa-connect-pairing">
+            <p className="wa-connect-pairing__label">Enter this pairing code on your phone</p>
+            <code className="wa-connect-pairing__code">{session!.pairingCode}</code>
           </div>
         ) : null}
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div className="wa-connect-actions">
           <button
             type="button"
+            className="wa-connect-btn wa-connect-btn--primary"
             onClick={onConnect}
             disabled={connecting || status === "initializing"}
-            style={{
-              width: "100%",
-              padding: "12px 16px",
-              borderRadius: 10,
-              border: "none",
-              background: "var(--wa-green)",
-              color: "#fff",
-              fontWeight: 700,
-              fontSize: 14,
-              cursor: connecting ? "wait" : "pointer",
-              opacity: connecting ? 0.7 : 1,
-            }}
           >
             {connecting || status === "initializing"
               ? "Starting session…"
@@ -172,25 +135,12 @@ export default function WhatsAppConnectScreen({
                 : "Connect WhatsApp"}
           </button>
 
-          <button
-            type="button"
-            onClick={onRefresh}
-            style={{
-              width: "100%",
-              padding: "10px 16px",
-              borderRadius: 10,
-              border: "1px solid var(--border-1)",
-              background: "transparent",
-              color: "var(--text-1)",
-              fontSize: 13,
-              cursor: "pointer",
-            }}
-          >
+          <button type="button" className="wa-connect-btn wa-connect-btn--secondary" onClick={onRefresh}>
             Refresh status
           </button>
         </div>
 
-        <p style={{ fontSize: 11, color: "var(--text-3)", marginTop: 16, textAlign: "center" }}>
+        <p className="wa-connect-footnote">
           Uses whatsapp-web.js via your backend. Keep the server running while connected.
         </p>
       </div>

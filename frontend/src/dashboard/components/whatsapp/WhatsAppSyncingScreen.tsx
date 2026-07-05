@@ -121,6 +121,11 @@ export default function WhatsAppSyncingScreen({
           </strong>
         </p>
 
+        <p style={{ fontSize: 11, color: "var(--text-3)", textAlign: "center", marginBottom: 16 }}>
+          First connect can take 1–2 minutes while the server starts Chromium. If it takes
+          longer, use Stop and try again.
+        </p>
+
         <button
           type="button"
           onClick={onRefresh}
