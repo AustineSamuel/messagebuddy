@@ -277,7 +277,7 @@ export default function DashboardLayout({ onLogout }: DashboardLayoutProps) {
             onOpenWebsite={() => store.setActiveView("website")}
             whatsappConnected={wa.isReady}
             onLogoutWhatsApp={wa.logoutWhatsApp}
-            onLogoutAccount={onLogout}
+            onLogoutAccount={async () => await onLogout?.()}
           />
           )
         )}
