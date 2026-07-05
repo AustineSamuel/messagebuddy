@@ -76,7 +76,7 @@ export default function WhatsAppSyncingScreen({
 
         {error || session?.lastError ? (
           <div style={{ marginBottom: 16 }}>
-            <DismissibleAlert message={error ?? session?.lastError ?? ""} />
+            <DismissibleAlert message={error ?? session?.lastError ?? ""} onDismiss={() => {}} />
           </div>
         ) : null}
 
