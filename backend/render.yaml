@@ -11,9 +11,10 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PUPPETEER_CACHE_DIR
+        value: .puppeteer-cache
       - key: WHATSAPP_PUPPETEER_SINGLE_PROCESS
         value: "true"
       - key: WHATSAPP_STALE_INIT_MS
         value: "90000"
-      # Do NOT set PUPPETEER_SKIP_CHROMIUM_DOWNLOAD — build installs Chrome automatically.
-      # Do NOT set WHATSAPP_CHROME_PATH unless you install system Chromium yourself.
+      # Do NOT set PUPPETEER_SKIP_CHROMIUM_DOWNLOAD or WHATSAPP_CHROME_PATH=/usr/bin/chromium

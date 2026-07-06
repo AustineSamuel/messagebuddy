@@ -1,6 +1,6 @@
 import app from '@adonisjs/core/services/app'
 import { execSync } from 'node:child_process'
-import { existsSync, mkdirSync, rmSync, unlinkSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, rmSync, unlinkSync } from 'node:fs'
 import path from 'node:path'
 import puppeteer from 'puppeteer'
 import { Client as WWebClient, LocalAuth, WAState } from '../lib/wwebjs.js'
@@ -133,7 +133,64 @@ function isBrowserAlreadyRunningError(error: unknown) {
   return message.includes('browser is already running') || message.includes('userDataDir')
 }
 
+function readPersistedChromePath(): string | undefined {
+  const appRoot = app.appRoot.toString()
+  const candidates = [
+    app.makePath('storage', 'chrome-executable-path.txt'),
+    path.join(appRoot, '.puppeteer-cache', 'chrome-path.txt'),
+    path.join(appRoot, 'storage', 'chrome-executable-path.txt'),
+  ]
+
+  for (const file of candidates) {
+    if (!existsSync(file)) continue
+    try {
+      const chromePath = readFileSync(file, 'utf8').trim()
+      if (chromePath && existsSync(chromePath)) {
+        return chromePath
+      }
+    } catch {
+      // try next
+    }
+  }
+
+  return undefined
+}
+
+function ensurePuppeteerCacheEnv() {
+  const appRoot = app.appRoot.toString()
+
+  if (process.env.PUPPETEER_CACHE_DIR?.trim()) {
+    const configured = process.env.PUPPETEER_CACHE_DIR.trim()
+    if (!path.isAbsolute(configured)) {
+      const resolved = path.join(appRoot, configured)
+      if (existsSync(resolved)) {
+        process.env.PUPPETEER_CACHE_DIR = resolved
+      }
+    }
+    return
+  }
+
+  const cacheDirs = [
+    path.join(appRoot, '.puppeteer-cache'),
+    path.join(appRoot, '..', '.puppeteer-cache'),
+  ]
+
+  for (const dir of cacheDirs) {
+    if (existsSync(dir)) {
+      process.env.PUPPETEER_CACHE_DIR = dir
+      return
+    }
+  }
+}
+
 function resolveChromeExecutable(): string | undefined {
+  const persisted = readPersistedChromePath()
+  if (persisted) {
+    return persisted
+  }
+
+  ensurePuppeteerCacheEnv()
+
   const envPaths = [
     process.env.WHATSAPP_CHROME_PATH?.trim(),
     process.env.PUPPETEER_EXECUTABLE_PATH?.trim(),
@@ -172,12 +229,13 @@ function resolveChromeExecutable(): string | undefined {
 }
 
 function chromeNotFoundMessage(): string {
+  const cacheDir = process.env.PUPPETEER_CACHE_DIR ?? '(not set)'
   return (
     'Chrome/Chromium not found for WhatsApp. ' +
-    'Render without Docker: set Build Command to `npm install && npm run build` (installs Chrome via Puppeteer). ' +
-    'Do NOT set PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true. ' +
-    'Or use Docker with WHATSAPP_CHROME_PATH=/usr/bin/chromium. ' +
-    'Need at least 1GB RAM on the instance.'
+    `PUPPETEER_CACHE_DIR=${cacheDir}. ` +
+    'On Render: Build Command must be `npm install && npm run build` (installs Chrome into build/.puppeteer-cache). ' +
+    'Remove WHATSAPP_CHROME_PATH and PUPPETEER_SKIP_CHROMIUM_DOWNLOAD from env. ' +
+    'Need at least 1GB RAM.'
   )
 }
 

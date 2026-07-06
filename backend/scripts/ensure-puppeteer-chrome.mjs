@@ -1,12 +1,19 @@
 /**
- * Ensures a Chrome/Chromium binary exists for WhatsApp (Puppeteer).
+ * Ensures Chrome exists for WhatsApp and records the path for production runtime.
  *
- * - Docker: uses system Chromium at WHATSAPP_CHROME_PATH — skips download.
- * - Render native (no Docker): downloads Chrome into Puppeteer cache during build.
+ * Build installs to backend/.puppeteer-cache (inside the project, not /opt/render/.cache).
+ * copy-puppeteer-cache.mjs copies that folder into build/ so Render runtime can find it.
  */
-import { existsSync } from 'node:fs'
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { execSync } from 'node:child_process'
-import puppeteer from 'puppeteer'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { resolvePuppeteerChromePath } from './puppeteer-chrome-path.mjs'
+
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
+const CACHE_DIR = path.join(ROOT, '.puppeteer-cache')
+const STORAGE_DIR = path.join(ROOT, 'storage')
+const CHROME_PATH_FILE = path.join(STORAGE_DIR, 'chrome-executable-path.txt')
 
 const SYSTEM_CANDIDATES = [
   process.env.WHATSAPP_CHROME_PATH,
@@ -23,34 +30,52 @@ const SYSTEM_CANDIDATES = [
     : null,
 ].filter(Boolean)
 
+const forceBundled =
+  process.env.RENDER === 'true' ||
+  process.env.CI === 'true' ||
+  process.env.FORCE_PUPPETEER_BUNDLE === 'true'
+
 function log(msg) {
   console.log(`[ensure-chrome] ${msg}`)
 }
 
+function persistChromePath(chromePath) {
+  mkdirSync(STORAGE_DIR, { recursive: true })
+  mkdirSync(CACHE_DIR, { recursive: true })
+  writeFileSync(CHROME_PATH_FILE, chromePath, 'utf8')
+  writeFileSync(path.join(CACHE_DIR, 'chrome-path.txt'), chromePath, 'utf8')
+  log(`Saved Chrome path to ${CHROME_PATH_FILE}`)
+}
+
 for (const candidate of SYSTEM_CANDIDATES) {
-  if (existsSync(candidate)) {
-    log(`Using system browser at ${candidate} — skip Puppeteer download`)
+  if (!forceBundled && existsSync(candidate)) {
+    log(`Using system browser at ${candidate}`)
+    persistChromePath(candidate)
     process.exit(0)
   }
 }
 
-try {
-  const cached = puppeteer.executablePath()
-  if (cached && existsSync(cached)) {
-    log(`Puppeteer Chrome already present at ${cached}`)
-    process.exit(0)
-  }
-} catch {
-  // fall through to install
+const existing = await resolvePuppeteerChromePath(CACHE_DIR)
+if (existing) {
+  log(`Puppeteer Chrome already present at ${existing}`)
+  persistChromePath(existing)
+  process.exit(0)
 }
 
-log('No system Chromium found — installing Chrome for Puppeteer (Render / native deploy)…')
-execSync('npx puppeteer browsers install chrome', { stdio: 'inherit' })
+mkdirSync(CACHE_DIR, { recursive: true })
 
-const installed = puppeteer.executablePath()
-if (!installed || !existsSync(installed)) {
+log(`Installing Chrome into ${CACHE_DIR} (bundled with deploy artifact)…`)
+execSync('npx puppeteer browsers install chrome', {
+  stdio: 'inherit',
+  cwd: ROOT,
+  env: { ...process.env, PUPPETEER_CACHE_DIR: CACHE_DIR },
+})
+
+const installed = await resolvePuppeteerChromePath(CACHE_DIR)
+if (!installed) {
   console.error('[ensure-chrome] Install finished but Chrome binary is still missing.')
   process.exit(1)
 }
 
+persistChromePath(installed)
 log(`Chrome ready at ${installed}`)

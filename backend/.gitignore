@@ -28,3 +28,7 @@ yarn-error.log
 
 # WhatsApp Web.js session data
 storage/whatsapp_auth
+
+# Puppeteer Chrome (installed at build time, copied into build/)
+.puppeteer-cache
+storage/chrome-executable-path.txt
