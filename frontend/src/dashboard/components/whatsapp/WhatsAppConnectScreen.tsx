@@ -140,9 +140,7 @@ export default function WhatsAppConnectScreen({
           </button>
         </div>
 
-        <p className="wa-connect-footnote">
-          Uses whatsapp-web.js via your backend. Keep the server running while connected.
-        </p>
+     
       </div>
     </div>
   );
