@@ -706,20 +706,20 @@ export function useDashboardStore({ whatsAppReady }: Props) {
           isGroup: chatContact?.isGroup ?? false,
         });
         loadedChatsRef.current.add(activeContactId);
-        setConversations((prev) => ({
-          ...prev,
-          [activeContactId]: {
-            contactId: activeContactId,
+      setConversations((prev) => ({
+        ...prev,
+        [activeContactId]: {
+          contactId: activeContactId,
             messages: [...(prev[activeContactId]?.messages ?? []), mapped],
-          },
-        }));
-        setContacts((prev) =>
-          prev.map((c) =>
-            c.id === activeContactId
-              ? { ...c, lastMessage: text.trim(), lastMessageTime: "now" }
-              : c
-          )
-        );
+        },
+      }));
+      setContacts((prev) =>
+        prev.map((c) =>
+          c.id === activeContactId
+            ? { ...c, lastMessage: text.trim(), lastMessageTime: "now" }
+            : c
+        )
+      );
         void loadCredits();
       } catch (err) {
         setSyncError(getErrorMessage(err));
@@ -754,16 +754,16 @@ export function useDashboardStore({ whatsAppReady }: Props) {
       setSyncError(null);
       try {
         await editWhatsAppMessage(messageId, newText);
-        setConversations((prev) => ({
-          ...prev,
-          [contactId]: {
-            ...prev[contactId],
+      setConversations((prev) => ({
+        ...prev,
+        [contactId]: {
+          ...prev[contactId],
             messages: (prev[contactId]?.messages ?? []).map((m) =>
-              m.id === messageId ? { ...m, text: newText, edited: true } : m
-            ),
-          },
-        }));
-        setEditingMessage(null);
+            m.id === messageId ? { ...m, text: newText, edited: true } : m
+          ),
+        },
+      }));
+      setEditingMessage(null);
       } catch (err) {
         setSyncError(getErrorMessage(err));
       }
@@ -775,9 +775,9 @@ export function useDashboardStore({ whatsAppReady }: Props) {
     async (contactId: string, rule: ContactRule) => {
       setSyncError(null);
       bumpChatSettingsGeneration(contactId);
-      setContacts((prev) =>
-        prev.map((c) => (c.id === contactId ? { ...c, rule } : c))
-      );
+    setContacts((prev) =>
+      prev.map((c) => (c.id === contactId ? { ...c, rule } : c))
+    );
       setWaContacts((prev) =>
         prev.map((c) => (c.id === contactId ? { ...c, rule } : c))
       );

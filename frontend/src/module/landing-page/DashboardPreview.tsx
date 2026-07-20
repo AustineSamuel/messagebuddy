@@ -24,7 +24,7 @@ function MessageBubble({
   );
 }
 
-export default function DashboardPreview() {
+export default function DashboardPreview({ noInputs }: { noInputs?: boolean }) {
   const chats = [
     { name: "Ada — iPhone 13", preview: "Voice message", unread: 2, active: true },
     { name: "Chidi — Delivery", preview: "Thanks, I'll pay now", unread: 0, active: false },
@@ -98,7 +98,7 @@ export default function DashboardPreview() {
             </MessageBubble>
           </div>
 
-          <LandingChatComposer />
+          {!noInputs && <LandingChatComposer />}
         </div>
       </div>
     </div>

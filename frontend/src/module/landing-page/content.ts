@@ -4,7 +4,7 @@ export const landingPageContent = {
     tagline: "WhatsApp Business dashboard with AI that never sleeps.",
   },
   hero: {
-    eyebrow: "WhatsApp Business · AI Auto-Reply · Voice Transcription",
+    eyebrow: "WhatsApp business dashboard for sellers",
     eyebrowIcon: "messages" as const,
     headline: "Never lose a WhatsApp sale because you replied too late.",
     subheadline:
@@ -27,7 +27,7 @@ export const landingPageContent = {
   pillars: {
     title: "The WhatsApp workspace your business actually needs.",
     subtitle:
-      "Not another chat app. A sales engine — AI at the core, built for how African merchants sell on WhatsApp every day.",
+      "Not another chat app — a sales workspace built for how merchants actually sell on WhatsApp.",
     items: [
       {
         label: "FIG 1.0",
@@ -71,7 +71,7 @@ export const landingPageContent = {
       title: "AI auto-reply while you are offline",
       description:
         "Save rules per contact and let MessageBuddy reply from the server using recent chat context. Your laptop does not need to stay open.",
-      bullets: ["Server-side AI auto-reply", "✨ AI compose assist", "Voice note transcription"],
+      bullets: ["Server-side AI auto-reply", "AI compose assist", "Voice note transcription"],
     },
     {
       id: "sell",
@@ -81,7 +81,7 @@ export const landingPageContent = {
       title: "Turn WhatsApp chats into a storefront",
       description:
         "Publish products to a branded public store. Send a link instead of typing prices in voice notes for the tenth time today.",
-      bullets: ["Product catalog & SEO pages", "Public store links", "WhatsApp checkout handoff"],
+      bullets: ["Product catalog & SEO pages", "WhatsApp checkout handoff"],
     },
     {
       id: "grow",
@@ -94,130 +94,12 @@ export const landingPageContent = {
       bullets: ["Smart follow-up sequences", "Credits & usage charts", "5,000 free credits to start"],
     },
   ],
-  problems: {
-    title: "WhatsApp is your shop. It was never built to run a business.",
-    intro:
-      "Growing businesses do not lose customers because the product is bad. They lose them because WhatsApp becomes impossible to manage — too many chats, too many voice notes, no system, no dashboard.",
-    items: [
-      {
-        icon: "clock" as const,
-        title: "Messages pile up faster than you can answer",
-        description:
-          "Every unread WhatsApp message is money walking away. When you are busy or offline, customers buy from whoever replies first.",
-      },
-      {
-        icon: "repeat" as const,
-        title: "You repeat the same answers all day",
-        description:
-          "Price, delivery, availability — asked again and again. You become the bottleneck for your own business.",
-      },
-      {
-        icon: "layout" as const,
-        title: "Voice notes with no way to search or reply fast",
-        description:
-          "Customers send audio. You listen twice, type it out, then answer. No transcription, no shortcuts, no time.",
-      },
-      {
-        icon: "users" as const,
-        title: "Leads go cold without follow-up",
-        description:
-          "No CRM, no reminders, no system. Growth stalls because retention is manual and memory is unreliable.",
-      },
-    ],
-  },
-  solution: {
-    title: "One WhatsApp Business workspace for sales, support, and follow-up.",
-    body: "MessageBuddy connects your WhatsApp number to an AI-powered business dashboard. Set rules per customer, auto-send or draft replies, transcribe voice messages, publish a storefront, and track usage — all in one product.",
-    highlight:
-      "You stay in control. AI suggests and sends based on rules you save per contact. Choose who gets auto-reply, transcribe any voice note, and define your business voice.",
-  },
-  features: {
-    title: "Everything to run WhatsApp like a real business",
-    subtitle: "From first DM to repeat purchase — inbox, AI, transcription, storefront, analytics.",
-    items: [
-      {
-        icon: "messages" as const,
-        title: "WhatsApp Business dashboard",
-        description:
-          "Sync chats, contacts, and messages into a clean inbox with unread counts and familiar chat UX.",
-        benefit: "See every conversation in one place.",
-      },
-      {
-        icon: "bot" as const,
-        title: "AI auto-reply",
-        description:
-          "Reply automatically from the server using recent context and your saved instructions.",
-        benefit: "Answer customers while you are offline.",
-      },
-      {
-        icon: "sparkles" as const,
-        title: "Voice note transcription",
-        description:
-          "Tap Transcribe on any audio message. Read what customers said and reply without replaying voice notes.",
-        benefit: "Stop listening to the same audio twice.",
-      },
-      {
-        icon: "clipboard" as const,
-        title: "Per-contact AI rules",
-        description:
-          "Custom instructions, notes, and AI toggles per chat — plus AI contact summaries for context.",
-        benefit: "Every customer gets the right treatment.",
-      },
-      {
-        icon: "clock" as const,
-        title: "Smart follow-ups",
-        description:
-          "Re-engage quiet leads with scheduled AI follow-ups based on conversation history.",
-        benefit: "Turn hesitation into a second chance.",
-      },
-      {
-        icon: "shop" as const,
-        title: "Public storefront",
-        description:
-          "Publish a branded store with product pages and WhatsApp contact links.",
-        benefit: "Send a link, not another voice note.",
-      },
-    ],
-  },
-  howItWorks: {
-    title: "Go live in four steps",
-    reassurance: "Start manually. Turn on AI auto-reply when you are ready.",
-    steps: [
-      {
-        step: "01",
-        icon: "userPlus" as const,
-        title: "Create your free account",
-        description: "Sign up with email or Google. 5,000 credits included. No payment required.",
-      },
-      {
-        step: "02",
-        icon: "qr" as const,
-        title: "Connect WhatsApp",
-        description: "Scan a QR code from the dashboard. Session stays active on the server.",
-      },
-      {
-        step: "03",
-        icon: "settings" as const,
-        title: "Set your business rules",
-        description: "Add profile, AI instructions, products, and per-contact rules.",
-      },
-      {
-        step: "04",
-        icon: "rocket" as const,
-        title: "Let MessageBuddy work",
-        description: "Reply manually, draft with ✨ AI, transcribe voice notes, or enable auto-reply.",
-      },
-    ],
-  },
-  audience: {
-    title: "Built for businesses that live on WhatsApp",
-    items: [
-      "Online sellers and Instagram-to-WhatsApp vendors",
-      "Electronics, fashion, beauty, and food businesses",
-      "Service providers taking bookings on WhatsApp",
-      "Small teams that need one shared business inbox",
-      "Nigerian and African merchants selling locally and abroad",
-    ],
+  storefront: {
+    title: "Every business gets a public shop",
+    body: "Publish your products and share one clean link. Customers browse your store, then reach you on WhatsApp to buy.",
+    urlSlug: "your-business-name",
+    imageSrc: "/landing/storefront-example.jpeg",
+    imageAlt: "Example MessageBuddy storefront with featured products and new arrivals",
   },
   faq: [
     {
@@ -261,7 +143,7 @@ export const landingPageContent = {
   contact: {
     title: "Contact us",
     body: "Questions before you sign up? We are happy to help.",
-    email: "hello@messagebuddy.app",
+    email: "hello@messagebuddy.com",
   },
   footer: {
     tagline: "Make WhatsApp feel like a business tool — not a second job.",

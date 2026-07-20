@@ -1,0 +1,112 @@
+/* Hero split — reference layout, MessageBuddy emerald theme */
+
+.lp-hero-split {
+  position: relative;
+  display: grid;
+  gap: 2.5rem;
+  align-items: center;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 1.25rem 0 3rem;
+  text-align: left;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+  background: transparent;
+}
+
+.lp-hero-split__content {
+  position: relative;
+  z-index: 1;
+  animation: lp-hero-rise 0.75s ease both;
+}
+
+.lp-hero-split__visual {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  overflow: visible;
+  min-height: auto;
+  padding-bottom: 2.5rem;
+  animation: lp-hero-rise 0.85s ease 0.12s both;
+}
+
+@keyframes lp-hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lp-hero-split__eyebrow {
+  margin: 0 0 1rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--lp-text-muted);
+}
+
+.lp-hero-split__headline {
+  margin: 0;
+  max-width: 14ch;
+  font-size: clamp(2.25rem, 6vw, 4.25rem);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+
+.lp-hero-split__sub {
+  margin: 1.25rem 0 0;
+  max-width: 46ch;
+  font-size: clamp(0.95rem, 2vw, 1.125rem);
+  line-height: 1.6;
+  color: var(--lp-text-muted);
+}
+
+.lp-hero-split__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.lp-hero-split__trust {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .lp-hero-split {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 3rem;
+    min-height: calc(100dvh - 6rem);
+    padding: 2rem 0 3rem;
+    align-items: center;
+    overflow: visible;
+  }
+
+  .lp-hero-split__visual {
+    justify-content: flex-end;
+    padding-right: 0.5rem;
+    padding-bottom: 2.75rem;
+  }
+
+  .lp-hero-split__headline {
+    max-width: 12ch;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-hero-split__content,
+  .lp-hero-split__visual {
+    animation: none !important;
+  }
+}

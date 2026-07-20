@@ -1,51 +1,136 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import DashboardPreview from "./DashboardPreview";
+import HeroSection from "./hero/HeroSection";
 import InView from "./InView";
 import LandingAuthActions from "./LandingAuthActions";
 import LandingHeader from "./LandingHeader";
 import LandingIcon from "./LandingIcons";
 import { landingPageContent as c } from "./content";
 import { getStoredLandingTheme, storeLandingTheme, type LandingTheme } from "./theme";
+import "./hero/hero-section.css";
+import "./hero-phone-3d/hero-phone-3d.css";
 import "./landing-page.css";
+
+function useBrowserHost() {
+  const [host, setHost] = useState("");
+
+  useEffect(() => {
+    setHost(window.location.host);
+  }, []);
+
+  return host;
+}
+
+function StorefrontPreview({ compact = false }: { compact?: boolean }) {
+  const host = useBrowserHost();
+  const { urlSlug, imageSrc, imageAlt } = c.storefront;
+  const displayHost = host || "…";
+  const shopPath = `${displayHost}/${urlSlug}`;
+
+  return (
+    <figure className={`lp-shop-preview ${compact ? "lp-shop-preview--compact" : ""}`}>
+      <div className="lp-shop-preview__browser" aria-hidden={!compact}>
+        <div className="lp-shop-preview__chrome">
+          <span className="lp-shop-preview__dots" aria-hidden>
+            <i /><i /><i />
+          </span>
+          <div className="lp-shop-preview__url" aria-label={`Store URL ${shopPath}`}>
+            <span className="lp-shop-preview__lock" aria-hidden>
+              <svg viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M4.5 7V5.5a3.5 3.5 0 0 1 7 0V7"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                />
+                <rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+              </svg>
+            </span>
+            <span className="lp-shop-preview__host">{displayHost}</span>
+            <span className="lp-shop-preview__slash">/</span>
+            <span className="lp-shop-preview__slug">{urlSlug}</span>
+          </div>
+        </div>
+        <div className="lp-shop-preview__screen">
+          <Image
+            src={imageSrc}
+            alt={imageAlt}
+            width={1030}
+            height={776}
+            className="lp-shop-preview__image"
+            sizes={compact ? "(max-width: 768px) 100vw, 420px" : "(max-width: 768px) 100vw, 900px"}
+            priority={!compact}
+          />
+        </div>
+      </div>
+      {!compact ? (
+        <figcaption className="lp-shop-preview__caption">
+          Live shop link: <code>{shopPath}</code>
+        </figcaption>
+      ) : null}
+    </figure>
+  );
+}
 
 function WorkflowVisual({ id }: { id: string }) {
   if (id === "automate") {
     return (
-      <div className="lp-panel rounded-2xl p-5">
-        <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider lp-accent">
-          <LandingIcon name="bot" size="sm" />
-          Auto-reply active
+      <div className="lp-workflow-card lp-workflow-card--chat">
+        <div className="lp-workflow-card__chrome">
+          <span className="lp-workflow-card__status">
+            <span className="lp-workflow-card__status-dot" />
+            Auto-reply active
+          </span>
+          <span className="lp-workflow-card__live">Online</span>
         </div>
-        <div className="space-y-2 text-xs lp-text-muted">
-          <p className="rounded-lg px-3 py-2 lp-panel-inset">Customer: &quot;How much for delivery?&quot;</p>
-          <p className="rounded-lg px-3 py-2 lp-ai-chip">
-            MessageBuddy: &quot;Delivery to your area is ₦2,500. Share your address to confirm.&quot;
-          </p>
+
+        <div className="lp-workflow-chat">
+          <div className="lp-workflow-chat__meta">Today · Ada</div>
+
+          <div className="lp-workflow-bubble lp-workflow-bubble--in">
+            <p>How much for delivery?</p>
+            <span>10:41 AM</span>
+          </div>
+
+          <div className="lp-workflow-bubble lp-workflow-bubble--out">
+            <span className="lp-workflow-bubble__ai">AI</span>
+            <p>Delivery to your area is ₦2,500. Share your address to confirm.</p>
+            <span>
+              10:41 AM
+              <svg className="lp-workflow-bubble__ticks" viewBox="0 0 24 16" aria-hidden>
+                <path d="M1.5 8.2l3.4 3.4L12.2 3" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                <path d="M8.2 8.2l3.4 3.4L19.8 3" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+              </svg>
+            </span>
+          </div>
+
+          <div className="lp-workflow-bubble lp-workflow-bubble--typing" aria-hidden>
+            <span /><span /><span />
+          </div>
         </div>
       </div>
     );
   }
 
   if (id === "sell") {
+    return <StorefrontPreview compact />;
+  }
+
+  if (id === "grow") {
     return (
-      <div className="lp-panel rounded-2xl p-5">
-        <div className="mb-4 flex items-center gap-3">
-          <span className="lp-icon-box lp-icon-box--md">
-            <LandingIcon name="shop" />
-          </span>
-          <div>
-            <p className="text-sm font-medium lp-text">Obi Electronics</p>
-            <p className="text-[11px] lp-text-subtle">yourstore.com/obi-electronics</p>
-          </div>
+      <div className="lp-workflow-card lp-workflow-card--chart">
+        <div className="lp-workflow-card__chrome">
+          <span className="lp-workflow-card__status">Messages sent</span>
+          <span className="lp-accent text-xs font-semibold">+24% this week</span>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          {["iPhone 13", "AirPods Pro", "MacBook Air", "Samsung A54"].map((item) => (
-            <div key={item} className="rounded-lg border p-3 lp-border lp-panel-inset">
-              <div className="mb-2 h-12 rounded-md lp-panel-inset" />
-              <p className="text-[11px] font-medium lp-text">{item}</p>
+        <div className="lp-workflow-chart">
+          {[40, 65, 45, 80, 55, 90, 70].map((h, i) => (
+            <div key={i} className="lp-workflow-chart__col">
+              <div className="lp-workflow-chart__bar" style={{ height: `${h}%` }} />
             </div>
           ))}
         </div>
@@ -53,27 +138,28 @@ function WorkflowVisual({ id }: { id: string }) {
     );
   }
 
-  if (id === "grow") {
-    return (
-      <div className="lp-panel rounded-2xl p-5">
-        <div className="mb-4 flex items-end justify-between gap-2">
-          {[40, 65, 45, 80, 55, 90, 70].map((h, i) => (
-            <div key={i} className="lp-chart-bar w-full rounded-t" style={{ height: `${h}px` }} />
-          ))}
-        </div>
-        <div className="flex justify-between text-[10px] lp-text-subtle">
-          <span>Messages sent</span>
-          <span className="lp-accent">+24% this week</span>
-        </div>
-      </div>
-    );
-  }
+  return <DashboardPreview noInputs />;
+}
 
-  return <DashboardPreview />;
+function ShopUrlPill() {
+  const host = useBrowserHost();
+  const displayHost = host || "…";
+
+  return (
+    <p className="lp-shop-showcase__url-pill">
+      <span className="lp-shop-showcase__url-host">{displayHost}</span>
+      <span className="lp-shop-showcase__url-slash">/</span>
+      <span className="lp-shop-showcase__url-slug">{c.storefront.urlSlug}</span>
+    </p>
+  );
 }
 
 export default function LandingPage() {
   const [theme, setTheme] = useState<LandingTheme>("dark");
+  const siteHost = useBrowserHost();
+  const shopExamplePath = siteHost
+    ? `${siteHost}/${c.storefront.urlSlug}`
+    : `…/${c.storefront.urlSlug}`;
 
   useEffect(() => {
     setTheme(getStoredLandingTheme());
@@ -86,8 +172,16 @@ export default function LandingPage() {
 
     return () => {
       document.documentElement.classList.remove("landing-active");
+      document.documentElement.style.removeProperty("background");
+      document.body.style.removeProperty("background");
     };
   }, []);
+
+  useEffect(() => {
+    const bg = theme === "light" ? "#fafafa" : "#08090a";
+    document.documentElement.style.background = bg;
+    document.body.style.background = bg;
+  }, [theme]);
 
   function toggleTheme() {
     setTheme((prev) => {
@@ -99,59 +193,49 @@ export default function LandingPage() {
 
   return (
     <div className="landing-page relative min-h-screen w-full flex-1" data-theme={theme}>
+      <div className="landing-page__hero-bleed">
+        <div className="landing-page__hero-bleed-inner">
+          <LandingHeader theme={theme} onToggleTheme={toggleTheme} />
+          <HeroSection />
+        </div>
+          </div>
+
       <div className="landing-page__shell relative z-10">
-        <LandingHeader theme={theme} onToggleTheme={toggleTheme} />
-
         <main>
-          <InView className="lp-hero-apple mx-auto w-full max-w-4xl text-center">
-            <p className="lp-hero-eyebrow mb-6 inline-flex items-center justify-center gap-2 text-sm font-medium">
-              <LandingIcon name={c.hero.eyebrowIcon} size="sm" />
-              {c.hero.eyebrow}
-            </p>
-            <h1 className="lp-hero-headline text-4xl font-semibold leading-[1.05] tracking-tight md:text-6xl lg:text-[4.5rem]">
-              {c.hero.headline}
-            </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed lp-text-muted md:text-lg">
-              {c.hero.subheadline}
-            </p>
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-              <LandingAuthActions variant="hero" />
-            </div>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-              {c.hero.trustBadges.map((badge) => (
-                <span key={badge.label} className="lp-trust-badge">
-                  <LandingIcon name={badge.icon} size="sm" />
-                  {badge.label}
-                </span>
-              ))}
-            </div>
-          </InView>
-
           <InView className="mx-auto mt-14 w-full max-w-5xl md:mt-20" delay={120}>
             <DashboardPreview />
           </InView>
 
-          <section className="mx-auto mt-24 max-w-5xl">
+          <section className="lp-pillars mx-auto mt-24 max-w-5xl">
             <InView className="mx-auto max-w-3xl text-center">
               <h2 className="text-3xl font-semibold tracking-tight lp-text md:text-4xl">{c.pillars.title}</h2>
               <p className="mt-4 text-base lp-text-muted">{c.pillars.subtitle}</p>
             </InView>
-            <div className="mt-12 grid gap-4 md:grid-cols-3">
+            <div className="lp-pillars__grid">
               {c.pillars.items.map((item, i) => (
-                <InView key={item.title} as="article" className="lp-panel rounded-2xl p-6" delay={i * 90}>
-                  <span className="lp-section-icon">
-                    <LandingIcon name={item.icon} />
+                <InView key={item.title} as="article" className="lp-pillar-card" delay={i * 90}>
+                  <span className="lp-pillar-card__icon" aria-hidden>
+                    <LandingIcon name={item.icon} size="xl" />
                   </span>
-                  <p className="text-[11px] font-medium uppercase tracking-wider lp-text-subtle">{item.label}</p>
-                  <h3 className="mt-3 text-lg font-semibold lp-text">{item.title}</h3>
-                  <p className="mt-3 text-sm leading-relaxed lp-text-muted">{item.description}</p>
+                  <h3 className="lp-pillar-card__title">{item.title}</h3>
+                  <p className="lp-pillar-card__body">{item.description}</p>
                 </InView>
               ))}
             </div>
           </section>
 
           <section id="workflows" className="mx-auto mt-28 max-w-5xl scroll-mt-28 space-y-24">
-            {c.workflows.map((flow, index) => (
+            {c.workflows.map((flow, index) => {
+              const bullets =
+                flow.id === "sell"
+                  ? [shopExamplePath, ...flow.bullets]
+                  : [...flow.bullets];
+              const description =
+                flow.id === "sell"
+                  ? `Publish products to a branded public store at ${shopExamplePath}. Send a link instead of typing prices in voice notes for the tenth time today.`
+                  : flow.description;
+
+              return (
               <InView
                 key={flow.id}
                 as="article"
@@ -160,7 +244,7 @@ export default function LandingPage() {
                 }`}
                 delay={80}
               >
-                <div>
+                <div className="lp-workflow-copy">
                   <p className="lp-workflow-label">
                     <LandingIcon name={flow.icon} size="sm" />
                     {flow.step} {flow.label} →
@@ -169,124 +253,52 @@ export default function LandingPage() {
                     {flow.title}
                   </h3>
                   <p className="mt-4 text-sm leading-relaxed lp-text-muted md:text-base">
-                    {flow.description}
+                    {description}
                   </p>
-                  <ul className="mt-6 space-y-2">
-                    {flow.bullets.map((bullet) => (
-                      <li key={bullet} className="flex items-center gap-2.5 text-sm lp-text-muted">
-                        <span className="lp-bullet">
-                          <LandingIcon name="check" size="sm" />
+                  <ul className="lp-feature-list">
+                    {bullets.map((bullet) => (
+                      <li key={bullet} className="lp-feature-list__item">
+                        <span className="lp-feature-list__check" aria-hidden>
+                          <svg viewBox="0 0 24 16" fill="none">
+                            <path
+                              d="M1.5 8.2l3.4 3.4L12.2 3"
+                              stroke="currentColor"
+                              strokeWidth="2.4"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M8.2 8.2l3.4 3.4L19.8 3"
+                              stroke="currentColor"
+                              strokeWidth="2.4"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
                         </span>
-                        {bullet}
+                        <span className="lp-feature-list__text">{bullet}</span>
                       </li>
                     ))}
                   </ul>
-                </div>
+            </div>
                 <WorkflowVisual id={flow.id} />
               </InView>
-            ))}
+              );
+            })}
           </section>
 
-          <InView
-            as="section"
-            className="mx-auto mt-28 max-w-5xl rounded-3xl border px-6 py-12 md:px-10 lp-border lp-panel"
-          >
-            <h2 className="text-center text-2xl font-semibold lp-text md:text-3xl">{c.problems.title}</h2>
-            <p className="mx-auto mt-4 max-w-3xl text-center text-sm leading-relaxed lp-text-muted md:text-base">
-              {c.problems.intro}
-            </p>
-            <div className="mt-10 grid gap-4 md:grid-cols-2">
-              {c.problems.items.map((item, i) => (
-                <InView key={item.title} as="article" className="lp-surface rounded-2xl border p-5" delay={i * 70}>
-                  <span className="lp-section-icon">
-                    <LandingIcon name={item.icon} />
-                  </span>
-                  <h3 className="text-base font-semibold lp-text">{item.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed lp-text-muted">{item.description}</p>
-                </InView>
-              ))}
-            </div>
-          </InView>
-
-          <InView className="mx-auto mt-20 max-w-3xl text-center">
-            <h2 className="text-2xl font-semibold lp-text md:text-3xl">{c.solution.title}</h2>
-            <p className="mt-5 text-sm leading-relaxed lp-text-muted md:text-base">{c.solution.body}</p>
-            <p
-              className="mt-6 rounded-2xl border px-5 py-4 text-sm font-medium"
-              style={{
-                background: "var(--lp-highlight-bg)",
-                borderColor: "var(--lp-highlight-border)",
-                color: "var(--lp-highlight-text)",
-              }}
-            >
-              {c.solution.highlight}
-            </p>
-          </InView>
-
-          <section id="features" className="mx-auto mt-24 max-w-5xl scroll-mt-28">
-            <InView className="text-center">
-              <h2 className="text-2xl font-semibold lp-text md:text-3xl">{c.features.title}</h2>
-              <p className="mx-auto mt-4 max-w-2xl text-sm lp-text-muted md:text-base">{c.features.subtitle}</p>
-            </InView>
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {c.features.items.map((feature, i) => (
-                <InView key={feature.title} as="article" className="lp-panel rounded-2xl p-5" delay={(i % 3) * 80}>
-                  <span className="lp-section-icon">
-                    <LandingIcon name={feature.icon} />
-                  </span>
-                  <h3 className="text-base font-semibold lp-text">{feature.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed lp-text-muted">{feature.description}</p>
-                  <p className="lp-benefit mt-3">
-                    <LandingIcon name="check" size="sm" />
-                    {feature.benefit}
-                  </p>
-                </InView>
-              ))}
-            </div>
-          </section>
-
-          <section id="how-it-works" className="mx-auto mt-24 max-w-4xl scroll-mt-28">
-            <InView className="text-center">
-              <h2 className="text-2xl font-semibold lp-text md:text-3xl">{c.howItWorks.title}</h2>
-            </InView>
-            <ol className="mt-10 space-y-4">
-              {c.howItWorks.steps.map((step, i) => (
-                <InView key={step.step} as="li" className="flex gap-5 rounded-2xl border p-5 lp-border lp-surface" delay={i * 90}>
-                  <span className="lp-icon-box lp-icon-box--md shrink-0">
-                    <LandingIcon name={step.icon} />
-                  </span>
-                  <div>
-                    <p className="text-[11px] font-mono font-semibold lp-accent">{step.step}</p>
-                    <h3 className="mt-1 text-base font-semibold lp-text">{step.title}</h3>
-                    <p className="mt-2 text-sm leading-relaxed lp-text-muted">{step.description}</p>
-                  </div>
-                </InView>
-              ))}
-            </ol>
-            <InView className="mt-6 text-center text-sm lp-text-subtle">
-              {c.howItWorks.reassurance}
-            </InView>
-          </section>
-
-          <InView
-            as="section"
-            className="mx-auto mt-20 max-w-3xl rounded-3xl border px-6 py-10 text-center md:px-10 lp-border lp-panel"
-          >
-            <h2 className="inline-flex items-center justify-center gap-2 text-xl font-semibold lp-text md:text-2xl">
-              <LandingIcon name="globe" />
-              {c.audience.title}
+          <section id="storefront" className="lp-shop-showcase mx-auto mt-28 max-w-5xl scroll-mt-28">
+            <InView className="mx-auto max-w-2xl text-center">
+              <h2 className="text-3xl font-semibold tracking-tight lp-text md:text-4xl">
+                {c.storefront.title}
             </h2>
-            <ul className="lp-audience-list">
-              {c.audience.items.map((item, i) => (
-                <InView key={item} as="li" className="lp-audience-item" delay={i * 50}>
-                  <span className="lp-audience-item__icon" aria-hidden>
-                    <LandingIcon name="check" size="sm" />
-                  </span>
-                  <span className="lp-audience-item__text">{item}</span>
-                </InView>
-              ))}
-            </ul>
-          </InView>
+              <p className="mt-4 text-base lp-text-muted">{c.storefront.body}</p>
+              <ShopUrlPill />
+            </InView>
+            <InView className="mt-10" delay={80}>
+              <StorefrontPreview />
+            </InView>
+          </section>
 
           <section id="faq" className="mx-auto mt-20 max-w-3xl scroll-mt-28">
             <InView className="mb-8 text-center">
@@ -298,7 +310,7 @@ export default function LandingPage() {
             <div className="space-y-3">
               {c.faq.map((item, i) => (
                 <InView key={item.question} delay={i * 60}>
-                  <details className="group rounded-2xl border px-5 py-4 lp-border lp-panel">
+                  <details className="group rounded-2xl border lp-border lp-panel lp-faq-item">
                     <summary className="flex cursor-pointer list-none items-center gap-3 text-sm font-medium lp-text marker:content-none">
                       <LandingIcon name="help" size="sm"/>
                       <span className="flex-1">{item.question}</span>
@@ -312,7 +324,7 @@ export default function LandingPage() {
 
           <InView
             as="section"
-            className="mx-auto mt-24 max-w-3xl rounded-3xl border px-6 py-14 text-center md:px-12 lp-border"
+            className="lp-offer mx-auto mt-24 max-w-3xl rounded-3xl border text-center lp-border"
             style={{ background: "var(--lp-cta-gradient)" }}
           >
             <h2 className="text-3xl font-semibold tracking-tight lp-text">{c.offer.title}</h2>

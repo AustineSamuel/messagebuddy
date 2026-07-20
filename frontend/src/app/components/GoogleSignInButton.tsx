@@ -2,6 +2,7 @@
 
 import { signInWithPopup } from "firebase/auth";
 import { getErrorMessage } from "../lib/api";
+import { isFirebaseAuthCancellation } from "../lib/firebase-auth-error";
 import { getFirebaseAuth, googleAuthProvider } from "../lib/firebase";
 import { loginWithFirebaseIdToken } from "../services/auth";
 
@@ -32,7 +33,10 @@ export function GoogleSignInButton({
       await loginWithFirebaseIdToken(idToken);
       onSuccess?.();
     } catch (e: unknown) {
-      onError?.(getErrorMessage(e, "Google sign-in failed. Please try again."));
+      if (isFirebaseAuthCancellation(e)) return;
+      onError?.(
+        getErrorMessage(e, "We couldn't sign you in with Google. Please try again.")
+      );
     }
   }
 

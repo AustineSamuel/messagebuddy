@@ -1,3 +1,5 @@
+import { getFirebaseAuthErrorMessage } from "./firebase-auth-error";
+
 type ValidationError = { message?: string; field?: string };
 type ErrorPayload = {
   error?: unknown;
@@ -88,6 +90,8 @@ export function getErrorMessage(
   err: unknown,
   fallback = "Something went wrong. Please try again."
 ): string {
+  const firebaseMessage = getFirebaseAuthErrorMessage(err, fallback);
+  if (firebaseMessage) return firebaseMessage;
   if (err instanceof ApiError) return err.message;
   if (err instanceof Error && err.message.trim()) return err.message;
   return fallback;
