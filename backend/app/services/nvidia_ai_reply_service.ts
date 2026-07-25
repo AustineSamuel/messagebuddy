@@ -11,6 +11,8 @@ import {
   type GenerateDraftInput,
   type GenerateFollowUpInput,
   type GenerateReplyInput,
+  type GenerateLeadStrategyInput,
+  type LeadStrategy,
 } from '#services/ai_reply_shared'
 
 export type {
@@ -48,7 +50,7 @@ export default class NvidiaAiReplyService {
       const response = await fetch(`${baseUrl}/chat/completions`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${apiKey}`,
+          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -118,11 +120,7 @@ export default class NvidiaAiReplyService {
 
   static async generateFollowUpMessage(input: GenerateFollowUpInput): Promise<string | null> {
     const intervalLabel =
-      input.interval === 'daily'
-        ? 'daily'
-        : input.interval === 'weekly'
-          ? 'weekly'
-          : 'every 3 days'
+      input.interval === 'daily' ? 'daily' : input.interval === 'weekly' ? 'weekly' : 'every 3 days'
 
     const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
       { role: 'system', content: buildSystemContent(FOLLOW_UP_SYSTEM_PROMPT, input) },
@@ -146,5 +144,28 @@ export default class NvidiaAiReplyService {
     ]
 
     return this.completeChat(messages)
+  }
+
+  static async generateLeadStrategy(
+    input: GenerateLeadStrategyInput
+  ): Promise<LeadStrategy | null> {
+    const raw = await this.completeChat([
+      {
+        role: 'system',
+        content:
+          'You are a senior software consultant. Analyze only the supplied evidence and return strict JSON with keys summary, title, problem, solution, value, platform. platform must be web, mobile, desktop, website, or hybrid. No markdown.',
+      },
+      { role: 'user', content: JSON.stringify(input) },
+    ])
+    if (!raw) return null
+    try {
+      const value = JSON.parse(raw.replace(/^```json\s*|```$/g, '').trim()) as LeadStrategy
+      if (!['web', 'mobile', 'desktop', 'website', 'hybrid'].includes(value.platform)) return null
+      if (!value.summary || !value.title || !value.problem || !value.solution || !value.value)
+        return null
+      return value
+    } catch {
+      return null
+    }
   }
 }

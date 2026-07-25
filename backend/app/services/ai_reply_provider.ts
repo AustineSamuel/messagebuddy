@@ -6,6 +6,8 @@ import type {
   GenerateDraftInput,
   GenerateFollowUpInput,
   GenerateReplyInput,
+  GenerateLeadStrategyInput,
+  LeadStrategy,
 } from '#services/ai_reply_shared'
 
 export type {
@@ -23,6 +25,7 @@ type ReplyServiceContract = {
   generateDraftReply(input: GenerateDraftInput): Promise<string | null>
   generateFollowUpMessage(input: GenerateFollowUpInput): Promise<string | null>
   generateContactSummary(input: GenerateContactSummaryInput): Promise<string | null>
+  generateLeadStrategy(input: GenerateLeadStrategyInput): Promise<LeadStrategy | null>
 }
 
 function activeService(): ReplyServiceContract {
@@ -50,5 +53,9 @@ export default class AiReplyProvider {
 
   static generateContactSummary(input: GenerateContactSummaryInput) {
     return activeService().generateContactSummary(input)
+  }
+
+  static generateLeadStrategy(input: GenerateLeadStrategyInput) {
+    return activeService().generateLeadStrategy(input)
   }
 }

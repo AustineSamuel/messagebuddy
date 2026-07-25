@@ -26,6 +26,7 @@ export default await Env.create(new URL('../', import.meta.url), {
   APP_KEY: Env.schema.secret(),
   APP_URL: Env.schema.string({ format: 'url', tld: false }),
   FRONTEND_URL: Env.schema.string.optional({ format: 'url', tld: false }),
+  LEAD_OUTREACH_ENABLED: Env.schema.boolean.optional(),
 
   // Database (Lucid + `pg`; omit to use SQLite from config/database.ts)
   DATABASE_URL: Env.schema.string(),

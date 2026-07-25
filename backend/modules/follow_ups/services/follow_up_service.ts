@@ -46,6 +46,33 @@ export function computeNextRunAt(interval: FollowUpInterval, from: DateTime = Da
 }
 
 export default class FollowUpService {
+  static async ensureForChat(
+    userId: number,
+    chatId: string,
+    interval: FollowUpInterval = 'every_3_days'
+  ) {
+    const existing = await FollowUpSchedule.query()
+      .where('user_id', userId)
+      .where('chat_id', chatId)
+      .first()
+    if (existing) {
+      existing.interval = interval
+      existing.enabled = true
+      existing.nextRunAt = existing.nextRunAt ?? computeNextRunAt(interval)
+      await existing.save()
+      return serializeRow(existing)
+    }
+    return serializeRow(
+      await FollowUpSchedule.create({
+        userId,
+        chatId,
+        interval,
+        enabled: true,
+        nextRunAt: computeNextRunAt(interval),
+      })
+    )
+  }
+
   static async listForUser(userId: number) {
     const rows = await FollowUpSchedule.query()
       .where('user_id', userId)

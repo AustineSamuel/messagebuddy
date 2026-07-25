@@ -8,6 +8,7 @@ import ProductReplyEnricher from '#services/product_reply_enricher'
 import CreditsService, { InsufficientCreditsError } from '#services/credits_service'
 import { buildConversationHistory, messageBodyFromWweb } from '../helpers/conversation_history.js'
 import { resolveChatDisplayName, serializeId } from '../helpers/serialization.js'
+import LeadOutreachService from '../../lead_outreach/services/lead_outreach_service.js'
 
 const HISTORY_LIMIT = 30
 const PROCESSED_TTL_MS = 60 * 60 * 1000
@@ -68,6 +69,13 @@ export default class WhatsAppAutoReplyService {
     try {
       const chat = await message.getChat()
       const chatId = serializeId(chat.id)
+      await LeadOutreachService.recordIncoming(
+        chatId,
+        messageId,
+        messageBodyFromWweb(message)
+      ).catch((error) => {
+        logger.warn({ err: error, chatId }, 'Could not record lead response')
+      })
       const lockKey = chatLockKey(userId, chatId)
 
       if (inFlightChats.has(lockKey)) return

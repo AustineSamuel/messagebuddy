@@ -8,7 +8,9 @@ import {
   type BusinessAiContext,
   type ResolveAiContextInput,
 } from '#services/ai_context_resolver'
-import ProductsService, { type AiProduct } from '../../modules/products/services/products_service.js'
+import ProductsService, {
+  type AiProduct,
+} from '../../modules/products/services/products_service.js'
 
 export type ConversationTurn = {
   role: 'user' | 'assistant'
@@ -48,6 +50,23 @@ export type GenerateDraftInput = AiPromptInput & {
 
 export type GenerateFollowUpInput = GenerateDraftInput & {
   interval: 'daily' | 'weekly' | 'every_3_days'
+}
+
+export type GenerateLeadStrategyInput = {
+  businessName: string
+  category: string | null
+  website: string
+  pageTitle: string
+  pageText: string
+}
+
+export type LeadStrategy = {
+  summary: string
+  title: string
+  problem: string
+  solution: string
+  value: string
+  platform: 'web' | 'mobile' | 'desktop' | 'website' | 'hybrid'
 }
 
 export const SYSTEM_PROMPT = `You are a helpful business assistant replying on WhatsApp on behalf of the business described below.
