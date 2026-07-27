@@ -1,5 +1,13 @@
-import app from '@adonisjs/core/services/app'
 import { defineConfig } from '@adonisjs/cors'
+import env from '#start/env'
+
+const configuredFrontendOrigin = env.get('FRONTEND_URL')?.replace(/\/$/, '')
+const frontendOrigins = [
+  'https://chatbusiness-teal.vercel.app',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  ...(configuredFrontendOrigin ? [configuredFrontendOrigin] : []),
+]
 
 /**
  * Configuration options to tweak the CORS policy. The following
@@ -14,11 +22,10 @@ const corsConfig = defineConfig({
   enabled: true,
 
   /**
-   * In development, allow every origin to simplify local front/backend setup.
-   * In production, keep an explicit allowlist (empty by default, so no
-   * cross-origin browser access is allowed until configured).
+   * Keep browser access restricted to the deployed frontend and local
+   * Next.js development origins.
    */
-  origin: app.inDev ? true : ['https://messagebuddy-1.onrender.com'],
+  origin: frontendOrigins,
 
   /**
    * HTTP methods accepted for cross-origin requests.
