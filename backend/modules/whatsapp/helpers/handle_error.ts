@@ -15,6 +15,15 @@ function errorStatus(error: unknown, message: string) {
   ) {
     return 504
   }
+  if (
+    message.includes('Execution context') ||
+    message.includes('Protocol error') ||
+    message.includes('Target closed') ||
+    message.includes('Session closed') ||
+    message.includes('Evaluation failed')
+  ) {
+    return 503
+  }
   return 400
 }
 

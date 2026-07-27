@@ -64,13 +64,13 @@ export function isAudioMessageType(type?: string) {
 }
 
 /** Resolve display title per wwebjs Chat + Contact APIs (formattedTitle is often empty for DMs). */
-export async function resolveChatDisplayName(chat: Chat, chatId: string) {
+export async function resolveChatDisplayName(chat: Chat, chatId: string, resolvedContact?: Contact | null) {
   const title = chat.name?.trim()
   if (title) return title
 
   if (!chat.isGroup) {
     try {
-      const contact = await chat.getContact()
+      const contact = resolvedContact ?? (await chat.getContact())
       const fromContact =
         contact.name?.trim() ||
         contact.pushname?.trim() ||
@@ -189,14 +189,25 @@ export function serializeChat(chat: Chat) {
   }
 }
 
-export async function serializeChatForApi(chat: Chat) {
+export async function serializeChatForApi(
+  chat: Chat,
+  enrichment?: { contact?: Contact | null; phone?: string | null; profilePicUrl?: string | null }
+) {
   const base = serializeChat(chat)
-  const name = await resolveChatDisplayName(chat, base.id)
-  return { ...base, name }
+  const name = await resolveChatDisplayName(chat, base.id, enrichment?.contact)
+  return {
+    ...base,
+    name,
+    phone: enrichment?.phone ?? null,
+    profilePicUrl: enrichment?.profilePicUrl ?? null,
+  }
 }
 
-export async function serializeGroupChat(group: Chat) {
-  const base = await serializeChatForApi(group)
+export async function serializeGroupChat(
+  group: Chat,
+  enrichment?: { profilePicUrl?: string | null }
+) {
+  const base = await serializeChatForApi(group, enrichment)
   const g = group as Chat & {
     description?: string
     owner?: unknown

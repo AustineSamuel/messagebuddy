@@ -1,4 +1,4 @@
-import type { Client } from 'whatsapp-web.js'
+import type { Chat, Client } from 'whatsapp-web.js'
 import { MessageMedia } from '../lib/wwebjs.js'
 import type WAWebJS from 'whatsapp-web.js'
 import whatsAppClientManager from './whatsapp_client_manager.js'
@@ -81,8 +81,90 @@ export default class WhatsAppService {
 
   static async getChats(userId: number) {
     const client = await whatsAppClientManager.getReadyClient(userId)
-    const chats = await client.getChats()
-    return Promise.all(chats.map((c) => (c.isGroup ? serializeGroupChat(c) : serializeChatForApi(c))))
+    const chats = await this.getChatsWithRetry(client)
+    const directChatIds = chats.filter((chat) => !chat.isGroup).map((chat) => serializeId(chat.id))
+    const phoneByChatId = await this.resolvePhoneIds(client, directChatIds)
+
+    return this.mapWithConcurrency(chats, 24, async (chat) => {
+      const chatId = serializeId(chat.id)
+      const [contact, profilePicUrl] = await Promise.all([
+        chat.isGroup
+          ? Promise.resolve(null)
+          : this.bestEffort(chat.getContact(), 2_500),
+        this.bestEffort(client.getProfilePicUrl(chatId), 2_500),
+      ])
+
+      if (chat.isGroup) return serializeGroupChat(chat, { profilePicUrl })
+
+      const phone =
+        phoneByChatId.get(chatId) ??
+        (contact && contact.id.server !== 'lid' ? contact.number?.trim() : null) ??
+        (chatId.endsWith('@c.us') ? chatId.split('@')[0] : null)
+
+      return serializeChatForApi(chat, { contact, phone, profilePicUrl })
+    })
+  }
+
+  private static async getChatsWithRetry(client: Client): Promise<Chat[]> {
+    try {
+      return await client.getChats()
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      return client.getChats()
+    }
+  }
+
+  private static async resolvePhoneIds(client: Client, chatIds: string[]) {
+    const phoneByChatId = new Map<string, string>()
+    if (chatIds.length === 0) return phoneByChatId
+
+    const resolved = await client.getContactLidAndPhone(chatIds).catch(() => [])
+    for (const item of resolved) {
+      if (!item.lid || !item.pn) continue
+      const phone = item.pn.split('@')[0]?.trim()
+      if (phone) {
+        phoneByChatId.set(item.lid, phone)
+        phoneByChatId.set(item.pn, phone)
+      }
+    }
+    return phoneByChatId
+  }
+
+  private static async bestEffort<T>(operation: Promise<T>, timeoutMs: number): Promise<T | null> {
+    let timeout: ReturnType<typeof setTimeout> | undefined
+    try {
+      return await Promise.race([
+        operation,
+        new Promise<null>((resolve) => {
+          timeout = setTimeout(() => resolve(null), timeoutMs)
+        }),
+      ])
+    } catch {
+      return null
+    } finally {
+      if (timeout) clearTimeout(timeout)
+    }
+  }
+
+  private static async mapWithConcurrency<T, R>(
+    values: T[],
+    concurrency: number,
+    mapper: (value: T) => Promise<R>
+  ): Promise<R[]> {
+    const results = new Array<R>(values.length)
+    let nextIndex = 0
+
+    async function worker() {
+      while (nextIndex < values.length) {
+        const index = nextIndex++
+        results[index] = await mapper(values[index]!)
+      }
+    }
+
+    await Promise.all(
+      Array.from({ length: Math.min(concurrency, values.length) }, () => worker())
+    )
+    return results
   }
 
   static async getChatById(userId: number, chatId: string) {
@@ -563,7 +645,7 @@ export default class WhatsAppService {
     const client = await whatsAppClientManager.getReadyClient(userId)
     const groupIds = await client.getCommonGroups(contactId)
     const groups = await Promise.all(groupIds.map((id) => client.getChatById(serializeId(id))))
-    return Promise.all(groups.map(serializeGroupChat))
+    return Promise.all(groups.map((group) => serializeGroupChat(group)))
   }
 
   static async getContactAbout(userId: number, contactId: string) {
