@@ -8,7 +8,6 @@ const frontendOrigins = [
   'http://127.0.0.1:3000',
   ...(configuredFrontendOrigin ? [configuredFrontendOrigin] : []),
 ]
-
 /**
  * Configuration options to tweak the CORS policy. The following
  * options are documented on the official documentation website.
