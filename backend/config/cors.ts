@@ -1,6 +1,5 @@
 import { defineConfig } from '@adonisjs/cors'
 import env from '#start/env'
-
 const configuredFrontendOrigin = env.get('FRONTEND_URL')?.replace(/\/$/, '')
 const frontendOrigins = [
   'https://chatbusiness-teal.vercel.app',
