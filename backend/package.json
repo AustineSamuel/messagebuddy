@@ -10,7 +10,7 @@
   },
   "scripts": {
     "start": "node bin/server.js",
-    "build": "node scripts/ensure-puppeteer-chrome.mjs && node ace build && node scripts/copy-puppeteer-cache.mjs",
+    "build": "node ace build",
     "ensure:chrome": "node scripts/ensure-puppeteer-chrome.mjs",
     "dev": "node ace serve --hmr",
     "migrate": "node ace migration:run --disable-locks",
