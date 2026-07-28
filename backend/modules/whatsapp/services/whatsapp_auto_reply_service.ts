@@ -50,7 +50,9 @@ export default class WhatsAppAutoReplyService {
     ;(client as Client & { __autoReplyListener?: boolean }).__autoReplyListener = true
 
     client.on('message', (message) => {
-      void this.handleIncomingMessage(userId, message)
+      void this.handleIncomingMessage(userId, message).catch((error) => {
+        logger.error({ err: error, userId }, 'Unhandled WhatsApp auto-reply event failure')
+      })
     })
 
     logger.info({ userId }, 'WhatsApp AI auto-reply listener attached')
@@ -158,6 +160,11 @@ export default class WhatsAppAutoReplyService {
       } finally {
         inFlightChats.delete(lockKey)
       }
+    } catch (error) {
+      logger.warn(
+        { err: error, userId, messageId },
+        'Incoming WhatsApp message could not be resolved to a chat'
+      )
     } finally {
       inFlightMessages.delete(messageId)
     }

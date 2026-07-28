@@ -5,12 +5,13 @@ import React from "react";
 /* ── Avatar ── */
 interface AvatarProps {
   initials: string;
+  imageUrl?: string;
   color?: string;
   size?: number;
   online?: boolean;
   className?: string;
 }
-export function Avatar({ initials, color = "#1e2d44", size = 40, online, className = "" }: AvatarProps) {
+export function Avatar({ initials, imageUrl, color = "#1e2d44", size = 40, online, className = "" }: AvatarProps) {
   return (
     <div className={`relative flex-shrink-0 ${className}`} style={{ width: size, height: size }}>
       <div
@@ -23,7 +24,14 @@ export function Avatar({ initials, color = "#1e2d44", size = 40, online, classNa
           color: "var(--text-0)",
         }}
       >
-        {initials}
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt=""
+            referrerPolicy="no-referrer"
+            className="h-full w-full rounded-full object-cover"
+          />
+        ) : initials}
       </div>
       {online !== undefined && (
         <div

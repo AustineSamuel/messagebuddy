@@ -4,6 +4,7 @@ type ValidationError = { message?: string; field?: string };
 type ErrorPayload = {
   error?: unknown;
   message?: unknown;
+  code?: unknown;
   errors?: ValidationError[];
 };
 
@@ -16,7 +17,22 @@ const STATUS_MESSAGES: Record<number, string> = {
   422: "Please check your input and try again.",
   429: "Too many requests. Please wait a moment and try again.",
   500: "Something went wrong on our side. Please try again.",
+  502: "The server received an invalid response. Please try again.",
   503: "The service is temporarily unavailable. Please try again.",
+  504: "The service took too long to respond. Please try again.",
+};
+
+const CODE_MESSAGES: Record<string, string> = {
+  WHATSAPP_NOT_CONNECTED:
+    "WhatsApp is not connected yet. Connect your account and try again.",
+  WHATSAPP_UNAVAILABLE:
+    "WhatsApp is temporarily unavailable. Please wait a moment and try again.",
+  WHATSAPP_TIMEOUT:
+    "WhatsApp took too long to respond. Please wait a moment and try again.",
+  WHATSAPP_CONNECTION_INTERRUPTED:
+    "The WhatsApp connection was interrupted. Refresh the connection and try again.",
+  WHATSAPP_REQUEST_FAILED:
+    "We couldn't complete that WhatsApp request. Please try again.",
 };
 
 export class ApiError extends Error {
@@ -36,6 +52,9 @@ function readString(value: unknown): string | null {
 }
 
 function messageFromPayload(body: ErrorPayload): string | null {
+  const code = readString(body.code);
+  if (code && CODE_MESSAGES[code]) return CODE_MESSAGES[code];
+
   if (Array.isArray(body.errors) && body.errors.length > 0) {
     const messages = body.errors
       .map((entry) => readString(entry.message))

@@ -6,6 +6,7 @@ export interface Contact {
   phone: string;
   initials: string;
   avatarColor: string;
+  avatarUrl?: string;
   online: boolean;
   rule: ContactRule;
   unreadCount: number;

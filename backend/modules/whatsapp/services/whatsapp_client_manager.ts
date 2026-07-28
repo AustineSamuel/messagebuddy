@@ -7,6 +7,7 @@ import { Client as WWebClient, LocalAuth, WAState } from '../lib/wwebjs.js'
 import type { Client, WAState as WAStateType } from 'whatsapp-web.js'
 import WhatsAppAutoReplyService from './whatsapp_auto_reply_service.js'
 import WhatsAppRealtimeService from './whatsapp_realtime_service.js'
+import WhatsAppRealtimeHub from './whatsapp_realtime_hub.js'
 
 export type WhatsAppSessionStatus =
   | 'disconnected'
@@ -56,8 +57,10 @@ const initStartedAt = new Map<number, number>()
 const readyCheckTimers = new Map<number, ReturnType<typeof setInterval>>()
 const qrWaitTimers = new Map<number, ReturnType<typeof setTimeout>>()
 const restoreBlockedUntil = new Map<number, number>()
+const freshQrRetryUsers = new Set<number>()
 
 const STALE_INIT_MS = Number(process.env.WHATSAPP_STALE_INIT_MS ?? 120_000)
+const QR_WAIT_TIMEOUT_MS = app.inProduction ? STALE_INIT_MS : Math.min(STALE_INIT_MS, 45_000)
 const READY_CHECK_INTERVAL_MS = 3_000
 
 function createSession(): WhatsAppSession {
@@ -71,24 +74,30 @@ function createSession(): WhatsAppSession {
   }
 }
 
+function broadcastSession(userId: number, session: WhatsAppSession) {
+  WhatsAppRealtimeHub.broadcast(userId, {
+    type: 'session:update',
+    session: {
+      status: session.status,
+      qr: session.qr,
+      pairingCode: session.pairingCode,
+      lastError: session.lastError,
+      loadingPercent: session.loadingPercent,
+    },
+  })
+}
+
 function sessionDir(userId: number) {
   return path.join(AUTH_DATA_PATH, `session-${userId}`)
 }
 
-/** True only after a successful link — not on a failed first-time browser launch. */
+/** LocalAuth stores each client's persistent browser profile directly under dataPath. */
 function hasAuthenticatedPersistedSession(userId: number) {
-  return existsSync(path.join(AUTH_DATA_PATH, '.wwebjs_auth', `session-${userId}`))
+  return existsSync(sessionDir(userId))
 }
 
 function clearPersistedAuth(userId: number) {
-  const authDir = path.join(AUTH_DATA_PATH, '.wwebjs_auth', `session-${userId}`)
   const profileDir = sessionDir(userId)
-
-  try {
-    if (existsSync(authDir)) rmSync(authDir, { recursive: true, force: true })
-  } catch {
-    // best-effort
-  }
 
   try {
     if (existsSync(profileDir)) rmSync(profileDir, { recursive: true, force: true })
@@ -205,6 +214,11 @@ function resolveChromeExecutable(): string | undefined {
 
   const candidates = [
     CHROME_EXECUTABLE,
+    '/Applications/Chromium.app/Contents/MacOS/Chromium',
+    '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary',
+    '/opt/homebrew/bin/chromium',
+    '/usr/local/bin/chromium',
+    '/usr/bin/google-chrome',
     '/usr/bin/chromium',
     '/usr/bin/chromium-browser',
     '/snap/bin/chromium',
@@ -240,7 +254,7 @@ function chromeNotFoundMessage(): string {
 }
 
 function buildPuppeteerOptions() {
-  const singleProcess = process.env.WHATSAPP_PUPPETEER_SINGLE_PROCESS !== 'false'
+  const singleProcess = process.env.WHATSAPP_PUPPETEER_SINGLE_PROCESS === 'true'
   const args = [
     '--no-sandbox',
     '--disable-setuid-sandbox',
@@ -355,13 +369,30 @@ function scheduleQrWaitTimeout(userId: number) {
 
     if (!waitingForQr) return
 
-    void forceResetStuckSession(
-      userId,
-      'QR code did not appear. The server may need Chromium and at least 1GB RAM. Tap Stop and try again.'
-    )
-  }, STALE_INIT_MS)
+    void recoverMissingQr(userId)
+  }, QR_WAIT_TIMEOUT_MS)
 
   qrWaitTimers.set(userId, timer)
+}
+
+async function recoverMissingQr(userId: number) {
+  if (freshQrRetryUsers.has(userId)) {
+    freshQrRetryUsers.delete(userId)
+    await forceResetStuckSession(
+      userId,
+      'WhatsApp Web did not finish restoring the session after retrying.'
+    )
+    return
+  }
+
+  freshQrRetryUsers.add(userId)
+  await forceResetStuckSession(
+    userId,
+    'WhatsApp Web did not finish restoring the session. Retrying without removing saved authentication.'
+  )
+  restoreBlockedUntil.delete(userId)
+  await sleep(500)
+  void whatsAppClientManager.initialize(userId)
 }
 
 function clearReadyCheck(userId: number) {
@@ -394,6 +425,7 @@ async function promoteToReadyIfPossible(
     clearReadyCheck(userId)
     attachAutoReplyListener(userId, client)
     notifyReadyWaiters(userId, client)
+    broadcastSession(userId, session)
     return true
   } catch {
     return false
@@ -451,6 +483,7 @@ async function forceResetStuckSession(userId: number, message: string) {
   session.loadingPercent = null
   session.client = null
   rejectReadyWaiters(userId)
+  broadcastSession(userId, session)
 }
 
 function attachAutoReplyListener(userId: number, client: Client) {
@@ -460,26 +493,32 @@ function attachAutoReplyListener(userId: number, client: Client) {
 
 function attachClientEvents(userId: number, session: WhatsAppSession, client: Client) {
   client.on('qr', (qr) => {
+    freshQrRetryUsers.delete(userId)
     session.qr = qr
     session.pairingCode = null
     session.status = 'qr'
     clearQrWait(userId)
+    broadcastSession(userId, session)
   })
 
   client.on('code', (code) => {
+    freshQrRetryUsers.delete(userId)
     session.pairingCode = code
     session.qr = null
     session.status = 'qr'
     clearQrWait(userId)
+    broadcastSession(userId, session)
   })
 
   client.on('authenticated', () => {
     session.status = 'authenticated'
     session.qr = null
     scheduleReadyCheck(userId, session, client)
+    broadcastSession(userId, session)
   })
 
   client.on('ready', () => {
+    freshQrRetryUsers.delete(userId)
     session.status = 'ready'
     session.qr = null
     session.pairingCode = null
@@ -489,12 +528,14 @@ function attachClientEvents(userId: number, session: WhatsAppSession, client: Cl
     clearQrWait(userId)
     attachAutoReplyListener(userId, client)
     notifyReadyWaiters(userId, client)
+    broadcastSession(userId, session)
   })
 
   client.on('auth_failure', (message) => {
     session.status = 'auth_failure'
     session.lastError = message
     rejectReadyWaiters(userId)
+    broadcastSession(userId, session)
   })
 
   client.on('disconnected', (reason) => {
@@ -505,6 +546,7 @@ function attachClientEvents(userId: number, session: WhatsAppSession, client: Cl
     session.loadingPercent = null
     session.client = null
     rejectReadyWaiters(userId)
+    broadcastSession(userId, session)
   })
 
   client.on('loading_screen', (percent) => {
@@ -519,12 +561,14 @@ function attachClientEvents(userId: number, session: WhatsAppSession, client: Cl
     if (Number(percent) >= 90) {
       scheduleReadyCheck(userId, session, client)
     }
+    broadcastSession(userId, session)
   })
 
   client.on('change_state', (state: WAStateType) => {
     if (state === WAState.CONNECTED && session.status !== 'ready') {
       session.status = 'authenticated'
       void promoteToReadyIfPossible(userId, session, client)
+      broadcastSession(userId, session)
     }
 
     if (
@@ -534,6 +578,7 @@ function attachClientEvents(userId: number, session: WhatsAppSession, client: Cl
     ) {
       if (!session.qr && !session.pairingCode) {
         session.status = 'qr'
+        broadcastSession(userId, session)
       }
     }
   })
@@ -542,8 +587,8 @@ function attachClientEvents(userId: number, session: WhatsAppSession, client: Cl
 async function launchClient(userId: number, session: WhatsAppSession, retryOnLock = true) {
   clearStaleBrowserProfileLocks(userId)
 
-  const puppeteerOptions = buildPuppeteerOptions()
-  if (!puppeteerOptions.executablePath) {
+  const productionPuppeteerOptions = app.inProduction ? buildPuppeteerOptions() : undefined
+  if (app.inProduction && !productionPuppeteerOptions?.executablePath) {
     requireChromeExecutable()
   }
 
@@ -552,7 +597,7 @@ async function launchClient(userId: number, session: WhatsAppSession, retryOnLoc
       clientId: String(userId),
       dataPath: AUTH_DATA_PATH,
     }),
-    puppeteer: puppeteerOptions,
+    ...(productionPuppeteerOptions ? { puppeteer: productionPuppeteerOptions } : {}),
     takeoverOnConflict: true,
   })
 
@@ -605,7 +650,7 @@ class WhatsAppClientManager {
     void forceResetStuckSession(
       userId,
       waitingForQr
-        ? 'QR code did not appear in time. Ensure Chromium is installed with at least 1GB RAM, then try again.'
+        ? 'WhatsApp Web did not generate a QR code before initialization timed out.'
         : session.lastError ??
             'WhatsApp startup timed out. Install Chromium on the server and try again.'
     )
@@ -695,6 +740,7 @@ class WhatsAppClientManager {
     session.loadingPercent = null
     initStartedAt.set(userId, Date.now())
     scheduleQrWaitTimeout(userId)
+    broadcastSession(userId, session)
 
     try {
       await launchClient(userId, session)
@@ -706,6 +752,7 @@ class WhatsAppClientManager {
       session.client = null
       restoreBlockedUntil.set(userId, Date.now() + 60_000)
       rejectReadyWaiters(userId)
+      broadcastSession(userId, session)
     }
 
     return session
@@ -774,18 +821,40 @@ class WhatsAppClientManager {
     clearReadyCheck(userId)
     clearQrWait(userId)
     initStartedAt.delete(userId)
-
-    const inFlight = initPromises.get(userId)
-    if (inFlight) {
-      await inFlight.catch(() => undefined)
-    }
+    freshQrRetryUsers.delete(userId)
     initPromises.delete(userId)
+    launchingUsers.delete(userId)
 
     if (session.client) {
       await session.client.destroy().catch(() => undefined)
     }
 
     clearPersistedAuth(userId)
+    const disconnected = createSession()
+    sessions.set(userId, disconnected)
+    broadcastSession(userId, disconnected)
+  }
+
+  /**
+   * Stop the in-memory client without deleting LocalAuth data.
+   * Used during application shutdown so the next process can restore the session.
+   */
+  private async stop(userId: number) {
+    const session = sessions.get(userId)
+    if (!session) return
+
+    rejectReadyWaiters(userId)
+    clearReadyCheck(userId)
+    clearQrWait(userId)
+    initStartedAt.delete(userId)
+    freshQrRetryUsers.delete(userId)
+    initPromises.delete(userId)
+    launchingUsers.delete(userId)
+
+    if (session.client) {
+      await session.client.destroy().catch(() => undefined)
+    }
+
     sessions.set(userId, createSession())
   }
 
@@ -795,13 +864,10 @@ class WhatsAppClientManager {
     clearReadyCheck(userId)
     clearQrWait(userId)
     initStartedAt.delete(userId)
+    freshQrRetryUsers.delete(userId)
     restoreBlockedUntil.delete(userId)
-
-    const inFlight = initPromises.get(userId)
-    if (inFlight) {
-      await inFlight.catch(() => undefined)
-    }
     initPromises.delete(userId)
+    launchingUsers.delete(userId)
 
     if (session.client) {
       await session.client.logout().catch(() => undefined)
@@ -809,7 +875,9 @@ class WhatsAppClientManager {
     }
 
     clearPersistedAuth(userId)
-    sessions.set(userId, createSession())
+    const disconnected = createSession()
+    sessions.set(userId, disconnected)
+    broadcastSession(userId, disconnected)
   }
 
   async requestPairingCode(userId: number, phoneNumber: string, showNotification = true) {
@@ -831,13 +899,14 @@ class WhatsAppClientManager {
     const code = await client.requestPairingCode(phoneNumber, showNotification)
     session.pairingCode = code
     session.status = 'qr'
+    broadcastSession(userId, session)
     return code
   }
 
   /** Graceful shutdown — call on process exit to release Chrome profiles. */
   async shutdownAll() {
     const userIds = [...sessions.keys()]
-    await Promise.all(userIds.map((userId) => this.destroy(userId)))
+    await Promise.all(userIds.map((userId) => this.stop(userId)))
   }
 }
 

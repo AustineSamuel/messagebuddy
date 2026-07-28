@@ -14,6 +14,8 @@ const AVATAR_COLORS = [
 export type ApiChat = {
   id: string;
   name?: string | null;
+  phone?: string | null;
+  profilePicUrl?: string | null;
   isGroup?: boolean;
   unreadCount?: number;
   timestamp?: number;
@@ -173,6 +175,7 @@ export type ApiWaContact = {
   name?: string | null;
   pushname?: string | null;
   number?: string | null;
+  profilePicUrl?: string | null;
   isMe?: boolean;
   isGroup?: boolean;
 };
@@ -238,7 +241,8 @@ export function chatToContact(chat: ApiChat, rule: ContactRule = "default"): Con
   return {
     id: chat.id,
     name,
-    phone: chat.id.replace(/@.+$/, ""),
+    phone: chat.phone?.trim() || chat.id.replace(/@.+$/, ""),
+    avatarUrl: chat.profilePicUrl || undefined,
     initials: initialsFromName(name),
     avatarColor: avatarColorForId(chat.id),
     online: false,
@@ -264,6 +268,7 @@ export function waContactToContact(contact: ApiWaContact, rule: ContactRule = "d
     phone: contact.number || contact.id.replace(/@.+$/, ""),
     initials: initialsFromName(name),
     avatarColor: avatarColorForId(contact.id),
+    avatarUrl: contact.profilePicUrl || undefined,
     online: false,
     rule,
     unreadCount: 0,

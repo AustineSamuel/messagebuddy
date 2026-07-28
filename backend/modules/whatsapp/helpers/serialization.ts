@@ -87,10 +87,14 @@ export async function resolveChatDisplayName(chat: Chat, chatId: string, resolve
   return idToDisplayName(chatId) || chatId
 }
 
-export function serializeContact(contact: Contact) {
+export function serializeContact(
+  contact: Contact,
+  enrichment?: { number?: string | null; profilePicUrl?: string | null }
+) {
   return {
     id: serializeId(contact.id),
-    number: contact.number,
+    number: enrichment?.number ?? contact.number,
+    profilePicUrl: enrichment?.profilePicUrl ?? null,
     name: contact.name,
     pushname: contact.pushname,
     shortName: contact.shortName,

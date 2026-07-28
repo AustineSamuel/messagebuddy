@@ -53,7 +53,21 @@ export type RealtimeReactionPayload = {
   }>
 }
 
-export type RealtimePayload = RealtimeMessagePayload | RealtimeReactionPayload
+export type RealtimeSessionPayload = {
+  type: 'session:update'
+  session: {
+    status: string
+    qr: string | null
+    pairingCode: string | null
+    lastError: string | null
+    loadingPercent: number | null
+  }
+}
+
+export type RealtimePayload =
+  | RealtimeMessagePayload
+  | RealtimeReactionPayload
+  | RealtimeSessionPayload
 
 const WS_PATH = '/ws'
 

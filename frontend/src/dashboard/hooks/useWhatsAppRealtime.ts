@@ -4,6 +4,7 @@ import { getAuthToken } from "@/app/lib/auth-token";
 import { useEffect, useRef } from "react";
 import type { ApiChat, ApiMessage } from "@/dashboard/lib/whatsapp-mappers";
 import type { MessageReaction } from "@/dashboard/types";
+import type { WhatsAppSession } from "@/whatsappjs-services/session";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:3333";
@@ -22,7 +23,15 @@ export type RealtimeReactionEvent = {
   reactions: MessageReaction[];
 };
 
-export type RealtimeEvent = RealtimeMessageEvent | RealtimeReactionEvent;
+export type RealtimeSessionEvent = {
+  type: "session:update";
+  session: WhatsAppSession;
+};
+
+export type RealtimeEvent =
+  | RealtimeMessageEvent
+  | RealtimeReactionEvent
+  | RealtimeSessionEvent;
 
 function buildWebSocketUrl(token: string) {
   const wsBase = API_BASE.replace(/^http/i, (match) =>
@@ -34,12 +43,16 @@ function buildWebSocketUrl(token: string) {
 export function useWhatsAppRealtime({
   enabled,
   onEvent,
+  onConnectionChange,
 }: {
   enabled: boolean;
   onEvent: (event: RealtimeEvent) => void;
+  onConnectionChange?: (connected: boolean) => void;
 }) {
   const onEventRef = useRef(onEvent);
   onEventRef.current = onEvent;
+  const onConnectionChangeRef = useRef(onConnectionChange);
+  onConnectionChangeRef.current = onConnectionChange;
 
   useEffect(() => {
     if (!enabled) return;
@@ -56,10 +69,16 @@ export function useWhatsAppRealtime({
     function connect() {
       ws = new WebSocket(buildWebSocketUrl(authToken));
 
+      ws.onopen = () => onConnectionChangeRef.current?.(true);
+
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(String(event.data)) as { type?: string };
-          if (data.type === "message:new" || data.type === "message:reaction") {
+          if (
+            data.type === "message:new" ||
+            data.type === "message:reaction" ||
+            data.type === "session:update"
+          ) {
             onEventRef.current(data as RealtimeEvent);
           }
         } catch {
@@ -68,6 +87,7 @@ export function useWhatsAppRealtime({
       };
 
       ws.onclose = () => {
+        onConnectionChangeRef.current?.(false);
         if (!closed) {
           reconnectTimer = setTimeout(connect, 3000);
         }
@@ -78,6 +98,7 @@ export function useWhatsAppRealtime({
 
     return () => {
       closed = true;
+      onConnectionChangeRef.current?.(false);
       if (reconnectTimer) clearTimeout(reconnectTimer);
       ws?.close();
     };

@@ -18,11 +18,15 @@ export default class WhatsAppRealtimeService {
     tagged.__realtimeListener = true
 
     client.on('message_create', (message) => {
-      void this.publishMessage(userId, message)
+      void this.publishMessage(userId, message).catch((error) => {
+        logger.warn({ err: error, userId }, 'Failed to publish WhatsApp realtime message')
+      })
     })
 
     client.on('message_reaction', (reaction) => {
-      void this.publishReaction(userId, client, reaction)
+      void this.publishReaction(userId, client, reaction).catch((error) => {
+        logger.warn({ err: error, userId }, 'Failed to publish WhatsApp reaction update')
+      })
     })
 
     logger.info({ userId }, 'WhatsApp realtime listener attached')
@@ -31,37 +35,34 @@ export default class WhatsAppRealtimeService {
   private static async publishMessage(userId: number, message: Message) {
     if (message.isStatus) return
     if (message.from.includes('@broadcast')) return
+    if (!message.body?.trim() && !message.hasMedia) return
 
-    try {
-      const chat = await message.getChat()
-      const chatId = serializeId(chat.id)
-      const serialized = await serializeMessageForApi(message)
+    const chatId = serializeId(message.fromMe ? message.to : message.from)
+    if (!chatId || chatId === 'undefined') return
 
-      const payload: RealtimeMessagePayload = {
-        type: 'message:new',
-        chatId,
-        message: serialized,
-        chat: {
-          id: chatId,
-          name: chat.name ?? null,
-          isGroup: chat.isGroup,
-          unreadCount: chat.unreadCount,
-          timestamp: chat.timestamp,
-          lastMessage: {
-            id: serialized.id,
-            body: serialized.body,
-            type: serialized.type,
-            timestamp: serialized.timestamp,
-            fromMe: serialized.fromMe,
-            hasMedia: serialized.hasMedia,
-          },
+    const serialized = await serializeMessageForApi(message)
+    const payload: RealtimeMessagePayload = {
+      type: 'message:new',
+      chatId,
+      message: serialized,
+      chat: {
+        id: chatId,
+        name: null,
+        isGroup: chatId.endsWith('@g.us'),
+        unreadCount: message.fromMe ? 0 : 1,
+        timestamp: serialized.timestamp,
+        lastMessage: {
+          id: serialized.id,
+          body: serialized.body,
+          type: serialized.type,
+          timestamp: serialized.timestamp,
+          fromMe: serialized.fromMe,
+          hasMedia: serialized.hasMedia,
         },
-      }
-
-      WhatsAppRealtimeHub.broadcast(userId, payload)
-    } catch (error) {
-      logger.warn({ err: error, userId }, 'Failed to publish WhatsApp realtime message')
+      },
     }
+
+    WhatsAppRealtimeHub.broadcast(userId, payload)
   }
 
   private static async publishReaction(userId: number, client: Client, reaction: Reaction) {
@@ -83,7 +84,7 @@ export default class WhatsAppRealtimeService {
 
       WhatsAppRealtimeHub.broadcast(userId, payload)
     } catch (error) {
-      logger.warn({ err: error, userId }, 'Failed to publish WhatsApp reaction update')
+      logger.debug({ err: error, userId }, 'WhatsApp reaction update could not be resolved')
     }
   }
 }

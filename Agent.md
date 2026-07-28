@@ -1,0 +1,1 @@
+read https://wwebjs.dev/ do everything accding to the docs 

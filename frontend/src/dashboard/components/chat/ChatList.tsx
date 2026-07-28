@@ -295,6 +295,7 @@ export default function ChatList({
               >
                 <Avatar
                   initials={contact.initials}
+                  imageUrl={contact.avatarUrl}
                   color={contact.avatarColor}
                   size={42}
                   online={contact.online}

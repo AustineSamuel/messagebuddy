@@ -4,6 +4,7 @@ import path from 'node:path'
 const CHROME_BINARY_CANDIDATES = [
   ['chrome-linux64', 'chrome'],
   ['chrome-mac-x64', 'Google Chrome for Testing.app', 'Contents', 'MacOS', 'Google Chrome for Testing'],
+  ['chrome-mac-arm64', 'Google Chrome for Testing.app', 'Contents', 'MacOS', 'Google Chrome for Testing'],
   ['chrome-win64', 'chrome.exe'],
 ]
 

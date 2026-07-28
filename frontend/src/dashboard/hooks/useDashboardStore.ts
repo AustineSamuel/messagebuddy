@@ -640,7 +640,9 @@ export function useDashboardStore({ whatsAppReady }: Props) {
         handleRealtimeMessage(event);
         return;
       }
-      handleRealtimeReaction(event);
+      if (event.type === "message:reaction") {
+        handleRealtimeReaction(event);
+      }
     },
     [handleRealtimeMessage, handleRealtimeReaction]
   );

@@ -1,4 +1,5 @@
 import type { Chat, Client } from 'whatsapp-web.js'
+import logger from '@adonisjs/core/services/logger'
 import { MessageMedia } from '../lib/wwebjs.js'
 import type WAWebJS from 'whatsapp-web.js'
 import whatsAppClientManager from './whatsapp_client_manager.js'
@@ -23,6 +24,7 @@ import {
   serializeReactions,
   resolveChatDisplayName,
 } from '../helpers/serialization.js'
+import { WhatsAppUnavailableError } from '../helpers/errors.js'
 
 export default class WhatsAppService {
   // ── Session ──────────────────────────────────────────────────────────────
@@ -85,33 +87,133 @@ export default class WhatsAppService {
     const directChatIds = chats.filter((chat) => !chat.isGroup).map((chat) => serializeId(chat.id))
     const phoneByChatId = await this.resolvePhoneIds(client, directChatIds)
 
-    return this.mapWithConcurrency(chats, 24, async (chat) => {
-      const chatId = serializeId(chat.id)
-      const [contact, profilePicUrl] = await Promise.all([
-        chat.isGroup
-          ? Promise.resolve(null)
-          : this.bestEffort(chat.getContact(), 2_500),
-        this.bestEffort(client.getProfilePicUrl(chatId), 2_500),
-      ])
+    const serialized = await this.mapWithConcurrency(chats, 24, async (chat) => {
+      try {
+        const chatId = serializeId(chat.id)
+        const [contact, profilePicUrl] = await Promise.all([
+          chat.isGroup
+            ? Promise.resolve(null)
+            : this.bestEffort(
+                typeof chat.getContact === 'function'
+                  ? chat.getContact()
+                  : client.getContactById(chatId),
+                2_500
+              ),
+          this.bestEffort(client.getProfilePicUrl(chatId), 2_500),
+        ])
 
-      if (chat.isGroup) return serializeGroupChat(chat, { profilePicUrl })
+        if (chat.isGroup) return serializeGroupChat(chat, { profilePicUrl })
 
-      const phone =
-        phoneByChatId.get(chatId) ??
-        (contact && contact.id.server !== 'lid' ? contact.number?.trim() : null) ??
-        (chatId.endsWith('@c.us') ? chatId.split('@')[0] : null)
+        const phone =
+          phoneByChatId.get(chatId) ??
+          (contact && contact.id.server !== 'lid' ? contact.number?.trim() : null) ??
+          (chatId.endsWith('@c.us') ? chatId.split('@')[0] : null)
 
-      return serializeChatForApi(chat, { contact, phone, profilePicUrl })
+        return serializeChatForApi(chat, { contact, phone, profilePicUrl })
+      } catch {
+        return null
+      }
     })
+
+    return serialized.filter((chat) => chat !== null)
   }
 
   private static async getChatsWithRetry(client: Client): Promise<Chat[]> {
     try {
       return await client.getChats()
-    } catch {
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      return client.getChats()
+    } catch (officialError) {
+      /*
+       * wwebjs serializes every cached chat with Promise.all(). A single stale chat
+       * (commonly while group metadata is updating) rejects the entire collection.
+       * Run the same serializers independently so one bad model cannot hide all chats.
+       */
+      try {
+        const page = client.pupPage
+        if (!page) throw officialError
+
+        const recovered = await page.evaluate(async () => {
+          const web = globalThis as unknown as {
+            WWebJS: {
+              getChats(): Promise<unknown[]>
+              getChatModel(chat: unknown): Promise<unknown>
+            }
+            require(name: string): {
+              Chat: { getModelsArray(): unknown[] }
+            }
+          }
+
+          const chats = web.require('WAWebCollections').Chat.getModelsArray()
+          const results = await Promise.allSettled(
+            chats.map((chat) => web.WWebJS.getChatModel(chat))
+          )
+
+          return results.flatMap((result) =>
+            result.status === 'fulfilled' && result.value ? [result.value] : []
+          )
+        })
+
+        if (recovered.length > 0) {
+          logger.debug(
+            { recovered: recovered.length },
+            'Recovered WhatsApp chats after bulk serialization failed'
+          )
+          return recovered as Chat[]
+        }
+      } catch {
+        // Continue to the contacts-based fallback below.
+      }
+
+      try {
+        const contacts = await client.getContacts()
+        const chatContacts = contacts.filter((contact) => {
+          const id = serializeId(contact.id)
+          return (
+            !contact.isMe &&
+            (contact.isUser || contact.isGroup) &&
+            !id.includes('@broadcast') &&
+            !id.includes('status@')
+          )
+        })
+        const resolved = await this.mapWithConcurrency(chatContacts, 24, (contact) =>
+          this.bestEffort(contact.getChat(), 3_000)
+        )
+        const chatsById = new Map<string, Chat>()
+        for (const chat of resolved) {
+          if (chat) chatsById.set(serializeId(chat.id), chat)
+        }
+        if (chatsById.size === 0 && chatContacts.length > 0) throw officialError
+        logger.debug(
+          { recovered: chatsById.size },
+          'Rebuilt WhatsApp chats from contacts after serialization failed'
+        )
+        return [...chatsById.values()]
+      } catch (fallbackError) {
+        logger.warn(
+          { err: officialError, fallbackErr: fallbackError },
+          'Unable to recover WhatsApp chats after wwebjs bulk serialization failed'
+        )
+        throw new WhatsAppUnavailableError(
+          'We could not load your WhatsApp chats right now. Please wait a moment and try again.',
+          { cause: fallbackError ?? officialError }
+        )
+      }
     }
+  }
+
+  private static async getListWithRetry<T>(
+    operation: () => Promise<T[]>,
+    publicMessage: string
+  ): Promise<T[]> {
+    let lastError: unknown
+    for (const delayMs of [0, 500, 1_000]) {
+      if (delayMs) await new Promise((resolve) => setTimeout(resolve, delayMs))
+      try {
+        return await operation()
+      } catch (error) {
+        lastError = error
+      }
+    }
+    throw new WhatsAppUnavailableError(publicMessage, { cause: lastError })
   }
 
   private static async resolvePhoneIds(client: Client, chatIds: string[]) {
@@ -239,16 +341,25 @@ export default class WhatsAppService {
   ) {
     const client = await whatsAppClientManager.getReadyClient(userId)
     const normalizedId = decodeURIComponent(chatId)
-
-    const chat = await client.getChatById(normalizedId)
-    if (!chat) {
-      throw new Error(`Chat not found: ${normalizedId}`)
-    }
-
     const requestedLimit = Math.min(Math.max(options?.limit ?? 30, 1), 100)
     const searchOptions: { limit: number; fromMe?: boolean } = { limit: requestedLimit }
     if (options?.fromMe !== undefined) {
       searchOptions.fromMe = options.fromMe
+    }
+
+    let chat: Chat | undefined
+    try {
+      chat = await client.getChatById(normalizedId)
+    } catch (error) {
+      logger.debug(
+        { err: error, chatId: normalizedId },
+        'Chat model serialization failed; fetching messages directly'
+      )
+      return this.fetchChatMessagesDirect(client, normalizedId, searchOptions)
+    }
+
+    if (!chat) {
+      return this.fetchChatMessagesDirect(client, normalizedId, searchOptions)
     }
 
     try {
@@ -272,6 +383,91 @@ export default class WhatsAppService {
 
       throw error
     }
+  }
+
+  /**
+   * Fetch message IDs from the raw chat collection, then use wwebjs's public
+   * getMessageById API to construct Message instances. This avoids getChatModel,
+   * whose unrelated group metadata refresh can reject otherwise valid chats.
+   */
+  private static async fetchChatMessagesDirect(
+    client: Client,
+    chatId: string,
+    searchOptions: { limit: number; fromMe?: boolean }
+  ) {
+    const page = client.pupPage
+    if (!page) throw new Error('WhatsApp Web page is not available.')
+
+    const messageIds = await page.evaluate(
+      async (targetChatId, options) => {
+        type RawMessage = {
+          id?: { fromMe?: boolean; _serialized?: string | null } | null
+          isNotification?: boolean
+          t: number
+          type?: string
+        }
+        type RawChat = {
+          msgs: { getModelsArray(): RawMessage[] }
+        }
+        const web = globalThis as unknown as {
+          WWebJS: {
+            getChat(id: string, options: { getAsModel: false }): Promise<RawChat | null>
+          }
+          require(name: string): {
+            loadEarlierMsgs(args: { chat: RawChat }): Promise<RawMessage[] | null>
+          }
+        }
+
+        const chat = await web.WWebJS.getChat(targetChatId, { getAsModel: false })
+        if (!chat) return []
+
+        const serializedId = (message: RawMessage) => {
+          const id = message.id?._serialized
+          if (typeof id !== 'string' || !id.trim()) return null
+          const parts = id.split('_')
+          return parts.length === 3 || parts.length === 4 ? id : null
+        }
+
+        const matches = (message: RawMessage) => {
+          if (message.isNotification || !serializedId(message)) return false
+          if (message.type === 'e2e_notification' || message.type === 'protocol') return false
+          return options.fromMe === undefined || message.id?.fromMe === options.fromMe
+        }
+
+        let messages = chat.msgs.getModelsArray().filter(matches)
+        while (messages.length < options.limit) {
+          const earlier = await web.require('WAWebChatLoadMessages').loadEarlierMsgs({ chat })
+          if (!earlier?.length) break
+          messages = [...earlier.filter(matches), ...messages]
+        }
+
+        messages.sort((left, right) => left.t - right.t)
+        return [
+          ...new Set(
+            messages
+              .slice(-options.limit)
+              .map(serializedId)
+              .filter((id): id is string => Boolean(id))
+          ),
+        ]
+      },
+      chatId,
+      searchOptions
+    )
+
+    const messages = await this.mapWithConcurrency(messageIds, 12, async (messageId) => {
+      try {
+        return await client.getMessageById(messageId)
+      } catch (error) {
+        logger.debug(
+          { err: error, messageId, chatId },
+          'Skipping malformed WhatsApp message cache entry'
+        )
+        return null
+      }
+    })
+    const availableMessages = messages.flatMap((message) => (message ? [message] : []))
+    return Promise.all(availableMessages.map((message) => serializeMessageForApi(message)))
   }
 
   static async getPinnedMessages(userId: number, chatId: string) {
@@ -607,14 +803,45 @@ export default class WhatsAppService {
 
   static async getContacts(userId: number) {
     const client = await whatsAppClientManager.getReadyClient(userId)
-    const contacts = await client.getContacts()
-    return contacts.map(serializeContact)
+    const contacts = await this.getListWithRetry(
+      () => client.getContacts(),
+      'We could not load your WhatsApp contacts right now. Please wait a moment and try again.'
+    )
+    const userContacts = contacts.filter((contact) => {
+      const id = serializeId(contact.id)
+      return (
+        contact.isUser &&
+        !contact.isMe &&
+        !contact.isGroup &&
+        !id.includes('@broadcast') &&
+        !id.includes('status@')
+      )
+    })
+    const ids = userContacts.map((contact) => serializeId(contact.id))
+    const phoneByContactId = await this.resolvePhoneIds(client, ids)
+    const serialized = await this.mapWithConcurrency(userContacts, 24, async (contact) => {
+      const id = serializeId(contact.id)
+      const profilePicUrl = await this.bestEffort(contact.getProfilePicUrl(), 2_500)
+      const number =
+        phoneByContactId.get(id) ??
+        (contact.id.server !== 'lid' ? contact.number?.trim() : null) ??
+        (id.endsWith('@c.us') ? id.split('@')[0] : null)
+      return serializeContact(contact, { number, profilePicUrl })
+    })
+
+    const deduplicated = new Map<string, (typeof serialized)[number]>()
+    for (const contact of serialized) {
+      const key = contact.number?.replace(/\D/g, '') || contact.id
+      const existing = deduplicated.get(key)
+      if (!existing || (!existing.name && contact.name)) deduplicated.set(key, contact)
+    }
+    return [...deduplicated.values()]
   }
 
   static async getBlockedContacts(userId: number) {
     const client = await whatsAppClientManager.getReadyClient(userId)
     const contacts = await client.getBlockedContacts()
-    return contacts.map(serializeContact)
+    return contacts.map((contact) => serializeContact(contact))
   }
 
   static async getContactById(userId: number, contactId: string) {
